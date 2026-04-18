@@ -15,12 +15,13 @@ import type {
   InternalIntakeDetail,
   InternalIntakeListItem,
   PortalLocale,
+  WorkflowListQuery,
   WorkflowResponse,
 } from "./types.js";
 
 export interface PortalWorkflowClient {
   getEmployerDashboard(input: { tenantId: string; locale: PortalLocale }): Promise<WorkflowResponse<EmployerDashboardSummary>>;
-  listEmployerAbsences(input: {
+  listEmployerAbsences(input: WorkflowListQuery & {
     tenantId: string;
     locale: PortalLocale;
     status?: string;
@@ -31,21 +32,56 @@ export interface PortalWorkflowClient {
     locale: PortalLocale;
     episodeId: string;
   }): Promise<WorkflowResponse<EmployerAbsenceDetail>>;
-  listEmployerCases(input: { tenantId: string; locale: PortalLocale }): Promise<WorkflowResponse<EmployerCaseListItem[]>>;
+  listEmployerCases(input: WorkflowListQuery & {
+    tenantId: string;
+    locale: PortalLocale;
+    status?: string;
+    employee?: string;
+  }): Promise<WorkflowResponse<EmployerCaseListItem[]>>;
   getEmployerCaseDetail(input: { tenantId: string; locale: PortalLocale; caseId: string }): Promise<WorkflowResponse<EmployerCaseDetail>>;
-  listEmployerDocuments(input: { tenantId: string; locale: PortalLocale }): Promise<WorkflowResponse<EmployerDocumentListItem[]>>;
-  listEmployerTasks(input: { tenantId: string; locale: PortalLocale }): Promise<WorkflowResponse<EmployerTaskListItem[]>>;
-  listEmployerPayments(input: { tenantId: string; locale: PortalLocale }): Promise<WorkflowResponse<EmployerPaymentSummary[]>>;
+  listEmployerDocuments(input: WorkflowListQuery & {
+    tenantId: string;
+    locale: PortalLocale;
+    status?: string;
+    employee?: string;
+  }): Promise<WorkflowResponse<EmployerDocumentListItem[]>>;
+  listEmployerTasks(input: WorkflowListQuery & {
+    tenantId: string;
+    locale: PortalLocale;
+    status?: string;
+  }): Promise<WorkflowResponse<EmployerTaskListItem[]>>;
+  listEmployerPayments(input: WorkflowListQuery & {
+    tenantId: string;
+    locale: PortalLocale;
+    status?: string;
+  }): Promise<WorkflowResponse<EmployerPaymentSummary[]>>;
   getInternalDashboard(input: { tenantId: string; locale: PortalLocale }): Promise<WorkflowResponse<InternalDashboardSummary>>;
-  listInternalIntake(input: { tenantId: string; locale: PortalLocale }): Promise<WorkflowResponse<InternalIntakeListItem[]>>;
+  listInternalIntake(input: WorkflowListQuery & {
+    tenantId: string;
+    locale: PortalLocale;
+    status?: string;
+    assignedHandler?: string;
+    assignedTeam?: string;
+    overdue?: string;
+  }): Promise<WorkflowResponse<InternalIntakeListItem[]>>;
   getInternalIntakeDetail(input: {
     tenantId: string;
     locale: PortalLocale;
     workspaceId: string;
   }): Promise<WorkflowResponse<InternalIntakeDetail>>;
-  listInternalCases(input: { tenantId: string; locale: PortalLocale }): Promise<WorkflowResponse<InternalCaseListItem[]>>;
+  listInternalCases(input: WorkflowListQuery & {
+    tenantId: string;
+    locale: PortalLocale;
+    status?: string;
+    employee?: string;
+  }): Promise<WorkflowResponse<InternalCaseListItem[]>>;
   getInternalCaseDetail(input: { tenantId: string; locale: PortalLocale; caseId: string }): Promise<WorkflowResponse<InternalCaseDetail>>;
-  listInternalBenefits(input: { tenantId: string; locale: PortalLocale }): Promise<WorkflowResponse<InternalBenefitListItem[]>>;
+  listInternalBenefits(input: WorkflowListQuery & {
+    tenantId: string;
+    locale: PortalLocale;
+    status?: string;
+    caseId?: string;
+  }): Promise<WorkflowResponse<InternalBenefitListItem[]>>;
   getInternalBenefitDetail(input: {
     tenantId: string;
     locale: PortalLocale;
@@ -61,11 +97,11 @@ const readJson = async <T>(response: Response): Promise<T> => {
   return response.json() as Promise<T>;
 };
 
-const toQueryString = (input: Record<string, string | undefined>): string => {
+const toQueryString = (input: object): string => {
   const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(input)) {
+  for (const [key, value] of Object.entries(input as Record<string, string | number | undefined>)) {
     if (value !== undefined) {
-      params.set(key, value);
+      params.set(key, String(value));
     }
   }
 

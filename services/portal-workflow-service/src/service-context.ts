@@ -161,6 +161,30 @@ const append = <T extends { tenantId?: string }>(items: T[], value: T): T => {
   return value;
 };
 
+const paginateItems = <T>(
+  items: T[],
+  input?: { page?: number; pageSize?: number },
+): {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
+} => {
+  const totalCount = items.length;
+  const pageSize = Math.max(1, input?.pageSize ?? (totalCount || 1));
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const page = Math.min(Math.max(1, input?.page ?? 1), totalPages);
+  const start = (page - 1) * pageSize;
+  return {
+    items: items.slice(start, start + pageSize),
+    page,
+    pageSize,
+    totalPages,
+    totalCount,
+  };
+};
+
 class AbsenceMemoryRepository implements AbsenceRepository {
   constructor(
     private readonly episodes: AbsenceEpisode[],
@@ -2080,7 +2104,7 @@ export const getEmployerDashboard = async (tenantId: string, locale: PortalLocal
 export const listEmployerAbsences = async (
   tenantId: string,
   locale: PortalLocale,
-  filters?: { status?: string; employee?: string },
+  filters?: { status?: string; employee?: string; page?: number; pageSize?: number },
 ): Promise<WorkflowResponse<EmployerAbsenceListItem[]>> => {
   const { repositories, services } = createServices();
   const episodes = await listTenantEpisodes(repositories.absenceRepository, tenantId);
@@ -2110,9 +2134,13 @@ export const listEmployerAbsences = async (
   const filtered = items.filter((item) =>
     (!filters?.status || item.status === filters.status) &&
     (!filters?.employee || item.employeeName.toLowerCase().includes(filters.employee.toLowerCase())));
+  const paginated = paginateItems(filtered, filters);
 
-  return makeResponse(filtered, tenantId, locale, employerPermissions, {
-    totalCount: filtered.length,
+  return makeResponse(paginated.items, tenantId, locale, employerPermissions, {
+    totalCount: paginated.totalCount,
+    page: paginated.page,
+    pageSize: paginated.pageSize,
+    totalPages: paginated.totalPages,
     appliedFilters: {
       ...(filters?.status ? { status: filters.status } : {}),
       ...(filters?.employee ? { employee: filters.employee } : {}),
@@ -2170,7 +2198,11 @@ export const getEmployerAbsenceDetail = async (
   }, tenantId, locale, employerPermissions);
 };
 
-export const listEmployerCases = async (tenantId: string, locale: PortalLocale): Promise<WorkflowResponse<EmployerCaseListItem[]>> => {
+export const listEmployerCases = async (
+  tenantId: string,
+  locale: PortalLocale,
+  filters?: { status?: string; employee?: string; page?: number; pageSize?: number },
+): Promise<WorkflowResponse<EmployerCaseListItem[]>> => {
   const { repositories, services } = createServices();
   const cases = await listTenantCases(repositories.ktgCaseRepository, tenantId);
   const items = await Promise.all(cases.map(async (ktgCase) => {
@@ -2187,7 +2219,21 @@ export const listEmployerCases = async (tenantId: string, locale: PortalLocale):
     } satisfies EmployerCaseListItem;
   }));
 
-  return makeResponse(items, tenantId, locale, employerPermissions, { totalCount: items.length });
+  const filtered = items.filter((item) =>
+    (!filters?.status || item.status === filters.status) &&
+    (!filters?.employee || item.employeeName.toLowerCase().includes(filters.employee.toLowerCase())));
+  const paginated = paginateItems(filtered, filters);
+
+  return makeResponse(paginated.items, tenantId, locale, employerPermissions, {
+    totalCount: paginated.totalCount,
+    page: paginated.page,
+    pageSize: paginated.pageSize,
+    totalPages: paginated.totalPages,
+    appliedFilters: {
+      ...(filters?.status ? { status: filters.status } : {}),
+      ...(filters?.employee ? { employee: filters.employee } : {}),
+    },
+  });
 };
 
 export const getEmployerCaseDetail = async (
@@ -2223,6 +2269,7 @@ export const getEmployerCaseDetail = async (
 export const listEmployerDocuments = async (
   tenantId: string,
   locale: PortalLocale,
+  filters?: { status?: string; employee?: string; page?: number; pageSize?: number },
 ): Promise<WorkflowResponse<EmployerDocumentListItem[]>> => {
   const { repositories } = createServices();
   const items = await Promise.all((await repositories.documentRepository.listDocuments(tenantId)).map(async (document) => {
@@ -2237,12 +2284,27 @@ export const listEmployerDocuments = async (
     } satisfies EmployerDocumentListItem;
   }));
 
-  return makeResponse(items, tenantId, locale, employerPermissions, { totalCount: items.length });
+  const filtered = items.filter((item) =>
+    (!filters?.status || item.status === filters.status) &&
+    (!filters?.employee || item.employeeName.toLowerCase().includes(filters.employee.toLowerCase())));
+  const paginated = paginateItems(filtered, filters);
+
+  return makeResponse(paginated.items, tenantId, locale, employerPermissions, {
+    totalCount: paginated.totalCount,
+    page: paginated.page,
+    pageSize: paginated.pageSize,
+    totalPages: paginated.totalPages,
+    appliedFilters: {
+      ...(filters?.status ? { status: filters.status } : {}),
+      ...(filters?.employee ? { employee: filters.employee } : {}),
+    },
+  });
 };
 
 export const listEmployerTasks = async (
   tenantId: string,
   locale: PortalLocale,
+  filters?: { status?: string; page?: number; pageSize?: number },
 ): Promise<WorkflowResponse<EmployerTaskListItem[]>> => {
   const { repositories, services } = createServices();
   const items = await Promise.all((await repositories.inboxRepository.listInboxItems(tenantId, { audienceRole: "hr_manager" })).map(async (item) => {
@@ -2256,12 +2318,24 @@ export const listEmployerTasks = async (
     } satisfies EmployerTaskListItem;
   }));
 
-  return makeResponse(items, tenantId, locale, employerPermissions, { totalCount: items.length });
+  const filtered = items.filter((item) => !filters?.status || item.status === filters.status);
+  const paginated = paginateItems(filtered, filters);
+
+  return makeResponse(paginated.items, tenantId, locale, employerPermissions, {
+    totalCount: paginated.totalCount,
+    page: paginated.page,
+    pageSize: paginated.pageSize,
+    totalPages: paginated.totalPages,
+    appliedFilters: {
+      ...(filters?.status ? { status: filters.status } : {}),
+    },
+  });
 };
 
 export const listEmployerPayments = async (
   tenantId: string,
   locale: PortalLocale,
+  filters?: { status?: string; page?: number; pageSize?: number },
 ): Promise<WorkflowResponse<EmployerPaymentSummary[]>> => {
   const { services } = createServices();
   const calculations = await services.benefitService.listCalculations(INTERNAL_TENANT_ID);
@@ -2284,7 +2358,18 @@ export const listEmployerPayments = async (
     }))
   ).flatMap((item) => (item ? [item] : []));
 
-  return makeResponse(items, tenantId, locale, employerPermissions, { totalCount: items.length });
+  const filtered = items.filter((item) => !filters?.status || item.status === filters.status);
+  const paginated = paginateItems(filtered, filters);
+
+  return makeResponse(paginated.items, tenantId, locale, employerPermissions, {
+    totalCount: paginated.totalCount,
+    page: paginated.page,
+    pageSize: paginated.pageSize,
+    totalPages: paginated.totalPages,
+    appliedFilters: {
+      ...(filters?.status ? { status: filters.status } : {}),
+    },
+  });
 };
 
 export const getInternalDashboard = async (tenantId: string, locale: PortalLocale): Promise<WorkflowResponse<InternalDashboardSummary>> => {
@@ -2309,6 +2394,14 @@ export const getInternalDashboard = async (tenantId: string, locale: PortalLocal
 export const listInternalIntake = async (
   tenantId: string,
   locale: PortalLocale,
+  filters?: {
+    status?: string;
+    assignedHandler?: string;
+    assignedTeam?: string;
+    overdue?: string;
+    page?: number;
+    pageSize?: number;
+  },
 ): Promise<WorkflowResponse<InternalIntakeListItem[]>> => {
   const { services } = createServices();
   const workspaces = await services.claimsService.listWorkspaces(tenantId);
@@ -2327,7 +2420,25 @@ export const listInternalIntake = async (
     } satisfies InternalIntakeListItem;
   }));
 
-  return makeResponse(items, tenantId, locale, internalPermissions, { totalCount: items.length });
+  const filtered = items.filter((item) =>
+    (!filters?.status || item.status === filters.status) &&
+    (!filters?.assignedHandler || item.assignedHandler.toLowerCase().includes(filters.assignedHandler.toLowerCase())) &&
+    (!filters?.assignedTeam || (filters.assignedTeam === "Claims Zurich" && item.assignedHandler.length > 0)) &&
+    (!filters?.overdue || String(item.overdue) === filters.overdue));
+  const paginated = paginateItems(filtered, filters);
+
+  return makeResponse(paginated.items, tenantId, locale, internalPermissions, {
+    totalCount: paginated.totalCount,
+    page: paginated.page,
+    pageSize: paginated.pageSize,
+    totalPages: paginated.totalPages,
+    appliedFilters: {
+      ...(filters?.status ? { status: filters.status } : {}),
+      ...(filters?.assignedHandler ? { assignedHandler: filters.assignedHandler } : {}),
+      ...(filters?.assignedTeam ? { assignedTeam: filters.assignedTeam } : {}),
+      ...(filters?.overdue ? { overdue: filters.overdue } : {}),
+    },
+  });
 };
 
 export const getInternalIntakeDetail = async (
@@ -2377,6 +2488,7 @@ export const getInternalIntakeDetail = async (
 export const listInternalCases = async (
   tenantId: string,
   locale: PortalLocale,
+  filters?: { status?: string; employee?: string; page?: number; pageSize?: number },
 ): Promise<WorkflowResponse<InternalCaseListItem[]>> => {
   const { repositories, services } = createServices();
   const cases = await listTenantCases(repositories.ktgCaseRepository, tenantId);
@@ -2394,7 +2506,21 @@ export const listInternalCases = async (
     } satisfies InternalCaseListItem;
   }));
 
-  return makeResponse(items, tenantId, locale, internalPermissions, { totalCount: items.length });
+  const filtered = items.filter((item) =>
+    (!filters?.status || item.status === filters.status) &&
+    (!filters?.employee || item.employeeName.toLowerCase().includes(filters.employee.toLowerCase())));
+  const paginated = paginateItems(filtered, filters);
+
+  return makeResponse(paginated.items, tenantId, locale, internalPermissions, {
+    totalCount: paginated.totalCount,
+    page: paginated.page,
+    pageSize: paginated.pageSize,
+    totalPages: paginated.totalPages,
+    appliedFilters: {
+      ...(filters?.status ? { status: filters.status } : {}),
+      ...(filters?.employee ? { employee: filters.employee } : {}),
+    },
+  });
 };
 
 export const getInternalCaseDetail = async (
@@ -2425,6 +2551,7 @@ export const getInternalCaseDetail = async (
 export const listInternalBenefits = async (
   tenantId: string,
   locale: PortalLocale,
+  filters?: { status?: string; caseId?: string; page?: number; pageSize?: number },
 ): Promise<WorkflowResponse<InternalBenefitListItem[]>> => {
   const { services } = createServices();
   const calculations = await services.benefitService.listCalculations(tenantId);
@@ -2439,7 +2566,21 @@ export const listInternalBenefits = async (
     } satisfies InternalBenefitListItem;
   }));
 
-  return makeResponse(items, tenantId, locale, internalPermissions, { totalCount: items.length });
+  const filtered = items.filter((item) =>
+    (!filters?.status || item.status === filters.status) &&
+    (!filters?.caseId || item.ktgCaseId === filters.caseId));
+  const paginated = paginateItems(filtered, filters);
+
+  return makeResponse(paginated.items, tenantId, locale, internalPermissions, {
+    totalCount: paginated.totalCount,
+    page: paginated.page,
+    pageSize: paginated.pageSize,
+    totalPages: paginated.totalPages,
+    appliedFilters: {
+      ...(filters?.status ? { status: filters.status } : {}),
+      ...(filters?.caseId ? { caseId: filters.caseId } : {}),
+    },
+  });
 };
 
 export const getInternalBenefitDetail = async (

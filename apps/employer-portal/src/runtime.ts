@@ -1,18 +1,11 @@
 import {
-  createPortalShellModel,
+  createPortalBootstrapRuntime,
   employerNavigation,
   employerRouteAccessRules,
-  filterVisibleNavigation,
-  loadCatalog,
-  resolveLocale,
   type LocaleCode,
-  type PortalTenantContext,
-  type PortalUserContext,
 } from "./frontend.js";
 import type {
-  EffectivePermissionSnapshotDto,
   PermissionCheck,
-  RoleAssignmentDto,
 } from "@elipslife/identity-access-client";
 import { createIdentityAccessClient } from "@elipslife/identity-access-client";
 import { createPortalWorkflowClient } from "@elipslife/portal-workflow-client";
@@ -44,59 +37,20 @@ const employerPortalPermissions: PermissionCheck[] = [
 ];
 
 export const getEmployerPortalRuntime = async (routeLocale?: string) => {
-  const session = await identityAccessClient.signIn({
-    email: employerPortalConfig.signInEmail,
-    tenantId: employerPortalConfig.tenantId,
-  });
-  const bootstrap = await identityAccessClient.getPortalBootstrap(session.sessionToken, {
-    routeLocale: routeLocale as LocaleCode | undefined,
-    permissions: employerPortalPermissions,
-  });
-  const locale = resolveLocale({
-    routeLocale: routeLocale as LocaleCode | undefined,
-    userPreferredLanguage: bootstrap.user.preferredLanguage,
-    tenantDefaultLanguage: employerPortalConfig.defaultLocale,
-  });
-  const messages = loadCatalog(locale);
-  const userContext: PortalUserContext = {
-    userId: bootstrap.user.id,
-    tenantId: employerPortalConfig.tenantId,
-    locale,
-    roleCodes: bootstrap.roleAssignments
-      .filter((assignment: RoleAssignmentDto) => !assignment.revokedAt)
-      .map((assignment: RoleAssignmentDto) => assignment.roleCode),
-    effectivePermissions: bootstrap.effectivePermissions.map((permission: EffectivePermissionSnapshotDto) => ({
-      resourceType: permission.resourceType,
-      action: permission.action,
-      allowed: permission.allowed,
-    })),
-  };
-  const tenantContext: PortalTenantContext = {
-    tenantId: employerPortalConfig.tenantId,
-    tenantName: employerPortalConfig.tenantName,
-    defaultLocale: locale,
-    featureFlags: employerPortalConfig.featureFlags,
-  };
-  const navigation = filterVisibleNavigation(employerNavigation, userContext);
-  const shell = createPortalShellModel({
-    locale,
-    portalTitleKey: "shell.employerPortal",
-    messages,
-    navigation,
-    tenantContext,
-    userContext,
-  });
-
-  return {
-    locale,
-    messages,
-    userContext,
-    tenantContext,
-    shell,
-    routeRules: employerRouteAccessRules,
-    bootstrap,
-    client: identityAccessClient,
+  return createPortalBootstrapRuntime({
+    identityAccessClient,
     workflowClient: portalWorkflowClient,
-    sessionToken: session.sessionToken,
-  };
+    routeLocale,
+    config: {
+      tenantId: employerPortalConfig.tenantId,
+      tenantName: employerPortalConfig.tenantName,
+      defaultLocale: employerPortalConfig.defaultLocale,
+      signInEmail: employerPortalConfig.signInEmail,
+      featureFlags: employerPortalConfig.featureFlags,
+      portalTitleKey: "shell.employerPortal",
+      navigation: employerNavigation,
+      routeRules: employerRouteAccessRules,
+      requestedPermissions: employerPortalPermissions,
+    },
+  });
 };

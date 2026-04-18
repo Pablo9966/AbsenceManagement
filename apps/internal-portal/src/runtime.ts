@@ -1,18 +1,12 @@
 import {
-  createPortalShellModel,
+  createPortalBootstrapRuntime,
   filterVisibleNavigation,
   internalNavigation,
   internalRouteAccessRules,
-  loadCatalog,
-  resolveLocale,
   type LocaleCode,
-  type PortalTenantContext,
-  type PortalUserContext,
 } from "./frontend.js";
 import type {
-  EffectivePermissionSnapshotDto,
   PermissionCheck,
-  RoleAssignmentDto,
 } from "@elipslife/identity-access-client";
 import { createIdentityAccessClient } from "@elipslife/identity-access-client";
 import { createPortalWorkflowClient } from "@elipslife/portal-workflow-client";
@@ -54,59 +48,20 @@ export const getInternalPortalRuntime = async (input?: {
   const permissions = viewer === "compliance"
     ? internalCompliancePermissions
     : internalClaimsPermissions;
-  const session = await identityAccessClient.signIn({
-    email: viewer === "compliance" ? internalPortalConfig.complianceSignInEmail : internalPortalConfig.claimsSignInEmail,
-    tenantId: internalPortalConfig.tenantId,
-  });
-  const bootstrap = await identityAccessClient.getPortalBootstrap(session.sessionToken, {
-    routeLocale: input?.routeLocale as LocaleCode | undefined,
-    permissions,
-  });
-  const locale = resolveLocale({
-    routeLocale: input?.routeLocale as LocaleCode | undefined,
-    userPreferredLanguage: bootstrap.user.preferredLanguage,
-    tenantDefaultLanguage: internalPortalConfig.defaultLocale,
-  });
-  const messages = loadCatalog(locale);
-  const userContext: PortalUserContext = {
-    userId: bootstrap.user.id,
-    tenantId: internalPortalConfig.tenantId,
-    locale,
-    roleCodes: bootstrap.roleAssignments
-      .filter((assignment: RoleAssignmentDto) => !assignment.revokedAt)
-      .map((assignment: RoleAssignmentDto) => assignment.roleCode),
-    effectivePermissions: bootstrap.effectivePermissions.map((permission: EffectivePermissionSnapshotDto) => ({
-      resourceType: permission.resourceType,
-      action: permission.action,
-      allowed: permission.allowed,
-    })),
-  };
-  const tenantContext: PortalTenantContext = {
-    tenantId: internalPortalConfig.tenantId,
-    tenantName: internalPortalConfig.tenantName,
-    defaultLocale: locale,
-    featureFlags: internalPortalConfig.featureFlags,
-  };
-  const navigation = filterVisibleNavigation(internalNavigation, userContext);
-  const shell = createPortalShellModel({
-    locale,
-    portalTitleKey: "shell.internalPortal",
-    messages,
-    navigation,
-    tenantContext,
-    userContext,
-  });
-
-  return {
-    locale,
-    messages,
-    userContext,
-    tenantContext,
-    shell,
-    routeRules: internalRouteAccessRules,
-    bootstrap,
-    client: identityAccessClient,
+  return createPortalBootstrapRuntime({
+    identityAccessClient,
     workflowClient: portalWorkflowClient,
-    sessionToken: session.sessionToken,
-  };
+    routeLocale: input?.routeLocale,
+    config: {
+      tenantId: internalPortalConfig.tenantId,
+      tenantName: internalPortalConfig.tenantName,
+      defaultLocale: internalPortalConfig.defaultLocale,
+      signInEmail: viewer === "compliance" ? internalPortalConfig.complianceSignInEmail : internalPortalConfig.claimsSignInEmail,
+      featureFlags: internalPortalConfig.featureFlags,
+      portalTitleKey: "shell.internalPortal",
+      navigation: internalNavigation,
+      routeRules: internalRouteAccessRules,
+      requestedPermissions: permissions,
+    },
+  });
 };

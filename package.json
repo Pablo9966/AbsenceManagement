@@ -9,7 +9,8 @@
   ],
   "scripts": {
     "typecheck": "tsc -b",
-    "lint": "echo \"lint configuration pending\""
+    "lint": "echo \"lint configuration pending\"",
+    "test:smoke": "npm run typecheck && node --experimental-transform-types --loader ./tests/ts-source-loader.mjs --test tests/phase-2b.smoke.test.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.7.2",

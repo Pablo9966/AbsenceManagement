@@ -34,7 +34,7 @@ export const MetricCards = (props: {
 );
 
 export const WorkflowTable = (props: {
-  children: any;
+  children?: any;
 }) => (
   <table className="data-table">
     {props.children}
@@ -43,7 +43,7 @@ export const WorkflowTable = (props: {
 
 export const SectionCard = (props: {
   title: string;
-  children: any;
+  children?: any;
 }) => (
   <section className="surface-card" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
     <h2 style={{ marginBottom: "1rem" }}>{props.title}</h2>

@@ -37,6 +37,13 @@ Phase 2B introduces:
 
 These provide route-oriented read models for employer and internal list/detail screens so the UI does not reconstruct workflow pages from low-level domain calls.
 
+Current route contract support includes:
+
+- workflow `data`, `meta`, `permissions`, and `links`
+- applied filters in `meta`
+- list pagination via `page` and `pageSize`
+- list metadata for `totalCount` and `totalPages`
+
 ## Shared Frontend Patterns
 
 `packages/frontend-platform` now contains reusable workflow primitives for:
@@ -55,7 +62,21 @@ The repository currently verifies:
 - root `npm run typecheck`
 - employer portal `npm run build`
 - internal portal `npm run build`
+- `npm run test:smoke`
+
+Smoke coverage currently checks:
+
+- employer absences list/detail
+- internal intake and benefits list routes
+- workflow detail `404` handling
+- route-guard isolation between employer and internal access
 
 ## Remaining Hardening
 
-Phase 2B is implemented as workflow-facing route delivery and shared read-model scaffolding. Full production hardening, end-to-end automation, and operational release readiness remain part of later hardening work.
+Phase 2B is implemented as workflow-facing route delivery and a shared read-model layer. The current `portal-workflow-service` composes the real Phase 1 application service modules over seeded in-memory adapters. That is structurally cleaner than route-local demo DTOs, but it remains an integration bridge rather than live process-to-process service composition.
+
+Before Phase 2C hardening is considered complete, the main remaining integration debt is:
+
+- replace seeded in-memory repository adapters with persistence-backed or process-backed adapters
+- move the remaining seeded domain fixtures out of `service-context.ts` into dedicated bootstrap/fixture modules
+- formalize workflow-service authorization semantics for `403` versus `404`

@@ -14,6 +14,9 @@ export {
   createPortalShellModel,
 } from "../../../packages/frontend-platform/src/shell/model.js";
 export {
+  createPortalBootstrapRuntime,
+} from "../../../packages/frontend-platform/src/runtime/bootstrap.js";
+export {
   DetailList,
   EmptyState,
   ErrorState,

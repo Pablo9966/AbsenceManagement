@@ -9,4 +9,5 @@ export * from "./navigation/types.js";
 export * from "./shell/model.js";
 export * from "./shell/components.js";
 export * from "./shell/types.js";
+export * from "./runtime/bootstrap.js";
 export * from "./workflow/components.js";

@@ -3,10 +3,17 @@
   "compilerOptions": {
     "composite": true,
     "jsx": "preserve",
-    "rootDir": "src"
+    "rootDir": "src",
+    "outDir": "../../dist/packages/frontend-platform",
+    "tsBuildInfoFile": "../../dist/packages/frontend-platform.tsbuildinfo"
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx"
+  ],
+  "references": [
+    {
+      "path": "../identity-access-client"
+    }
   ]
 }

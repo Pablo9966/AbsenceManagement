@@ -3,6 +3,14 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "main": "../../dist/ktg-case-service/index.js",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "../../dist/ktg-case-service/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json"
   }

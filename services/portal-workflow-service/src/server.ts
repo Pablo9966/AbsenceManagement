@@ -42,6 +42,23 @@ const getLocale = (requestUrl: URL): PortalLocale => {
 };
 
 const getTenantId = (requestUrl: URL): string => requestUrl.searchParams.get("tenantId") ?? "tenant-employer-demo";
+const getPage = (requestUrl: URL): number | undefined => {
+  const raw = requestUrl.searchParams.get("page");
+  if (!raw) {
+    return undefined;
+  }
+  const value = Number.parseInt(raw, 10);
+  return Number.isFinite(value) && value > 0 ? value : undefined;
+};
+
+const getPageSize = (requestUrl: URL): number | undefined => {
+  const raw = requestUrl.searchParams.get("pageSize");
+  if (!raw) {
+    return undefined;
+  }
+  const value = Number.parseInt(raw, 10);
+  return Number.isFinite(value) && value > 0 ? value : undefined;
+};
 
 const notFound = (response: ServerResponse): void => {
   writeJson(response, 404, { error: "Not found." });
@@ -59,6 +76,8 @@ const handleEmployerRoutes = async (pathname: string, requestUrl: URL, response:
     writeJson(response, 200, await listEmployerAbsences(tenantId, locale, {
       status: requestUrl.searchParams.get("status") ?? undefined,
       employee: requestUrl.searchParams.get("employee") ?? undefined,
+      page: getPage(requestUrl),
+      pageSize: getPageSize(requestUrl),
     }));
     return true;
   }
@@ -72,7 +91,12 @@ const handleEmployerRoutes = async (pathname: string, requestUrl: URL, response:
     return true;
   }
   if (pathname === "/v1/employer/cases") {
-    writeJson(response, 200, await listEmployerCases(tenantId, locale));
+    writeJson(response, 200, await listEmployerCases(tenantId, locale, {
+      status: requestUrl.searchParams.get("status") ?? undefined,
+      employee: requestUrl.searchParams.get("employee") ?? undefined,
+      page: getPage(requestUrl),
+      pageSize: getPageSize(requestUrl),
+    }));
     return true;
   }
   if (pathname.startsWith("/v1/employer/cases/")) {
@@ -85,15 +109,28 @@ const handleEmployerRoutes = async (pathname: string, requestUrl: URL, response:
     return true;
   }
   if (pathname === "/v1/employer/documents") {
-    writeJson(response, 200, await listEmployerDocuments(tenantId, locale));
+    writeJson(response, 200, await listEmployerDocuments(tenantId, locale, {
+      status: requestUrl.searchParams.get("status") ?? undefined,
+      employee: requestUrl.searchParams.get("employee") ?? undefined,
+      page: getPage(requestUrl),
+      pageSize: getPageSize(requestUrl),
+    }));
     return true;
   }
   if (pathname === "/v1/employer/tasks") {
-    writeJson(response, 200, await listEmployerTasks(tenantId, locale));
+    writeJson(response, 200, await listEmployerTasks(tenantId, locale, {
+      status: requestUrl.searchParams.get("status") ?? undefined,
+      page: getPage(requestUrl),
+      pageSize: getPageSize(requestUrl),
+    }));
     return true;
   }
   if (pathname === "/v1/employer/payments") {
-    writeJson(response, 200, await listEmployerPayments(tenantId, locale));
+    writeJson(response, 200, await listEmployerPayments(tenantId, locale, {
+      status: requestUrl.searchParams.get("status") ?? undefined,
+      page: getPage(requestUrl),
+      pageSize: getPageSize(requestUrl),
+    }));
     return true;
   }
 
@@ -109,7 +146,14 @@ const handleInternalRoutes = async (pathname: string, requestUrl: URL, response:
     return true;
   }
   if (pathname === "/v1/internal/intake") {
-    writeJson(response, 200, await listInternalIntake(tenantId, locale));
+    writeJson(response, 200, await listInternalIntake(tenantId, locale, {
+      status: requestUrl.searchParams.get("status") ?? undefined,
+      assignedHandler: requestUrl.searchParams.get("assignedHandler") ?? undefined,
+      assignedTeam: requestUrl.searchParams.get("assignedTeam") ?? undefined,
+      overdue: requestUrl.searchParams.get("overdue") ?? undefined,
+      page: getPage(requestUrl),
+      pageSize: getPageSize(requestUrl),
+    }));
     return true;
   }
   if (pathname.startsWith("/v1/internal/intake/")) {
@@ -122,7 +166,12 @@ const handleInternalRoutes = async (pathname: string, requestUrl: URL, response:
     return true;
   }
   if (pathname === "/v1/internal/ktg-cases") {
-    writeJson(response, 200, await listInternalCases(tenantId, locale));
+    writeJson(response, 200, await listInternalCases(tenantId, locale, {
+      status: requestUrl.searchParams.get("status") ?? undefined,
+      employee: requestUrl.searchParams.get("employee") ?? undefined,
+      page: getPage(requestUrl),
+      pageSize: getPageSize(requestUrl),
+    }));
     return true;
   }
   if (pathname.startsWith("/v1/internal/ktg-cases/")) {
@@ -135,7 +184,12 @@ const handleInternalRoutes = async (pathname: string, requestUrl: URL, response:
     return true;
   }
   if (pathname === "/v1/internal/benefits") {
-    writeJson(response, 200, await listInternalBenefits(tenantId, locale));
+    writeJson(response, 200, await listInternalBenefits(tenantId, locale, {
+      status: requestUrl.searchParams.get("status") ?? undefined,
+      caseId: requestUrl.searchParams.get("caseId") ?? undefined,
+      page: getPage(requestUrl),
+      pageSize: getPageSize(requestUrl),
+    }));
     return true;
   }
   if (pathname.startsWith("/v1/internal/benefits/")) {
@@ -178,6 +232,40 @@ const requestHandler = async (request: IncomingMessage, response: ServerResponse
 };
 
 export const createPortalWorkflowHttpServer = () => createServer(requestHandler);
+
+export const executePortalWorkflowRequest = async (
+  requestPath: string,
+): Promise<{ statusCode: number; body: unknown }> => {
+  let statusCode = 200;
+  let body;
+
+  const response = {
+    set statusCode(value: number) {
+      statusCode = value;
+    },
+    get statusCode() {
+      return statusCode;
+    },
+    setHeader() {
+      return undefined;
+    },
+    end(payload?: string) {
+      body = payload ? JSON.parse(payload) : undefined;
+    },
+  } as unknown as ServerResponse;
+
+  await requestHandler(
+    {
+      url: requestPath,
+    } as IncomingMessage,
+    response,
+  );
+
+  return {
+    statusCode,
+    body,
+  };
+};
 
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1])) {
   createPortalWorkflowHttpServer().listen(PORT, () => {

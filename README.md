@@ -51,6 +51,7 @@ This repository currently contains:
 - `portal-workflow-service` route-oriented workflow aggregation service
 - `employer-portal` Next.js employer workflow application
 - `internal-portal` Next.js internal workflow application
+- `tests/phase-2b.smoke.test.mjs` workflow and access smoke coverage for key 2B routes
 
 ## Repository Layout
 
@@ -126,4 +127,11 @@ This repository currently contains:
 
 ## Notes
 
-The repository currently validates root typecheck plus both portal builds. Runtime process orchestration and end-to-end environment wiring still need explicit service startup and integration verification.
+The repository currently validates:
+
+- root `npm run typecheck`
+- employer portal `npm run build`
+- internal portal `npm run build`
+- `npm run test:smoke` for key 2B workflow and route-guard scenarios
+
+`portal-workflow-service` is currently a route-oriented aggregation layer built by composing the real Phase 1 application service modules over seeded in-memory repository adapters. That keeps the workflow routes aligned with backend service logic, but it is still not the same as live distributed service integration or persistence-backed runtime wiring.

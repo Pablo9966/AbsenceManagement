@@ -16,7 +16,15 @@ export interface WorkflowMeta {
   tenantId: string;
   locale: PortalLocale;
   totalCount?: number;
+  page?: number;
+  pageSize?: number;
+  totalPages?: number;
   appliedFilters?: Record<string, string>;
+}
+
+export interface WorkflowListQuery {
+  page?: number;
+  pageSize?: number;
 }
 
 export interface WorkflowResponse<T> {
