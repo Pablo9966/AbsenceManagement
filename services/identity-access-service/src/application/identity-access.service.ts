@@ -8,11 +8,14 @@ import type {
   AccessPurposeRecord,
   ActorRole,
   AuditAccessPolicy,
+  EffectivePermissionSnapshot,
   EffectivePermissionDecision,
   OnboardingWorkspace,
+  PermissionCheck,
   PermissionGrant,
   PermissionPolicySet,
   PlatformUser,
+  PortalBootstrap,
   PortalSessionPolicy,
   ProvisioningInvite,
   RoleAssignment,
@@ -611,6 +614,59 @@ export class IdentityAccessService {
     return { data, issues };
   }
 
+  async listTenantMemberships(tenantId: string): Promise<TenantMembership[]> {
+    return this.repository.listTenantMemberships(tenantId);
+  }
+
+  async listProvisioningInvites(
+    tenantId: string,
+    filters?: {
+      inviteStatus?: ProvisioningInvite["inviteStatus"];
+    },
+  ): Promise<ProvisioningInvite[]> {
+    return this.repository.listProvisioningInvites(tenantId, filters);
+  }
+
+  async listAccessPurposeRecords(
+    tenantId: string,
+    filters?: {
+      userId?: string;
+      employeeId?: string;
+      lawfulBasis?: AccessPurposeRecord["lawfulBasis"];
+    },
+  ): Promise<AccessPurposeRecord[]> {
+    return this.repository.listAccessPurposeRecords(tenantId, filters);
+  }
+
+  async listAccessAuditEvents(
+    tenantId: string,
+    filters?: {
+      userId?: string;
+      resourceType?: string;
+      lawfulBasis?: AccessPurposeRecord["lawfulBasis"];
+    },
+  ): Promise<AccessAuditEvent[]> {
+    return this.repository.listAccessAuditEvents(tenantId, filters);
+  }
+
+  async getOnboardingWorkspace(tenantId: string): Promise<OnboardingWorkspace | null> {
+    return this.repository.getOnboardingWorkspace(tenantId);
+  }
+
+  async getAuditAccessPoliciesForUser(tenantId: string, userId: string): Promise<AuditAccessPolicy[]> {
+    const roleAssignments = await this.repository.listRoleAssignmentsByUser(tenantId, userId);
+    const activeRoleCodes = [...new Set(
+      roleAssignments
+        .filter((assignment) => !assignment.revokedAt)
+        .map((assignment) => assignment.roleCode),
+    )];
+    const policies = await Promise.all(
+      activeRoleCodes.map((roleCode) => this.repository.getAuditAccessPolicyByRole(tenantId, roleCode)),
+    );
+
+    return policies.filter((policy): policy is AuditAccessPolicy => policy !== null);
+  }
+
   async getEffectivePermissions(params: {
     tenantId: string;
     userId: string;
@@ -632,6 +688,31 @@ export class IdentityAccessService {
       action: params.action,
       effectiveAt: params.effectiveAt,
     });
+  }
+
+  async getEffectivePermissionSnapshots(params: {
+    tenantId: string;
+    userId: string;
+    permissions: PermissionCheck[];
+    effectiveAt: string;
+  }): Promise<EffectivePermissionSnapshot[]> {
+    return Promise.all(
+      params.permissions.map(async (permission) => {
+        const decision = await this.getEffectivePermissions({
+          tenantId: params.tenantId,
+          userId: params.userId,
+          resourceType: permission.resourceType,
+          action: permission.action,
+          effectiveAt: params.effectiveAt,
+        });
+
+        return {
+          ...permission,
+          allowed: decision.allowed.value,
+          decision,
+        };
+      }),
+    );
   }
 
   async getResolvedLocale(params: {
@@ -676,5 +757,56 @@ export class IdentityAccessService {
       integrationSetupStatus: workspace.integrationSetupStatus,
       effectiveAt: workspace.updatedAt,
     });
+  }
+
+  async getPortalBootstrap(params: {
+    tenantId: string;
+    userId: string;
+    routeLocale?: PlatformUser["preferredLanguage"];
+    tenantDefaultLanguage?: PlatformUser["preferredLanguage"];
+    permissions: PermissionCheck[];
+    effectiveAt: string;
+  }): Promise<PortalBootstrap> {
+    const [user, profile, memberships, roleAssignments, locale, onboardingReadiness, effectivePermissions, auditAccessPolicies] =
+      await Promise.all([
+        this.repository.getPlatformUserById(params.userId),
+        this.repository.getUserProfileByUserId(params.userId),
+        this.repository.listTenantMemberships(params.tenantId),
+        this.repository.listRoleAssignmentsByUser(params.tenantId, params.userId),
+        this.getResolvedLocale({
+          userId: params.userId,
+          routeLocale: params.routeLocale,
+          tenantDefaultLanguage: params.tenantDefaultLanguage,
+          effectiveAt: params.effectiveAt,
+        }),
+        this.getOnboardingReadiness(params.tenantId),
+        this.getEffectivePermissionSnapshots({
+          tenantId: params.tenantId,
+          userId: params.userId,
+          permissions: params.permissions,
+          effectiveAt: params.effectiveAt,
+        }),
+        this.getAuditAccessPoliciesForUser(params.tenantId, params.userId),
+      ]);
+
+    if (!user) {
+      throw new Error(`Platform user ${params.userId} was not found.`);
+    }
+
+    return {
+      user,
+      profile,
+      membership: memberships.find(
+        (membership) =>
+          membership.userId === params.userId &&
+          membership.membershipStatus === "active" &&
+          membership.leftAt === undefined,
+      ) ?? null,
+      locale,
+      roleAssignments,
+      effectivePermissions,
+      auditAccessPolicies,
+      onboardingReadiness,
+    };
   }
 }

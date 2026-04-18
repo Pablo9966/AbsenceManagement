@@ -10,5 +10,8 @@
   "scripts": {
     "typecheck": "tsc -b",
     "lint": "echo \"lint configuration pending\""
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
   }
 }

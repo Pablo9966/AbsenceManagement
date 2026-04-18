@@ -223,7 +223,6 @@ export class DashboardProjectionService {
           completedAt: params.completedAt,
         });
         const watermarkIssues = validateProjectionDependencyWatermark({
-          sourceService: params.watermark.sourceService,
           sourceStream: params.watermark.sourceStream,
           lastProcessedAt: params.watermark.lastProcessedAt,
         });

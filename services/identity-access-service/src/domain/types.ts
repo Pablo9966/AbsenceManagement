@@ -191,6 +191,27 @@ export interface EffectivePermissionDecision {
   activePolicySets: PermissionPolicySet[];
 }
 
+export interface PermissionCheck {
+  resourceType: string;
+  action: string;
+}
+
+export interface EffectivePermissionSnapshot extends PermissionCheck {
+  allowed: boolean;
+  decision: EffectivePermissionDecision;
+}
+
+export interface PortalBootstrap {
+  user: PlatformUser;
+  profile: UserProfile | null;
+  membership: TenantMembership | null;
+  locale: TransparentLocale;
+  roleAssignments: RoleAssignment[];
+  effectivePermissions: EffectivePermissionSnapshot[];
+  auditAccessPolicies: AuditAccessPolicy[];
+  onboardingReadiness: TransparentBoolean;
+}
+
 export interface UpdatePlatformUserPatch {
   preferredLanguage?: LocaleCode;
   status?: PlatformUserStatus;
@@ -211,4 +232,3 @@ export interface UpdateOnboardingWorkspacePatch {
   integrationSetupStatus?: string;
   updatedAt?: string;
 }
-

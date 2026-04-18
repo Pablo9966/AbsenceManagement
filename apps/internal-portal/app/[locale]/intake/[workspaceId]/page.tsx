@@ -1,10 +1,10 @@
-import { GuardedPortalPage } from "@elipslife/frontend-platform";
-import { getInternalPortalRuntime } from "../../../../src/runtime";
+import { GuardedPortalPage } from "../../../../src/frontend.js";
+import { getInternalPortalRuntime } from "../../../../src/runtime.js";
 
-export default function InternalIntakeDetailPage(props: {
+export default async function InternalIntakeDetailPage(props: {
   params: { locale: "de-CH" | "en-CH" | "fr-CH" | "it-CH"; workspaceId: string };
 }) {
-  const runtime = getInternalPortalRuntime(props.params.locale);
+  const runtime = await getInternalPortalRuntime({ routeLocale: props.params.locale });
 
   return (
     <GuardedPortalPage

@@ -1,14 +1,11 @@
-import {
-  PortalLayout,
-} from "@elipslife/frontend-platform";
-import type { ReactNode } from "react";
-import { getEmployerPortalRuntime } from "../../src/runtime";
+import { PortalLayout } from "../../src/frontend.js";
+import { getEmployerPortalRuntime } from "../../src/runtime.js";
 
-export default function EmployerPortalLayout(props: {
-  children: ReactNode;
+export default async function EmployerPortalLayout(props: {
+  children: unknown;
   params: { locale: "de-CH" | "en-CH" | "fr-CH" | "it-CH" };
 }) {
-  const runtime = getEmployerPortalRuntime(props.params.locale);
+  const runtime = await getEmployerPortalRuntime(props.params.locale);
 
   return (
     <html lang={runtime.locale}>

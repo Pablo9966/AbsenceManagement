@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { resolveRouteAccess, type PortalTenantContext, type PortalUserContext } from "../access/guards.js";
 import type { MessageCatalog } from "../i18n/types.js";
 import type { RouteAccessRule } from "../navigation/types.js";
@@ -7,7 +6,7 @@ import type { PortalShellModel } from "./model.js";
 export interface PortalLayoutProps {
   shell: PortalShellModel;
   messages: MessageCatalog;
-  children: ReactNode;
+  children?: unknown;
 }
 
 export const PortalLayout = (props: PortalLayoutProps) => (

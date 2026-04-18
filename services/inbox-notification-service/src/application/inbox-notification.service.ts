@@ -140,9 +140,7 @@ export class InboxNotificationService {
     ];
     if (params.delivery) {
       issues.push(...validateNotificationDelivery({
-        ...params.delivery,
-        notificationEventId: "",
-        deliveryStatus: "pending",
+        triggeredAt: params.delivery.triggeredAt,
       }));
     }
     if (hasBlockingIssues(issues)) {

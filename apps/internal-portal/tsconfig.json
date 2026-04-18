@@ -13,6 +13,9 @@
   ],
   "references": [
     {
+      "path": "../../services/identity-access-service"
+    },
+    {
       "path": "../../packages/frontend-platform"
     }
   ]

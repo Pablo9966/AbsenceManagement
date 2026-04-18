@@ -6,7 +6,7 @@ import type {
 } from "./types.js";
 
 const parseTimeToMinutes = (value: string): number => {
-  const [hours, minutes] = value.split(":").map(Number);
+  const [hours = 0, minutes = 0] = value.split(":").map(Number);
   return hours * 60 + minutes;
 };
 
@@ -82,4 +82,3 @@ export const calculateInboxItemOverdue = (input: {
     effectiveAt: input.referenceAt,
   };
 };
-

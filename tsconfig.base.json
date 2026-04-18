@@ -5,11 +5,26 @@
     "moduleResolution": "NodeNext",
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+    "exactOptionalPropertyTypes": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "jsx": "react-jsx",
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "typeRoots": [
+      "./types",
+      "./node_modules/@types"
+    ],
+    "paths": {
+      "@elipslife/frontend-platform": [
+        "packages/frontend-platform/src/index.ts"
+      ],
+      "@elipslife/identity-access-service": [
+        "services/identity-access-service/src/index.ts"
+      ]
+    },
     "declaration": true,
     "sourceMap": true,
     "outDir": "dist"

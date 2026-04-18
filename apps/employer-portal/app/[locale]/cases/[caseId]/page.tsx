@@ -1,10 +1,10 @@
-import { GuardedPortalPage } from "@elipslife/frontend-platform";
-import { getEmployerPortalRuntime } from "../../../../src/runtime";
+import { GuardedPortalPage } from "../../../../src/frontend.js";
+import { getEmployerPortalRuntime } from "../../../../src/runtime.js";
 
-export default function EmployerCaseDetailPage(props: {
+export default async function EmployerCaseDetailPage(props: {
   params: { locale: "de-CH" | "en-CH" | "fr-CH" | "it-CH"; caseId: string };
 }) {
-  const runtime = getEmployerPortalRuntime(props.params.locale);
+  const runtime = await getEmployerPortalRuntime(props.params.locale);
 
   return (
     <GuardedPortalPage
