@@ -1,0 +1,962 @@
+openapi: 3.0.3
+info:
+  title: elipsLife Claims Intake Workspace Service API
+  version: 0.1.0
+  description: >
+    Tenant-scoped internal claims-intake workspace API for KTG case triage, checklist blockers,
+    missing-information loops, internal queue projections, and internal-only activity history.
+servers:
+  - url: https://api.elipslife.ch/claims-intake-workspace-service
+security:
+  - bearerAuth: []
+tags:
+  - name: Workspaces
+  - name: Checklist
+  - name: MissingInformation
+  - name: Queue
+  - name: Notes
+  - name: Recommendations
+  - name: Evidence
+paths:
+  /v1/tenants/{tenantId}/intake-workspaces:
+    get:
+      tags: [Workspaces]
+      operationId: listIntakeWorkspaces
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - in: query
+          name: workspaceStatus
+          schema:
+            $ref: '#/components/schemas/WorkspaceStatus'
+        - in: query
+          name: assignedHandlerId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: assignedTeam
+          schema:
+            type: string
+        - in: query
+          name: ktgCaseId
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Workspaces
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/IntakeCaseWorkspace'
+    post:
+      tags: [Workspaces]
+      operationId: createIntakeWorkspace
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIntakeWorkspaceRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntakeCaseWorkspace'
+  /v1/tenants/{tenantId}/intake-workspaces/{workspaceId}:
+    get:
+      tags: [Workspaces]
+      operationId: getIntakeWorkspace
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/WorkspaceId'
+      responses:
+        '200':
+          description: Workspace detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntakeCaseWorkspaceDetail'
+    patch:
+      tags: [Workspaces]
+      operationId: updateIntakeWorkspace
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateIntakeWorkspaceRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntakeCaseWorkspace'
+  /v1/tenants/{tenantId}/intake-workspaces/{workspaceId}/checklist-items:
+    post:
+      tags: [Checklist]
+      operationId: createChecklistItem
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChecklistItemRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntakeChecklistItem'
+  /v1/tenants/{tenantId}/intake-workspaces/{workspaceId}/checklist-items/{itemId}:
+    patch:
+      tags: [Checklist]
+      operationId: updateChecklistItem
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/ChecklistItemId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateChecklistItemRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntakeChecklistItem'
+  /v1/tenants/{tenantId}/intake-workspaces/{workspaceId}/missing-information-requests:
+    post:
+      tags: [MissingInformation]
+      operationId: createMissingInformationRequest
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMissingInformationRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingInformationRequest'
+  /v1/tenants/{tenantId}/intake-workspaces/{workspaceId}/missing-information-requests/{requestId}:
+    patch:
+      tags: [MissingInformation]
+      operationId: updateMissingInformationRequest
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMissingInformationRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingInformationRequest'
+  /v1/tenants/{tenantId}/intake-workspaces/{workspaceId}/queue-entries:
+    post:
+      tags: [Queue]
+      operationId: createQueueEntry
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQueueEntryRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HandlerWorkQueueEntry'
+  /v1/tenants/{tenantId}/intake-workspaces/{workspaceId}/queue-entries/{entryId}:
+    patch:
+      tags: [Queue]
+      operationId: updateQueueEntry
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/WorkspaceId'
+        - $ref: '#/components/parameters/QueueEntryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateQueueEntryRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HandlerWorkQueueEntry'
+  /v1/tenants/{tenantId}/intake-workspaces/{workspaceId}/notes:
+    post:
+      tags: [Notes]
+      operationId: createWorkspaceNote
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWorkspaceNoteRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceNote'
+  /v1/tenants/{tenantId}/intake-workspaces/{workspaceId}/recommendations:
+    post:
+      tags: [Recommendations]
+      operationId: createRecommendation
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecommendationRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntakeDecisionRecommendation'
+  /v1/tenants/{tenantId}/intake-workspaces/{workspaceId}/evidence-references:
+    post:
+      tags: [Evidence]
+      operationId: createEvidenceReference
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/WorkspaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEvidenceReferenceRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceEvidenceReference'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    TenantId:
+      in: path
+      name: tenantId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    WorkspaceId:
+      in: path
+      name: workspaceId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ChecklistItemId:
+      in: path
+      name: itemId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RequestId:
+      in: path
+      name: requestId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    QueueEntryId:
+      in: path
+      name: entryId
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    WorkspaceStatus:
+      type: string
+      enum: [new, intake_in_progress, waiting_for_information, ready_for_review, decision_pending, completed]
+    ChecklistItemStatus:
+      type: string
+      enum: [open, satisfied, waived]
+    SourceService:
+      type: string
+      enum: [ktg_case_service, document_service, absence_service, people_service, manual]
+    RequestPartyType:
+      type: string
+      enum: [hr_manager, employee, claims_handler, document_review, external_partner]
+    RequestChannelPolicy:
+      type: string
+      enum: [portal_only, portal_and_email, internal_only]
+    MissingInformationRequestStatus:
+      type: string
+      enum: [open, answered, cancelled, overdue]
+    QueueType:
+      type: string
+      enum: [new_submissions, missing_information_follow_up, ready_for_review, decision_pending]
+    QueueEntryStatus:
+      type: string
+      enum: [entered, in_progress, paused, exited]
+    NoteVisibility:
+      type: string
+      enum: [internal_claims_only, internal_claims_team]
+    NoteType:
+      type: string
+      enum: [triage_note, medical_review_note, operations_note, system_note]
+    RecommendationType:
+      type: string
+      enum: [request_more_information, ready_for_decision, medical_review_needed, escalate]
+    ActorRole:
+      type: string
+      enum: [claims_handler, team_lead, medical_reviewer, system]
+    EvidenceReferenceType:
+      type: string
+      enum: [document_id, certificate_reference_id]
+    DocumentRole:
+      type: string
+      enum: [primary_certificate, supporting_medical_evidence, claims_attachment, reference_only]
+    LinkSource:
+      type: string
+      enum: [manual, inferred_from_ktg_case, inferred_from_document_service]
+    WorkspaceActivityEventType:
+      type: string
+      enum:
+        - workspace_created
+        - workspace_updated
+        - workspace_status_changed
+        - checklist_item_created
+        - checklist_item_updated
+        - missing_information_requested
+        - missing_information_resolved
+        - missing_information_updated
+        - queue_entered
+        - queue_status_changed
+        - queue_exited
+        - note_created
+        - recommendation_created
+        - evidence_reference_linked
+    TransparentBoolean:
+      type: object
+      properties:
+        value:
+          type: boolean
+        formula:
+          type: string
+        inputs:
+          type: object
+          additionalProperties: true
+        effectiveAt:
+          type: string
+          format: date-time
+    IntakeCaseWorkspace:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        ktgCaseId:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+          format: uuid
+        policyId:
+          type: string
+        workspaceStatus:
+          $ref: '#/components/schemas/WorkspaceStatus'
+        assignedHandlerId:
+          type: string
+          format: uuid
+          nullable: true
+        assignedTeam:
+          type: string
+          nullable: true
+        submittedAt:
+          type: string
+          format: date-time
+        lastActivityAt:
+          type: string
+          format: date-time
+        closedAt:
+          type: string
+          format: date-time
+          nullable: true
+    IntakeChecklistItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        workspaceId:
+          type: string
+          format: uuid
+        checkType:
+          type: string
+        blockerCode:
+          type: string
+          nullable: true
+        sourceService:
+          $ref: '#/components/schemas/SourceService'
+        blockingFlag:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/ChecklistItemStatus'
+        requiredFlag:
+          type: boolean
+        satisfiedByReferenceType:
+          $ref: '#/components/schemas/EvidenceReferenceType'
+          nullable: true
+        satisfiedByReferenceId:
+          type: string
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedBy:
+          type: string
+          format: uuid
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+    MissingInformationRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        workspaceId:
+          type: string
+          format: uuid
+        requestReasonCode:
+          type: string
+        requestDetails:
+          type: string
+          nullable: true
+        requestedFromPartyType:
+          $ref: '#/components/schemas/RequestPartyType'
+        requestedFromUserId:
+          type: string
+          format: uuid
+          nullable: true
+        requestedFromRole:
+          type: string
+          nullable: true
+        requestChannelPolicy:
+          $ref: '#/components/schemas/RequestChannelPolicy'
+        relatedReferenceType:
+          type: string
+          nullable: true
+        relatedReferenceId:
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/MissingInformationRequestStatus'
+        requestedAt:
+          type: string
+          format: date-time
+        dueAt:
+          type: string
+          format: date-time
+          nullable: true
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        resolvedBy:
+          type: string
+          format: uuid
+          nullable: true
+    HandlerWorkQueueEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        workspaceId:
+          type: string
+          format: uuid
+        queueType:
+          $ref: '#/components/schemas/QueueType'
+        queueStatus:
+          $ref: '#/components/schemas/QueueEntryStatus'
+        slaDueAt:
+          type: string
+          format: date-time
+          nullable: true
+        sortScore:
+          type: number
+          nullable: true
+        enteredAt:
+          type: string
+          format: date-time
+        exitedAt:
+          type: string
+          format: date-time
+          nullable: true
+        exitReason:
+          type: string
+          nullable: true
+    HandlerWorkQueueEntryDetail:
+      allOf:
+        - $ref: '#/components/schemas/HandlerWorkQueueEntry'
+        - type: object
+          properties:
+            overdue:
+              $ref: '#/components/schemas/TransparentBoolean'
+    WorkspaceNote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        workspaceId:
+          type: string
+          format: uuid
+        authorId:
+          type: string
+          format: uuid
+          nullable: true
+        authorRole:
+          $ref: '#/components/schemas/ActorRole'
+        visibility:
+          $ref: '#/components/schemas/NoteVisibility'
+        noteType:
+          $ref: '#/components/schemas/NoteType'
+        message:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    IntakeDecisionRecommendation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        workspaceId:
+          type: string
+          format: uuid
+        recommendationType:
+          $ref: '#/components/schemas/RecommendationType'
+        confidence:
+          type: number
+          nullable: true
+        reasonCodes:
+          oneOf:
+            - type: array
+              items:
+                type: string
+            - type: object
+              additionalProperties: true
+        summary:
+          type: string
+        generatedAt:
+          type: string
+          format: date-time
+        acceptedBy:
+          type: string
+          format: uuid
+          nullable: true
+        acceptedAt:
+          type: string
+          format: date-time
+          nullable: true
+    WorkspaceActivityEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        workspaceId:
+          type: string
+          format: uuid
+        eventType:
+          $ref: '#/components/schemas/WorkspaceActivityEventType'
+        actorId:
+          type: string
+          format: uuid
+          nullable: true
+        actorRole:
+          $ref: '#/components/schemas/ActorRole'
+        occurredAt:
+          type: string
+          format: date-time
+        correlationId:
+          type: string
+          nullable: true
+        payload:
+          type: object
+          additionalProperties: true
+          nullable: true
+    WorkspaceEvidenceReference:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        workspaceId:
+          type: string
+          format: uuid
+        documentRole:
+          $ref: '#/components/schemas/DocumentRole'
+        documentId:
+          type: string
+          format: uuid
+          nullable: true
+        certificateReferenceId:
+          type: string
+          format: uuid
+          nullable: true
+        linkSource:
+          $ref: '#/components/schemas/LinkSource'
+        linkConfidence:
+          type: number
+          nullable: true
+        linkedAt:
+          type: string
+          format: date-time
+    IntakeCaseWorkspaceDetail:
+      allOf:
+        - $ref: '#/components/schemas/IntakeCaseWorkspace'
+        - type: object
+          properties:
+            checklistItems:
+              type: array
+              items:
+                $ref: '#/components/schemas/IntakeChecklistItem'
+            missingInformationRequests:
+              type: array
+              items:
+                $ref: '#/components/schemas/MissingInformationRequest'
+            queueEntries:
+              type: array
+              items:
+                $ref: '#/components/schemas/HandlerWorkQueueEntryDetail'
+            notes:
+              type: array
+              items:
+                $ref: '#/components/schemas/WorkspaceNote'
+            recommendations:
+              type: array
+              items:
+                $ref: '#/components/schemas/IntakeDecisionRecommendation'
+            activityEvents:
+              type: array
+              items:
+                $ref: '#/components/schemas/WorkspaceActivityEvent'
+            evidenceReferences:
+              type: array
+              items:
+                $ref: '#/components/schemas/WorkspaceEvidenceReference'
+            readyForReview:
+              $ref: '#/components/schemas/TransparentBoolean'
+            blocked:
+              $ref: '#/components/schemas/TransparentBoolean'
+    CreateIntakeWorkspaceRequest:
+      type: object
+      required: [ktgCaseId, employeeId, policyId, workspaceStatus, submittedAt, lastActivityAt]
+      properties:
+        ktgCaseId:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+          format: uuid
+        policyId:
+          type: string
+        workspaceStatus:
+          $ref: '#/components/schemas/WorkspaceStatus'
+        assignedHandlerId:
+          type: string
+          format: uuid
+        assignedTeam:
+          type: string
+        submittedAt:
+          type: string
+          format: date-time
+        lastActivityAt:
+          type: string
+          format: date-time
+        closedAt:
+          type: string
+          format: date-time
+    UpdateIntakeWorkspaceRequest:
+      type: object
+      properties:
+        workspaceStatus:
+          $ref: '#/components/schemas/WorkspaceStatus'
+        assignedHandlerId:
+          type: string
+          format: uuid
+        assignedTeam:
+          type: string
+        lastActivityAt:
+          type: string
+          format: date-time
+        closedAt:
+          type: string
+          format: date-time
+    CreateChecklistItemRequest:
+      type: object
+      required: [checkType, sourceService, blockingFlag, status, requiredFlag]
+      properties:
+        checkType:
+          type: string
+        blockerCode:
+          type: string
+        sourceService:
+          $ref: '#/components/schemas/SourceService'
+        blockingFlag:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/ChecklistItemStatus'
+        requiredFlag:
+          type: boolean
+        satisfiedByReferenceType:
+          $ref: '#/components/schemas/EvidenceReferenceType'
+        satisfiedByReferenceId:
+          type: string
+        completedAt:
+          type: string
+          format: date-time
+        completedBy:
+          type: string
+          format: uuid
+        notes:
+          type: string
+    UpdateChecklistItemRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/ChecklistItemStatus'
+        satisfiedByReferenceType:
+          $ref: '#/components/schemas/EvidenceReferenceType'
+        satisfiedByReferenceId:
+          type: string
+        completedAt:
+          type: string
+          format: date-time
+        completedBy:
+          type: string
+          format: uuid
+        notes:
+          type: string
+    CreateMissingInformationRequest:
+      type: object
+      required:
+        [requestReasonCode, requestedFromPartyType, requestChannelPolicy, requestedAt]
+      properties:
+        requestReasonCode:
+          type: string
+        requestDetails:
+          type: string
+        requestedFromPartyType:
+          $ref: '#/components/schemas/RequestPartyType'
+        requestedFromUserId:
+          type: string
+          format: uuid
+        requestedFromRole:
+          type: string
+        requestChannelPolicy:
+          $ref: '#/components/schemas/RequestChannelPolicy'
+        relatedReferenceType:
+          type: string
+        relatedReferenceId:
+          type: string
+        status:
+          $ref: '#/components/schemas/MissingInformationRequestStatus'
+        requestedAt:
+          type: string
+          format: date-time
+        dueAt:
+          type: string
+          format: date-time
+    UpdateMissingInformationRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/MissingInformationRequestStatus'
+        resolvedAt:
+          type: string
+          format: date-time
+        resolvedBy:
+          type: string
+          format: uuid
+    CreateQueueEntryRequest:
+      type: object
+      required: [queueType, queueStatus, enteredAt]
+      properties:
+        queueType:
+          $ref: '#/components/schemas/QueueType'
+        queueStatus:
+          $ref: '#/components/schemas/QueueEntryStatus'
+        slaDueAt:
+          type: string
+          format: date-time
+        sortScore:
+          type: number
+        enteredAt:
+          type: string
+          format: date-time
+        exitedAt:
+          type: string
+          format: date-time
+        exitReason:
+          type: string
+    UpdateQueueEntryRequest:
+      type: object
+      properties:
+        queueStatus:
+          $ref: '#/components/schemas/QueueEntryStatus'
+        exitedAt:
+          type: string
+          format: date-time
+        exitReason:
+          type: string
+    CreateWorkspaceNoteRequest:
+      type: object
+      required: [authorRole, visibility, noteType, message, createdAt]
+      properties:
+        authorId:
+          type: string
+          format: uuid
+        authorRole:
+          $ref: '#/components/schemas/ActorRole'
+        visibility:
+          $ref: '#/components/schemas/NoteVisibility'
+        noteType:
+          $ref: '#/components/schemas/NoteType'
+        message:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    CreateRecommendationRequest:
+      type: object
+      required: [recommendationType, summary, generatedAt]
+      properties:
+        recommendationType:
+          $ref: '#/components/schemas/RecommendationType'
+        confidence:
+          type: number
+        reasonCodes:
+          oneOf:
+            - type: array
+              items:
+                type: string
+            - type: object
+              additionalProperties: true
+        summary:
+          type: string
+        generatedAt:
+          type: string
+          format: date-time
+        acceptedBy:
+          type: string
+          format: uuid
+        acceptedAt:
+          type: string
+          format: date-time
+    CreateEvidenceReferenceRequest:
+      type: object
+      required: [documentRole, linkSource, linkedAt]
+      properties:
+        documentRole:
+          $ref: '#/components/schemas/DocumentRole'
+        documentId:
+          type: string
+          format: uuid
+        certificateReferenceId:
+          type: string
+          format: uuid
+        linkSource:
+          $ref: '#/components/schemas/LinkSource'
+        linkConfidence:
+          type: number
+        linkedAt:
+          type: string
+          format: date-time

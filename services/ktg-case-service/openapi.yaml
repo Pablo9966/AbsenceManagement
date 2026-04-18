@@ -1,0 +1,845 @@
+openapi: 3.0.3
+info:
+  title: elipsLife KTG Case Service API
+  version: 0.1.0
+  description: >
+    Tenant-scoped KTG case registration, snapshot, and deadline-management service.
+servers:
+  - url: https://api.elipslife.ch/ktg-case-service
+security:
+  - bearerAuth: []
+tags:
+  - name: Suggestions
+  - name: Cases
+  - name: AbsenceLinks
+  - name: CoverageSnapshots
+  - name: Submissions
+  - name: StatusTransitions
+  - name: Deadlines
+  - name: Tasks
+  - name: Notes
+  - name: Decisions
+paths:
+  /v1/tenants/{tenantId}/ktg-case-suggestions:
+    get:
+      tags: [Suggestions]
+      operationId: listKtgCaseSuggestions
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - in: query
+          name: employeeId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: absenceEpisodeId
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Suggestion list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/KtgCaseSuggestion'
+  /v1/tenants/{tenantId}/ktg-cases:
+    get:
+      tags: [Cases]
+      operationId: listKtgCases
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - in: query
+          name: employeeId
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/KtgCaseStatus'
+      responses:
+        '200':
+          description: Case list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/KtgCaseSummary'
+    post:
+      tags: [Cases]
+      operationId: createKtgCase
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateKtgCaseRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KtgCaseDetail'
+  /v1/tenants/{tenantId}/ktg-cases/{caseId}:
+    get:
+      tags: [Cases]
+      operationId: getKtgCase
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: Case detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KtgCaseDetail'
+    patch:
+      tags: [Cases]
+      operationId: updateKtgCase
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateKtgCaseRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KtgCaseDetail'
+  /v1/tenants/{tenantId}/ktg-cases/{caseId}/absence-links:
+    post:
+      tags: [AbsenceLinks]
+      operationId: createKtgCaseAbsenceLink
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateKtgCaseAbsenceLinkRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KtgCaseAbsenceLink'
+  /v1/tenants/{tenantId}/ktg-cases/{caseId}/coverage-snapshot:
+    post:
+      tags: [CoverageSnapshots]
+      operationId: createKtgCaseCoverageSnapshot
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateKtgCaseCoverageSnapshotRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KtgCaseCoverageSnapshot'
+  /v1/tenants/{tenantId}/ktg-cases/{caseId}/submissions:
+    post:
+      tags: [Submissions]
+      operationId: createKtgCaseSubmission
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateKtgCaseSubmissionRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KtgCaseSubmission'
+  /v1/tenants/{tenantId}/ktg-cases/{caseId}/status-transitions:
+    post:
+      tags: [StatusTransitions]
+      operationId: transitionKtgCaseStatus
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransitionKtgCaseStatusRequest'
+      responses:
+        '200':
+          description: Transition recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KtgCaseDetail'
+  /v1/tenants/{tenantId}/ktg-cases/{caseId}/deadlines:
+    post:
+      tags: [Deadlines]
+      operationId: createKtgDeadline
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateKtgDeadlineRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KtgDeadline'
+  /v1/tenants/{tenantId}/ktg-cases/{caseId}/tasks:
+    post:
+      tags: [Tasks]
+      operationId: createKtgTask
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateKtgTaskRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KtgTask'
+  /v1/tenants/{tenantId}/ktg-cases/{caseId}/notes:
+    post:
+      tags: [Notes]
+      operationId: createKtgCaseNote
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateKtgCaseNoteRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KtgCaseNote'
+  /v1/tenants/{tenantId}/ktg-cases/{caseId}/decisions:
+    post:
+      tags: [Decisions]
+      operationId: createKtgCaseDecision
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateKtgCaseDecisionRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KtgCaseDecision'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    TenantId:
+      in: path
+      name: tenantId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CaseId:
+      in: path
+      name: caseId
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    KtgCaseStatus:
+      type: string
+      enum: [suggested, draft, submitted, in_review, benefit_active, closed, rejected]
+    SubmissionReadinessStatus:
+      type: string
+      enum: [not_ready, ready, blocked]
+    CaseActorRole:
+      type: string
+      enum: [hr_manager, claims_handler, account_manager, system, api]
+    DeadlineCountingMethod:
+      type: string
+      enum: [calendar_days, working_days]
+    KtgCaseSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        caseNumber:
+          type: string
+        employeeId:
+          type: string
+          format: uuid
+        policyId:
+          type: string
+        status:
+          $ref: '#/components/schemas/KtgCaseStatus'
+        submissionReadinessStatus:
+          $ref: '#/components/schemas/SubmissionReadinessStatus'
+        benefitStartDate:
+          type: string
+          format: date
+          nullable: true
+        claimsSystemCaseId:
+          type: string
+          nullable: true
+        relapseOfCaseId:
+          type: string
+          format: uuid
+          nullable: true
+    KtgCaseDetail:
+      allOf:
+        - $ref: '#/components/schemas/KtgCaseSummary'
+        - type: object
+          properties:
+            coverageSnapshot:
+              $ref: '#/components/schemas/KtgCaseCoverageSnapshot'
+              nullable: true
+            absenceLinks:
+              type: array
+              items:
+                $ref: '#/components/schemas/KtgCaseAbsenceLink'
+            submissions:
+              type: array
+              items:
+                $ref: '#/components/schemas/KtgCaseSubmission'
+            deadlines:
+              type: array
+              items:
+                $ref: '#/components/schemas/KtgDeadline'
+            tasks:
+              type: array
+              items:
+                $ref: '#/components/schemas/KtgTask'
+            notes:
+              type: array
+              items:
+                $ref: '#/components/schemas/KtgCaseNote'
+            decisions:
+              type: array
+              items:
+                $ref: '#/components/schemas/KtgCaseDecision'
+            statusEvents:
+              type: array
+              items:
+                $ref: '#/components/schemas/KtgCaseStatusEvent'
+            firstPayableDay:
+              $ref: '#/components/schemas/TransparentDate'
+              nullable: true
+            submissionReadiness:
+              $ref: '#/components/schemas/TransparentBoolean'
+              nullable: true
+    CreateKtgCaseRequest:
+      type: object
+      required: [caseNumber, employeeId, policyId, status]
+      properties:
+        caseNumber:
+          type: string
+        employeeId:
+          type: string
+          format: uuid
+        policyId:
+          type: string
+        status:
+          $ref: '#/components/schemas/KtgCaseStatus'
+        relapseOfCaseId:
+          type: string
+          format: uuid
+    UpdateKtgCaseRequest:
+      type: object
+      properties:
+        submissionReadinessStatus:
+          $ref: '#/components/schemas/SubmissionReadinessStatus'
+        benefitStartDate:
+          type: string
+          format: date
+        claimsSystemCaseId:
+          type: string
+        relapseOfCaseId:
+          type: string
+          format: uuid
+    KtgCaseAbsenceLink:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        absenceEpisodeId:
+          type: string
+          format: uuid
+        isOriginatingEpisode:
+          type: boolean
+        linkedAt:
+          type: string
+          format: date-time
+    CreateKtgCaseAbsenceLinkRequest:
+      type: object
+      required: [absenceEpisodeId, isOriginatingEpisode, linkedAt]
+      properties:
+        absenceEpisodeId:
+          type: string
+          format: uuid
+        isOriginatingEpisode:
+          type: boolean
+        linkedAt:
+          type: string
+          format: date-time
+    KtgCaseCoverageSnapshot:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        policyId:
+          type: string
+        coveragePercentage:
+          type: number
+        wartezeitDays:
+          type: integer
+        leistungsdauerDays:
+          type: integer
+        lohnfortzahlungDays:
+          type: integer
+        salaryFormulaVersion:
+          type: string
+        insuredSalarySnapshotId:
+          type: string
+          format: uuid
+          nullable: true
+        insuredSalaryAmountChf:
+          type: number
+          nullable: true
+        insuredSalaryFormula:
+          type: string
+          nullable: true
+        insuredSalaryInputs:
+          type: object
+          additionalProperties: true
+          nullable: true
+        firstDayOfIncapacity:
+          type: string
+          format: date
+        capturedAt:
+          type: string
+          format: date-time
+    CreateKtgCaseCoverageSnapshotRequest:
+      type: object
+      required:
+        - policyId
+        - coveragePercentage
+        - wartezeitDays
+        - leistungsdauerDays
+        - lohnfortzahlungDays
+        - salaryFormulaVersion
+        - firstDayOfIncapacity
+        - capturedAt
+      properties:
+        policyId:
+          type: string
+        coveragePercentage:
+          type: number
+        wartezeitDays:
+          type: integer
+        leistungsdauerDays:
+          type: integer
+        lohnfortzahlungDays:
+          type: integer
+        salaryFormulaVersion:
+          type: string
+        insuredSalarySnapshotId:
+          type: string
+          format: uuid
+        insuredSalaryAmountChf:
+          type: number
+        insuredSalaryFormula:
+          type: string
+        insuredSalaryInputs:
+          type: object
+          additionalProperties: true
+        firstDayOfIncapacity:
+          type: string
+          format: date
+        capturedAt:
+          type: string
+          format: date-time
+    KtgCaseSubmission:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        submittedAt:
+          type: string
+          format: date-time
+        submittedBy:
+          type: string
+          format: uuid
+          nullable: true
+        validationResult:
+          type: string
+        externalClaimsSystemId:
+          type: string
+          nullable: true
+        correspondenceChannel:
+          type: string
+        payloadSnapshot:
+          type: object
+          additionalProperties: true
+    CreateKtgCaseSubmissionRequest:
+      type: object
+      required: [submittedAt, validationResult, correspondenceChannel, payloadSnapshot]
+      properties:
+        submittedAt:
+          type: string
+          format: date-time
+        submittedBy:
+          type: string
+          format: uuid
+        validationResult:
+          type: string
+          enum: [valid, warning, blocked]
+        externalClaimsSystemId:
+          type: string
+        correspondenceChannel:
+          type: string
+          enum: [portal, email, api, claims_system]
+        payloadSnapshot:
+          type: object
+          additionalProperties: true
+    TransitionKtgCaseStatusRequest:
+      type: object
+      required: [toStatus, eventAt, actorRole]
+      properties:
+        toStatus:
+          $ref: '#/components/schemas/KtgCaseStatus'
+        eventAt:
+          type: string
+          format: date-time
+        actorId:
+          type: string
+          format: uuid
+        actorRole:
+          $ref: '#/components/schemas/CaseActorRole'
+        correlationId:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+    KtgDeadline:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        deadlineType:
+          type: string
+        dueAt:
+          type: string
+          format: date-time
+        countingMethod:
+          $ref: '#/components/schemas/DeadlineCountingMethod'
+        responsibleRole:
+          $ref: '#/components/schemas/CaseActorRole'
+        escalationStatus:
+          type: string
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+    CreateKtgDeadlineRequest:
+      type: object
+      required: [deadlineType, dueAt, countingMethod, responsibleRole]
+      properties:
+        deadlineType:
+          type: string
+          enum: [case_submission, certificate_renewal, reintegration_touchpoint, hr_follow_up, claims_reply, benefit_review]
+        dueAt:
+          type: string
+          format: date-time
+        countingMethod:
+          $ref: '#/components/schemas/DeadlineCountingMethod'
+        responsibleRole:
+          $ref: '#/components/schemas/CaseActorRole'
+        escalationStatus:
+          type: string
+          enum: [not_escalated, escalated, resolved]
+    KtgTask:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        deadlineId:
+          type: string
+          format: uuid
+          nullable: true
+        taskType:
+          type: string
+        status:
+          type: string
+        priority:
+          type: string
+        assigneeId:
+          type: string
+          format: uuid
+          nullable: true
+        dueAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        description:
+          type: string
+          nullable: true
+    CreateKtgTaskRequest:
+      type: object
+      required: [taskType]
+      properties:
+        deadlineId:
+          type: string
+          format: uuid
+        taskType:
+          type: string
+          enum: [submit_case, request_certificate, review_claims_reply, prepare_return_to_work, follow_up_employer, manual]
+        status:
+          type: string
+          enum: [open, in_progress, completed, cancelled]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        assigneeId:
+          type: string
+          format: uuid
+        dueAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        description:
+          type: string
+    KtgCaseNote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        authorId:
+          type: string
+          format: uuid
+          nullable: true
+        authorRole:
+          $ref: '#/components/schemas/CaseActorRole'
+        visibility:
+          type: string
+        message:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    CreateKtgCaseNoteRequest:
+      type: object
+      required: [authorRole, visibility, message]
+      properties:
+        authorId:
+          type: string
+          format: uuid
+        authorRole:
+          $ref: '#/components/schemas/CaseActorRole'
+        visibility:
+          type: string
+          enum: [shared_hr_claims, elips_internal, system_internal]
+        message:
+          type: string
+    KtgCaseDecision:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        decisionStatus:
+          type: string
+        reasonCode:
+          type: string
+          nullable: true
+        reasonText:
+          type: string
+          nullable: true
+        effectiveFrom:
+          type: string
+          format: date
+          nullable: true
+        effectiveTo:
+          type: string
+          format: date
+          nullable: true
+        decisionAt:
+          type: string
+          format: date-time
+        dailyAllowanceAmountChf:
+          type: number
+        paymentRunId:
+          type: string
+          format: uuid
+          nullable: true
+    CreateKtgCaseDecisionRequest:
+      type: object
+      required: [decisionStatus, decisionAt, dailyAllowanceAmountChf]
+      properties:
+        decisionStatus:
+          type: string
+          enum: [accepted, partially_accepted, rejected, suspended, closed_without_payment]
+        reasonCode:
+          type: string
+        reasonText:
+          type: string
+        effectiveFrom:
+          type: string
+          format: date
+        effectiveTo:
+          type: string
+          format: date
+        decisionAt:
+          type: string
+          format: date-time
+        dailyAllowanceAmountChf:
+          type: number
+        paymentRunId:
+          type: string
+          format: uuid
+    KtgCaseStatusEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        fromStatus:
+          $ref: '#/components/schemas/KtgCaseStatus'
+          nullable: true
+        toStatus:
+          $ref: '#/components/schemas/KtgCaseStatus'
+        eventType:
+          type: string
+        eventAt:
+          type: string
+          format: date-time
+        actorId:
+          type: string
+          format: uuid
+          nullable: true
+        actorRole:
+          $ref: '#/components/schemas/CaseActorRole'
+        correlationId:
+          type: string
+          nullable: true
+        payload:
+          type: object
+          additionalProperties: true
+          nullable: true
+    TransparentDate:
+      type: object
+      properties:
+        value:
+          type: string
+          format: date
+        formula:
+          type: string
+        inputs:
+          type: object
+          additionalProperties: true
+        effectiveAt:
+          type: string
+          format: date
+    TransparentBoolean:
+      type: object
+      properties:
+        value:
+          type: boolean
+        formula:
+          type: string
+        inputs:
+          type: object
+          additionalProperties: true
+        effectiveAt:
+          type: string
+          format: date-time
+    KtgCaseSuggestion:
+      type: object
+      properties:
+        employeeId:
+          type: string
+          format: uuid
+        absenceEpisodeId:
+          type: string
+          format: uuid
+        policyId:
+          type: string
+        shouldSuggestCase:
+          $ref: '#/components/schemas/TransparentBoolean'
+        firstPayableDay:
+          $ref: '#/components/schemas/TransparentDate'
+          nullable: true

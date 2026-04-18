@@ -1,0 +1,1062 @@
+openapi: 3.0.3
+info:
+  title: elipsLife Identity Access Service API
+  version: 0.1.0
+  description: >
+    Tenant-scoped identity, access, onboarding, and compliance-control service for employer,
+    internal, and later employee-facing portals.
+servers:
+  - url: https://api.elipslife.ch/identity-access-service
+security:
+  - bearerAuth: []
+tags:
+  - name: PlatformUsers
+  - name: Memberships
+  - name: UserEmployeeLinks
+  - name: RoleAssignments
+  - name: PermissionPolicy
+  - name: SessionPolicy
+  - name: Sso
+  - name: AccessPurpose
+  - name: AuditAccess
+  - name: Onboarding
+  - name: Invites
+  - name: EffectiveAccess
+paths:
+  /v1/platform-users:
+    post:
+      tags: [PlatformUsers]
+      operationId: createPlatformUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePlatformUserRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformUser'
+  /v1/platform-users/{userId}:
+    patch:
+      tags: [PlatformUsers]
+      operationId: updatePlatformUser
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePlatformUserRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformUser'
+  /v1/tenants/{tenantId}/memberships:
+    get:
+      tags: [Memberships]
+      operationId: listTenantMemberships
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: Memberships
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TenantMembership'
+    post:
+      tags: [Memberships]
+      operationId: createTenantMembership
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTenantMembershipRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantMembership'
+  /v1/tenants/{tenantId}/memberships/{membershipId}:
+    patch:
+      tags: [Memberships]
+      operationId: updateTenantMembership
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/MembershipId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTenantMembershipRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantMembership'
+  /v1/tenants/{tenantId}/user-employee-links:
+    post:
+      tags: [UserEmployeeLinks]
+      operationId: createUserEmployeeLink
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserEmployeeLinkRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserEmployeeLink'
+  /v1/tenants/{tenantId}/role-assignments:
+    post:
+      tags: [RoleAssignments]
+      operationId: createRoleAssignment
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoleAssignmentRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleAssignment'
+  /v1/tenants/{tenantId}/permission-policy-sets:
+    post:
+      tags: [PermissionPolicy]
+      operationId: createPermissionPolicySet
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePermissionPolicySetRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionPolicySet'
+  /v1/tenants/{tenantId}/permission-policy-sets/{policySetId}/grants:
+    post:
+      tags: [PermissionPolicy]
+      operationId: createPermissionGrant
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PolicySetId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePermissionGrantRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionGrant'
+  /v1/tenants/{tenantId}/session-policy:
+    put:
+      tags: [SessionPolicy]
+      operationId: upsertPortalSessionPolicy
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertPortalSessionPolicyRequest'
+      responses:
+        '200':
+          description: Upserted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortalSessionPolicy'
+  /v1/tenants/{tenantId}/sso-configurations/{configurationId}:
+    put:
+      tags: [Sso]
+      operationId: upsertSsoConfiguration
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ConfigurationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertSsoConfigurationRequest'
+      responses:
+        '200':
+          description: Upserted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SsoConfiguration'
+  /v1/tenants/{tenantId}/access-purpose-records:
+    post:
+      tags: [AccessPurpose]
+      operationId: createAccessPurposeRecord
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccessPurposeRecordRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessPurposeRecord'
+  /v1/tenants/{tenantId}/audit-access-policy:
+    put:
+      tags: [AuditAccess]
+      operationId: upsertAuditAccessPolicy
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertAuditAccessPolicyRequest'
+      responses:
+        '200':
+          description: Upserted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditAccessPolicy'
+  /v1/tenants/{tenantId}/onboarding-workspace:
+    post:
+      tags: [Onboarding]
+      operationId: createOnboardingWorkspace
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOnboardingWorkspaceRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingWorkspace'
+    patch:
+      tags: [Onboarding]
+      operationId: updateOnboardingWorkspace
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOnboardingWorkspaceRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingWorkspace'
+  /v1/tenants/{tenantId}/provisioning-invites:
+    post:
+      tags: [Invites]
+      operationId: createProvisioningInvite
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProvisioningInviteRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProvisioningInvite'
+  /v1/tenants/{tenantId}/permissions/effective:
+    get:
+      tags: [EffectiveAccess]
+      operationId: getEffectivePermissions
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - in: query
+          name: userId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: resourceType
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: action
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Effective permission decision
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EffectivePermissionDecision'
+  /v1/platform-users/{userId}/resolved-locale:
+    get:
+      tags: [EffectiveAccess]
+      operationId: getResolvedLocale
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - in: query
+          name: routeLocale
+          schema:
+            $ref: '#/components/schemas/LocaleCode'
+        - in: query
+          name: tenantDefaultLanguage
+          schema:
+            $ref: '#/components/schemas/LocaleCode'
+      responses:
+        '200':
+          description: Resolved locale
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransparentLocale'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    TenantId:
+      in: path
+      name: tenantId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    UserId:
+      in: path
+      name: userId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    MembershipId:
+      in: path
+      name: membershipId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PolicySetId:
+      in: path
+      name: policySetId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ConfigurationId:
+      in: path
+      name: configurationId
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    LocaleCode:
+      type: string
+      enum: [de-CH, en-CH, fr-CH, it-CH]
+    PlatformUserStatus:
+      type: string
+      enum: [invited, active, locked, disabled]
+    MembershipStatus:
+      type: string
+      enum: [active, suspended, revoked]
+    EmployeeLinkType:
+      type: string
+      enum: [employee_self_service, manager_delegate, claims_reference]
+    ScopeType:
+      type: string
+      enum: [tenant, org_unit, employee, case, document, audit]
+    EffectType:
+      type: string
+      enum: [allow, deny]
+    ProviderType:
+      type: string
+      enum: [saml, oidc, local]
+    ProviderStatus:
+      type: string
+      enum: [draft, active, inactive]
+    LawfulBasis:
+      type: string
+      enum: [consent, contract, legal_obligation, insurance_claim_handling]
+    OnboardingStatus:
+      type: string
+      enum: [created, policy_sync, admin_setup, user_provisioning, integration_setup, ready, paused]
+    InviteStatus:
+      type: string
+      enum: [pending, accepted, expired, revoked]
+    ActorRole:
+      type: string
+      enum: [platform_admin, tenant_admin, compliance_user, system]
+    TransparentBoolean:
+      type: object
+      properties:
+        value:
+          type: boolean
+        formula:
+          type: string
+        inputs:
+          type: object
+          additionalProperties: true
+        effectiveAt:
+          type: string
+          format: date-time
+    TransparentLocale:
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/LocaleCode'
+        formula:
+          type: string
+        inputs:
+          type: object
+          additionalProperties: true
+        effectiveAt:
+          type: string
+          format: date-time
+    PlatformUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        preferredLanguage:
+          $ref: '#/components/schemas/LocaleCode'
+        status:
+          $ref: '#/components/schemas/PlatformUserStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    TenantMembership:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        membershipStatus:
+          $ref: '#/components/schemas/MembershipStatus'
+        joinedAt:
+          type: string
+          format: date-time
+        leftAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UserEmployeeLink:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+          format: uuid
+        linkType:
+          $ref: '#/components/schemas/EmployeeLinkType'
+        linkedAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type: string
+          format: date-time
+          nullable: true
+    RoleAssignment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        roleCode:
+          type: string
+        scopeType:
+          $ref: '#/components/schemas/ScopeType'
+        scopeReference:
+          type: string
+          nullable: true
+        assignedAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type: string
+          format: date-time
+          nullable: true
+    PermissionPolicySet:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+          nullable: true
+        policyCode:
+          type: string
+        policyVersion:
+          type: integer
+        activeFlag:
+          type: boolean
+        description:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    PermissionGrant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+          nullable: true
+        policySetId:
+          type: string
+          format: uuid
+        roleCode:
+          type: string
+        resourceType:
+          type: string
+        action:
+          type: string
+        effect:
+          $ref: '#/components/schemas/EffectType'
+        conditionJson:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+    PortalSessionPolicy:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        mfaRequiredFlag:
+          type: boolean
+        idleTimeoutMinutes:
+          type: integer
+        allowedAuthMethodsJson:
+          type: array
+          items: {}
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    SsoConfiguration:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        providerType:
+          $ref: '#/components/schemas/ProviderType'
+        providerStatus:
+          $ref: '#/components/schemas/ProviderStatus'
+        samlMetadataJson:
+          type: object
+          additionalProperties: true
+          nullable: true
+        oidcConfigJson:
+          type: object
+          additionalProperties: true
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    AccessPurposeRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+        employeeId:
+          type: string
+          format: uuid
+          nullable: true
+        purposeCode:
+          type: string
+        lawfulBasis:
+          $ref: '#/components/schemas/LawfulBasis'
+        grantedAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type: string
+          format: date-time
+          nullable: true
+        source:
+          type: string
+        referenceJson:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+    AuditAccessPolicy:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        roleCode:
+          type: string
+        policySetId:
+          type: string
+          format: uuid
+          nullable: true
+        canViewAuditFlag:
+          type: boolean
+        canExportAuditFlag:
+          type: boolean
+        sensitiveScopeJson:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    OnboardingWorkspace:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/OnboardingStatus'
+        currentStep:
+          type: string
+        policySyncStatus:
+          type: string
+        userProvisioningStatus:
+          type: string
+        integrationSetupStatus:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ProvisioningInvite:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        email:
+          type: string
+        targetRoleCode:
+          type: string
+        inviteStatus:
+          $ref: '#/components/schemas/InviteStatus'
+        expiresAt:
+          type: string
+          format: date-time
+        acceptedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    EffectivePermissionDecision:
+      type: object
+      properties:
+        allowed:
+          $ref: '#/components/schemas/TransparentBoolean'
+        matchedAllowGrants:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionGrant'
+        matchedDenyGrants:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionGrant'
+        activePolicySets:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionPolicySet'
+    CreatePlatformUserRequest:
+      type: object
+      required: [email, preferredLanguage, status, createdAt, updatedAt]
+      properties:
+        email:
+          type: string
+        preferredLanguage:
+          $ref: '#/components/schemas/LocaleCode'
+        status:
+          $ref: '#/components/schemas/PlatformUserStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        profile:
+          type: object
+          properties:
+            firstName:
+              type: string
+            lastName:
+              type: string
+            displayName:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+    UpdatePlatformUserRequest:
+      type: object
+      properties:
+        preferredLanguage:
+          $ref: '#/components/schemas/LocaleCode'
+        status:
+          $ref: '#/components/schemas/PlatformUserStatus'
+        updatedAt:
+          type: string
+          format: date-time
+    CreateTenantMembershipRequest:
+      type: object
+      required: [userId, membershipStatus, joinedAt, updatedAt]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        membershipStatus:
+          $ref: '#/components/schemas/MembershipStatus'
+        joinedAt:
+          type: string
+          format: date-time
+        leftAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UpdateTenantMembershipRequest:
+      type: object
+      properties:
+        membershipStatus:
+          $ref: '#/components/schemas/MembershipStatus'
+        leftAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateUserEmployeeLinkRequest:
+      type: object
+      required: [userId, employeeId, linkType, linkedAt]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+          format: uuid
+        linkType:
+          $ref: '#/components/schemas/EmployeeLinkType'
+        linkedAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type: string
+          format: date-time
+    CreateRoleAssignmentRequest:
+      type: object
+      required: [userId, roleCode, scopeType, assignedAt]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        roleCode:
+          type: string
+        scopeType:
+          $ref: '#/components/schemas/ScopeType'
+        scopeReference:
+          type: string
+        assignedAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type: string
+          format: date-time
+    CreatePermissionPolicySetRequest:
+      type: object
+      required: [policyCode, policyVersion]
+      properties:
+        policyCode:
+          type: string
+        policyVersion:
+          type: integer
+        activeFlag:
+          type: boolean
+          default: true
+        description:
+          type: string
+    CreatePermissionGrantRequest:
+      type: object
+      required: [roleCode, resourceType, action, effect]
+      properties:
+        roleCode:
+          type: string
+        resourceType:
+          type: string
+        action:
+          type: string
+        effect:
+          $ref: '#/components/schemas/EffectType'
+        conditionJson:
+          type: object
+          additionalProperties: true
+    UpsertPortalSessionPolicyRequest:
+      type: object
+      required: [mfaRequiredFlag, idleTimeoutMinutes, allowedAuthMethodsJson]
+      properties:
+        mfaRequiredFlag:
+          type: boolean
+        idleTimeoutMinutes:
+          type: integer
+        allowedAuthMethodsJson:
+          type: array
+          items: {}
+    UpsertSsoConfigurationRequest:
+      type: object
+      required: [providerType, providerStatus]
+      properties:
+        providerType:
+          $ref: '#/components/schemas/ProviderType'
+        providerStatus:
+          $ref: '#/components/schemas/ProviderStatus'
+        samlMetadataJson:
+          type: object
+          additionalProperties: true
+        oidcConfigJson:
+          type: object
+          additionalProperties: true
+    CreateAccessPurposeRecordRequest:
+      type: object
+      required: [purposeCode, lawfulBasis, grantedAt, source]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+          format: uuid
+        purposeCode:
+          type: string
+        lawfulBasis:
+          $ref: '#/components/schemas/LawfulBasis'
+        grantedAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type: string
+          format: date-time
+        source:
+          type: string
+        referenceJson:
+          type: object
+          additionalProperties: true
+    UpsertAuditAccessPolicyRequest:
+      type: object
+      required: [roleCode, canViewAuditFlag, canExportAuditFlag, sensitiveScopeJson]
+      properties:
+        roleCode:
+          type: string
+        policySetId:
+          type: string
+          format: uuid
+        canViewAuditFlag:
+          type: boolean
+        canExportAuditFlag:
+          type: boolean
+        sensitiveScopeJson:
+          type: object
+          additionalProperties: true
+    CreateOnboardingWorkspaceRequest:
+      type: object
+      required: [status, currentStep, policySyncStatus, userProvisioningStatus, integrationSetupStatus, createdAt, updatedAt]
+      properties:
+        status:
+          $ref: '#/components/schemas/OnboardingStatus'
+        currentStep:
+          type: string
+        policySyncStatus:
+          type: string
+        userProvisioningStatus:
+          type: string
+        integrationSetupStatus:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    UpdateOnboardingWorkspaceRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/OnboardingStatus'
+        currentStep:
+          type: string
+        policySyncStatus:
+          type: string
+        userProvisioningStatus:
+          type: string
+        integrationSetupStatus:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+    CreateProvisioningInviteRequest:
+      type: object
+      required: [email, targetRoleCode, inviteStatus, expiresAt, createdAt]
+      properties:
+        email:
+          type: string
+        targetRoleCode:
+          type: string
+        inviteStatus:
+          $ref: '#/components/schemas/InviteStatus'
+        expiresAt:
+          type: string
+          format: date-time
+        acceptedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time

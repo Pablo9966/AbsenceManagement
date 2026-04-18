@@ -1,0 +1,676 @@
+openapi: 3.0.3
+info:
+  title: elipsLife Dashboard Projection Service API
+  version: 0.1.0
+  description: >
+    Tenant-scoped dashboard projection and KPI snapshot service.
+servers:
+  - url: https://api.elipslife.ch/dashboard-projection-service
+security:
+  - bearerAuth: []
+tags:
+  - name: KpiSnapshots
+  - name: WidgetSnapshots
+  - name: ProjectionJobs
+  - name: Watermarks
+  - name: ViewConfigs
+  - name: Benchmarks
+paths:
+  /v1/tenants/{tenantId}/dashboard-kpis:
+    get:
+      tags: [KpiSnapshots]
+      operationId: listDashboardKpiSnapshots
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - in: query
+          name: dashboardRole
+          schema:
+            $ref: '#/components/schemas/DashboardRole'
+        - in: query
+          name: kpiKey
+          schema:
+            type: string
+      responses:
+        '200':
+          description: KPI snapshots
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DashboardKpiSnapshot'
+    post:
+      tags: [KpiSnapshots]
+      operationId: createDashboardKpiSnapshot
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDashboardKpiSnapshotRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardKpiSnapshot'
+  /v1/tenants/{tenantId}/dashboard-widgets:
+    get:
+      tags: [WidgetSnapshots]
+      operationId: listDashboardWidgetSnapshots
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - in: query
+          name: dashboardRole
+          schema:
+            $ref: '#/components/schemas/DashboardRole'
+        - in: query
+          name: widgetKey
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Widget snapshots
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DashboardWidgetSnapshot'
+    post:
+      tags: [WidgetSnapshots]
+      operationId: createDashboardWidgetSnapshot
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDashboardWidgetSnapshotRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardWidgetSnapshot'
+  /v1/tenants/{tenantId}/projection-jobs:
+    get:
+      tags: [ProjectionJobs]
+      operationId: listProjectionJobs
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - in: query
+          name: projectionType
+          schema:
+            $ref: '#/components/schemas/ProjectionType'
+        - in: query
+          name: jobStatus
+          schema:
+            $ref: '#/components/schemas/ProjectionJobStatus'
+      responses:
+        '200':
+          description: Projection jobs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProjectionJob'
+    post:
+      tags: [ProjectionJobs]
+      operationId: createProjectionJob
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectionJobRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectionJob'
+  /v1/tenants/{tenantId}/projection-jobs/{jobId}:
+    patch:
+      tags: [ProjectionJobs]
+      operationId: updateProjectionJob
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/JobId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectionJobRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectionJob'
+  /v1/tenants/{tenantId}/projection-dependency-watermarks:
+    get:
+      tags: [Watermarks]
+      operationId: listProjectionDependencyWatermarks
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: Watermarks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProjectionDependencyWatermark'
+    post:
+      tags: [Watermarks]
+      operationId: createProjectionDependencyWatermark
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectionDependencyWatermarkRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectionDependencyWatermark'
+  /v1/tenants/{tenantId}/projection-dependency-watermarks/{watermarkId}:
+    patch:
+      tags: [Watermarks]
+      operationId: updateProjectionDependencyWatermark
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/WatermarkId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectionDependencyWatermarkRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectionDependencyWatermark'
+  /v1/tenants/{tenantId}/dashboard-view-configs:
+    get:
+      tags: [ViewConfigs]
+      operationId: listDashboardViewConfigs
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - in: query
+          name: dashboardRole
+          schema:
+            $ref: '#/components/schemas/DashboardRole'
+      responses:
+        '200':
+          description: Dashboard configs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DashboardViewConfig'
+    post:
+      tags: [ViewConfigs]
+      operationId: createDashboardViewConfig
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDashboardViewConfigRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardViewConfig'
+  /v1/tenants/{tenantId}/dashboard-view-configs/{configId}:
+    patch:
+      tags: [ViewConfigs]
+      operationId: updateDashboardViewConfig
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ConfigId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDashboardViewConfigRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardViewConfig'
+  /v1/benchmarks:
+    get:
+      tags: [Benchmarks]
+      operationId: listBenchmarkSnapshots
+      parameters:
+        - in: query
+          name: benchmarkScope
+          schema:
+            $ref: '#/components/schemas/BenchmarkScope'
+        - in: query
+          name: metricKey
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Benchmark snapshots
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BenchmarkSnapshot'
+    post:
+      tags: [Benchmarks]
+      operationId: createBenchmarkSnapshot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBenchmarkSnapshotRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BenchmarkSnapshot'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    TenantId:
+      in: path
+      name: tenantId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    JobId:
+      in: path
+      name: jobId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    WatermarkId:
+      in: path
+      name: watermarkId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ConfigId:
+      in: path
+      name: configId
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    DashboardRole:
+      type: string
+      enum: [hr_manager, payroll_manager, line_manager, claims_handler, account_manager, actuary, admin]
+    ProjectionType:
+      type: string
+      enum: [kpi_snapshot, widget_snapshot, full_dashboard_refresh]
+    ProjectionJobStatus:
+      type: string
+      enum: [pending, running, completed, failed, cancelled]
+    SourceService:
+      type: string
+      enum: [people_service, absence_service, ktg_case_service, document_service, inbox_notification_service, integration_gateway]
+    BenchmarkScope:
+      type: string
+      enum: [industry, portfolio, market_reference]
+    DashboardKpiSnapshot:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        dashboardRole:
+          $ref: '#/components/schemas/DashboardRole'
+        kpiKey:
+          type: string
+        valueJson:
+          type: object
+          additionalProperties: true
+        formula:
+          type: string
+          nullable: true
+        inputsJson:
+          type: object
+          additionalProperties: true
+          nullable: true
+        windowStart:
+          type: string
+          format: date
+        windowEnd:
+          type: string
+          format: date
+        refreshedAt:
+          type: string
+          format: date-time
+    DashboardWidgetSnapshot:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        dashboardRole:
+          $ref: '#/components/schemas/DashboardRole'
+        widgetKey:
+          type: string
+        widgetPayload:
+          type: object
+          additionalProperties: true
+        windowStart:
+          type: string
+          format: date
+          nullable: true
+        windowEnd:
+          type: string
+          format: date
+          nullable: true
+        refreshedAt:
+          type: string
+          format: date-time
+    ProjectionJob:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        projectionType:
+          $ref: '#/components/schemas/ProjectionType'
+        scopeKey:
+          type: string
+        jobStatus:
+          $ref: '#/components/schemas/ProjectionJobStatus'
+        requestedAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        errorCode:
+          type: string
+          nullable: true
+        errorMessage:
+          type: string
+          nullable: true
+    ProjectionDependencyWatermark:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sourceService:
+          $ref: '#/components/schemas/SourceService'
+        sourceStream:
+          type: string
+        lastProcessedEventId:
+          type: string
+          nullable: true
+        lastProcessedAt:
+          type: string
+          format: date-time
+          nullable: true
+    DashboardViewConfig:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        dashboardRole:
+          $ref: '#/components/schemas/DashboardRole'
+        widgetKey:
+          type: string
+        displayOrder:
+          type: integer
+        enabledFlag:
+          type: boolean
+        defaultFiltersJson:
+          type: object
+          additionalProperties: true
+          nullable: true
+    BenchmarkSnapshot:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        benchmarkScope:
+          $ref: '#/components/schemas/BenchmarkScope'
+        industryCode:
+          type: string
+          nullable: true
+        metricKey:
+          type: string
+        valueJson:
+          type: object
+          additionalProperties: true
+        methodologyVersion:
+          type: string
+        refreshedAt:
+          type: string
+          format: date-time
+    TransparentBoolean:
+      type: object
+      properties:
+        value:
+          type: boolean
+        formula:
+          type: string
+        inputs:
+          type: object
+          additionalProperties: true
+        effectiveAt:
+          type: string
+    CreateDashboardKpiSnapshotRequest:
+      type: object
+      required: [dashboardRole, kpiKey, valueJson, windowStart, windowEnd, refreshedAt]
+      properties:
+        dashboardRole:
+          $ref: '#/components/schemas/DashboardRole'
+        kpiKey:
+          type: string
+        valueJson:
+          type: object
+          additionalProperties: true
+        formula:
+          type: string
+        inputsJson:
+          type: object
+          additionalProperties: true
+        windowStart:
+          type: string
+          format: date
+        windowEnd:
+          type: string
+          format: date
+        refreshedAt:
+          type: string
+          format: date-time
+    CreateDashboardWidgetSnapshotRequest:
+      type: object
+      required: [dashboardRole, widgetKey, widgetPayload, refreshedAt]
+      properties:
+        dashboardRole:
+          $ref: '#/components/schemas/DashboardRole'
+        widgetKey:
+          type: string
+        widgetPayload:
+          type: object
+          additionalProperties: true
+        windowStart:
+          type: string
+          format: date
+        windowEnd:
+          type: string
+          format: date
+        refreshedAt:
+          type: string
+          format: date-time
+    CreateProjectionJobRequest:
+      type: object
+      required: [projectionType, scopeKey, requestedAt]
+      properties:
+        projectionType:
+          $ref: '#/components/schemas/ProjectionType'
+        scopeKey:
+          type: string
+        jobStatus:
+          $ref: '#/components/schemas/ProjectionJobStatus'
+        requestedAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        errorCode:
+          type: string
+        errorMessage:
+          type: string
+    UpdateProjectionJobRequest:
+      type: object
+      properties:
+        jobStatus:
+          $ref: '#/components/schemas/ProjectionJobStatus'
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        errorCode:
+          type: string
+        errorMessage:
+          type: string
+    CreateProjectionDependencyWatermarkRequest:
+      type: object
+      required: [sourceService, sourceStream]
+      properties:
+        sourceService:
+          $ref: '#/components/schemas/SourceService'
+        sourceStream:
+          type: string
+        lastProcessedEventId:
+          type: string
+        lastProcessedAt:
+          type: string
+          format: date-time
+    UpdateProjectionDependencyWatermarkRequest:
+      type: object
+      properties:
+        lastProcessedEventId:
+          type: string
+        lastProcessedAt:
+          type: string
+          format: date-time
+    CreateDashboardViewConfigRequest:
+      type: object
+      required: [dashboardRole, widgetKey, displayOrder]
+      properties:
+        dashboardRole:
+          $ref: '#/components/schemas/DashboardRole'
+        widgetKey:
+          type: string
+        displayOrder:
+          type: integer
+        enabledFlag:
+          type: boolean
+          default: true
+        defaultFiltersJson:
+          type: object
+          additionalProperties: true
+    UpdateDashboardViewConfigRequest:
+      type: object
+      properties:
+        displayOrder:
+          type: integer
+        enabledFlag:
+          type: boolean
+        defaultFiltersJson:
+          type: object
+          additionalProperties: true
+    CreateBenchmarkSnapshotRequest:
+      type: object
+      required: [benchmarkScope, metricKey, valueJson, methodologyVersion, refreshedAt]
+      properties:
+        benchmarkScope:
+          $ref: '#/components/schemas/BenchmarkScope'
+        industryCode:
+          type: string
+        metricKey:
+          type: string
+        valueJson:
+          type: object
+          additionalProperties: true
+        methodologyVersion:
+          type: string
+        refreshedAt:
+          type: string
+          format: date-time
