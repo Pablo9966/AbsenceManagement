@@ -1,0 +1,163 @@
+openapi: 3.1.0
+info:
+  title: Payment Operations Service
+  version: 0.1.0
+  description: Operationalises benefit-engine payment instructions into payment runs, exports, statements, and reconciliation records.
+
+paths:
+  /v1/internal/payment-runs:
+    get:
+      operationId: listInternalPaymentRuns
+      summary: List payment runs
+      parameters:
+        - { name: tenantId, in: query, required: true, schema: { type: string } }
+        - { name: locale, in: query, schema: { type: string } }
+        - { name: runStatus, in: query, schema: { type: string } }
+        - { name: runType, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer } }
+        - { name: pageSize, in: query, schema: { type: integer } }
+      responses:
+        '200': { description: Payment run list }
+
+  /v1/internal/payment-runs/create:
+    post:
+      operationId: createInternalPaymentRun
+      summary: Create a new payment run
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenantId, runType]
+              properties:
+                tenantId: { type: string }
+                runType: { type: string, enum: [scheduled, manual, correction] }
+                scheduledExecutionAt: { type: string, format: date-time }
+                notes: { type: string }
+      responses:
+        '200': { description: Created payment run }
+
+  /v1/internal/payment-runs/{runId}:
+    get:
+      operationId: getInternalPaymentRunDetail
+      summary: Get payment run detail
+      parameters:
+        - { name: runId, in: path, required: true, schema: { type: string } }
+        - { name: tenantId, in: query, required: true, schema: { type: string } }
+        - { name: locale, in: query, schema: { type: string } }
+      responses:
+        '200': { description: Payment run detail }
+        '404': { description: Not found }
+
+  /v1/internal/payment-runs/{runId}/ready:
+    post:
+      operationId: markInternalPaymentRunReady
+      summary: Mark run ready for export
+      parameters:
+        - { name: runId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Updated run }
+
+  /v1/internal/payment-runs/{runId}/cancel:
+    post:
+      operationId: cancelInternalPaymentRun
+      summary: Cancel a payment run
+      parameters:
+        - { name: runId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Cancelled run }
+
+  /v1/internal/payment-runs/{runId}/export:
+    post:
+      operationId: generateInternalExportPackage
+      summary: Generate export package for a run
+      parameters:
+        - { name: runId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                format: { type: string, enum: [pain_001, csv, json] }
+      responses:
+        '200': { description: Export package metadata }
+
+  /v1/internal/payment-runs/{runId}/statement:
+    post:
+      operationId: generateInternalStatement
+      summary: Generate a statement PDF for a run
+      parameters:
+        - { name: runId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Statement metadata }
+
+  /v1/internal/payment-runs/{runId}/reconcile:
+    post:
+      operationId: updateInternalReconciliation
+      summary: Update reconciliation status for a run
+      parameters:
+        - { name: runId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Reconciliation record }
+
+  /v1/internal/payment-runs/{runId}/booking-confirmation:
+    post:
+      operationId: recordPayrollBookingConfirmation
+      summary: Record payroll booking confirmation
+      parameters:
+        - { name: runId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Booking confirmation }
+
+  /v1/internal/month-end:
+    get:
+      operationId: getInternalMonthEndReport
+      summary: Month-end reconciliation report
+      parameters:
+        - { name: tenantId, in: query, required: true, schema: { type: string } }
+        - { name: locale, in: query, schema: { type: string } }
+      responses:
+        '200': { description: Month-end report }
+
+  /v1/internal/reconciliation:
+    get:
+      operationId: listInternalReconciliationRecords
+      summary: List reconciliation records
+      parameters:
+        - { name: tenantId, in: query, required: true, schema: { type: string } }
+        - { name: reconciliationStatus, in: query, schema: { type: string } }
+      responses:
+        '200': { description: Reconciliation record list }
+
+  /v1/internal/settlement/{ktgCaseId}:
+    get:
+      operationId: getInternalSettlementSummary
+      summary: Get settlement summary for a case
+      parameters:
+        - { name: ktgCaseId, in: path, required: true, schema: { type: string } }
+        - { name: tenantId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Settlement summary }
+        '404': { description: Not found }
+
+  /v1/internal/payment-audit-events:
+    get:
+      operationId: listInternalPaymentAuditEvents
+      summary: List payment operations audit events
+      parameters:
+        - { name: tenantId, in: query, required: true, schema: { type: string } }
+        - { name: runId, in: query, schema: { type: string } }
+      responses:
+        '200': { description: Audit event list }
+
+  /v1/employer/payment-runs:
+    get:
+      operationId: listEmployerPaymentRunSummaries
+      summary: List payment run summaries (employer read-only)
+      parameters:
+        - { name: tenantId, in: query, required: true, schema: { type: string } }
+        - { name: locale, in: query, schema: { type: string } }
+      responses:
+        '200': { description: Payment run summary list }

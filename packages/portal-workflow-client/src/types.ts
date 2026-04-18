@@ -182,3 +182,132 @@ export interface InternalBenefitDetail {
   adjustmentSummary: string[];
   paymentInstructionSummary: Array<{ id: string; routing: string; amountChf: number }>;
 }
+
+// Phase 2C: Payment Operations types
+
+export interface InternalPaymentRunListItem {
+  runId: string;
+  runNumber: string;
+  runType: string;
+  runStatus: string;
+  instructionCount: number;
+  totalNetAmountChf: number;
+  reconciliationStatus: string;
+  createdAt: string;
+}
+
+export interface InternalPaymentRunItemSummary {
+  runItemId: string;
+  paymentInstructionId: string;
+  ktgCaseId: string;
+  payeeReference: string;
+  periodLabel: string;
+  netAmountChf: number;
+  itemStatus: string;
+}
+
+export interface InternalExportPackageSummary {
+  exportId: string;
+  exportFormat: string;
+  fileName: string;
+  exportStatus: string;
+  generatedAt: string;
+  generatedBy: string;
+}
+
+export interface InternalStatementSummary {
+  statementId: string;
+  statementType: string;
+  ktgCaseId: string;
+  periodLabel: string;
+  fileName: string;
+  pdfSizeBytes: number;
+  generatedAt: string;
+}
+
+export interface InternalReconciliationRecord {
+  reconciliationId: string;
+  paymentRunId: string;
+  reconciliationStatus: string;
+  reconciledAt?: string;
+  reconciledBy?: string;
+  mismatchReason?: string;
+  payrollBookingReference?: string;
+  confirmationReceivedAt?: string;
+}
+
+export interface InternalPaymentRunDetail {
+  runId: string;
+  runNumber: string;
+  runType: string;
+  runStatus: string;
+  instructionCount: number;
+  totalGrossAmountChf: number;
+  totalNetAmountChf: number;
+  reconciliationStatus: string;
+  createdAt: string;
+  createdBy: string;
+  scheduledExecutionAt?: string;
+  exportedAt?: string;
+  completedAt?: string;
+  cancelledAt?: string;
+  notes?: string;
+  items: InternalPaymentRunItemSummary[];
+  exportPackages: InternalExportPackageSummary[];
+  statements: InternalStatementSummary[];
+  reconciliation?: InternalReconciliationRecord;
+  bookingReference?: string;
+}
+
+export interface InternalSettlementSummary {
+  summaryId: string;
+  ktgCaseId: string;
+  latestPaymentRunId?: string;
+  totalGrossPaidChf: number;
+  totalNetPaidChf: number;
+  totalPayableDays: number;
+  lastStatementAt?: string;
+  settlementStatus: string;
+  updatedAt: string;
+}
+
+export interface InternalMonthEndReportEntry {
+  runId: string;
+  runNumber: string;
+  runStatus: string;
+  totalNetAmountChf: number;
+  reconciliationStatus: string;
+  exportedAt?: string;
+  completedAt?: string;
+  mismatch: boolean;
+  bookingReference?: string;
+}
+
+export interface InternalMonthEndReport {
+  reportGeneratedAt: string;
+  totalRuns: number;
+  totalNetAmountChf: number;
+  confirmed: number;
+  unresolved: number;
+  mismatches: number;
+  entries: InternalMonthEndReportEntry[];
+}
+
+export interface InternalPaymentAuditEventItem {
+  eventId: string;
+  paymentRunId?: string;
+  eventType: string;
+  occurredAt: string;
+  actorId: string;
+  actorRole: string;
+  payload?: Record<string, unknown>;
+}
+
+export interface EmployerPaymentRunSummary {
+  runId: string;
+  runNumber: string;
+  totalNetAmountChf: number;
+  instructionCount: number;
+  runStatus: string;
+  createdAt: string;
+}

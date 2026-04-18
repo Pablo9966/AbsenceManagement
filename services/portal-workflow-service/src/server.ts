@@ -24,6 +24,13 @@ import {
   listInternalBenefits,
   listInternalCases,
   listInternalIntake,
+  listEmployerPaymentRunSummaries,
+  listInternalPaymentRuns,
+  getInternalPaymentRunDetail,
+  getInternalMonthEndReport,
+  listInternalReconciliationRecords,
+  getInternalSettlementSummary,
+  listInternalPaymentAuditEvents,
 } from "./service-context.js";
 
 const PORT = Number(process.env.PORTAL_WORKFLOW_SERVICE_PORT ?? "4020");
@@ -131,6 +138,13 @@ const handleEmployerRoutes = async (pathname: string, requestUrl: URL, response:
     }));
     return true;
   }
+  if (pathname === "/v1/employer/payment-runs") {
+    writeJson(response, 200, await listEmployerPaymentRunSummaries(tenantId, locale, {
+      page: getPage(requestUrl),
+      pageSize: getPageSize(requestUrl),
+    }));
+    return true;
+  }
 
   return false;
 };
@@ -185,6 +199,41 @@ const handleInternalRoutes = async (pathname: string, requestUrl: URL, response:
   if (pathname.startsWith("/v1/internal/benefits/")) {
     const detail = await getInternalBenefitDetail(tenantId, locale, pathname.split("/").at(-1) ?? "");
     writeJson(response, 200, detail);
+    return true;
+  }
+  if (pathname === "/v1/internal/payment-runs") {
+    writeJson(response, 200, await listInternalPaymentRuns(tenantId, locale, {
+      runStatus: requestUrl.searchParams.get("runStatus") ?? undefined,
+      runType: requestUrl.searchParams.get("runType") ?? undefined,
+      page: getPage(requestUrl),
+      pageSize: getPageSize(requestUrl),
+    }));
+    return true;
+  }
+  if (pathname.startsWith("/v1/internal/payment-runs/") && !pathname.endsWith("/")) {
+    const runId = pathname.split("/").at(-1) ?? "";
+    writeJson(response, 200, await getInternalPaymentRunDetail(tenantId, locale, runId));
+    return true;
+  }
+  if (pathname === "/v1/internal/month-end") {
+    writeJson(response, 200, await getInternalMonthEndReport(tenantId, locale));
+    return true;
+  }
+  if (pathname === "/v1/internal/reconciliation") {
+    writeJson(response, 200, await listInternalReconciliationRecords(tenantId, locale, {
+      reconciliationStatus: requestUrl.searchParams.get("reconciliationStatus") ?? undefined,
+    }));
+    return true;
+  }
+  if (pathname.startsWith("/v1/internal/settlement/")) {
+    const ktgCaseId = pathname.split("/").at(-1) ?? "";
+    writeJson(response, 200, await getInternalSettlementSummary(tenantId, locale, ktgCaseId));
+    return true;
+  }
+  if (pathname === "/v1/internal/payment-audit-events") {
+    writeJson(response, 200, await listInternalPaymentAuditEvents(tenantId, locale, {
+      runId: requestUrl.searchParams.get("runId") ?? undefined,
+    }));
     return true;
   }
 

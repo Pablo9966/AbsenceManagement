@@ -32,6 +32,9 @@
       "path": "../../services/benefit-engine-service"
     },
     {
+      "path": "../../services/payment-operations-service"
+    },
+    {
       "path": "../../packages/portal-workflow-client"
     }
   ]

@@ -6,6 +6,7 @@ import type {
   EmployerDashboardSummary,
   EmployerDocumentListItem,
   EmployerPaymentSummary,
+  EmployerPaymentRunSummary,
   EmployerTaskListItem,
   InternalBenefitDetail,
   InternalBenefitListItem,
@@ -14,12 +15,56 @@ import type {
   InternalDashboardSummary,
   InternalIntakeDetail,
   InternalIntakeListItem,
+  InternalMonthEndReport,
+  InternalPaymentAuditEventItem,
+  InternalPaymentRunDetail,
+  InternalPaymentRunListItem,
+  InternalReconciliationRecord,
+  InternalSettlementSummary,
   PortalLocale,
   WorkflowListQuery,
   WorkflowResponse,
 } from "./types.js";
 
 export interface PortalWorkflowClient {
+  // Phase 2C: Payment Operations — Employer (read-only)
+  listEmployerPaymentRunSummaries(input: WorkflowListQuery & {
+    tenantId: string;
+    locale: PortalLocale;
+  }): Promise<WorkflowResponse<EmployerPaymentRunSummary[]>>;
+
+  // Phase 2C: Payment Operations — Internal
+  listInternalPaymentRuns(input: WorkflowListQuery & {
+    tenantId: string;
+    locale: PortalLocale;
+    runStatus?: string;
+    runType?: string;
+  }): Promise<WorkflowResponse<InternalPaymentRunListItem[]>>;
+  getInternalPaymentRunDetail(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    runId: string;
+  }): Promise<WorkflowResponse<InternalPaymentRunDetail>>;
+  getInternalMonthEndReport(input: {
+    tenantId: string;
+    locale: PortalLocale;
+  }): Promise<WorkflowResponse<InternalMonthEndReport>>;
+  listInternalReconciliationRecords(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    reconciliationStatus?: string;
+  }): Promise<WorkflowResponse<InternalReconciliationRecord[]>>;
+  getInternalSettlementSummary(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    ktgCaseId: string;
+  }): Promise<WorkflowResponse<InternalSettlementSummary>>;
+  listInternalPaymentAuditEvents(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    runId?: string;
+  }): Promise<WorkflowResponse<InternalPaymentAuditEventItem[]>>;
+
   getEmployerDashboard(input: { tenantId: string; locale: PortalLocale }): Promise<WorkflowResponse<EmployerDashboardSummary>>;
   listEmployerAbsences(input: WorkflowListQuery & {
     tenantId: string;
@@ -117,6 +162,33 @@ export const createPortalWorkflowClient = (input: {
   const withBaseUrl = (path: string): string => `${input.baseUrl.replace(/\/$/, "")}${path}`;
 
   return {
+    async listEmployerPaymentRunSummaries(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/employer/payment-runs${toQueryString(params)}`)));
+    },
+    async listInternalPaymentRuns(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/internal/payment-runs${toQueryString(params)}`)));
+    },
+    async getInternalPaymentRunDetail(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/internal/payment-runs/${params.runId}${toQueryString({
+        tenantId: params.tenantId,
+        locale: params.locale,
+      })}`)));
+    },
+    async getInternalMonthEndReport(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/internal/month-end${toQueryString(params)}`)));
+    },
+    async listInternalReconciliationRecords(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/internal/reconciliation${toQueryString(params)}`)));
+    },
+    async getInternalSettlementSummary(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/internal/settlement/${params.ktgCaseId}${toQueryString({
+        tenantId: params.tenantId,
+        locale: params.locale,
+      })}`)));
+    },
+    async listInternalPaymentAuditEvents(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/internal/payment-audit-events${toQueryString(params)}`)));
+    },
     async getEmployerDashboard(params) {
       return readJson(await fetchFn(withBaseUrl(`/v1/employer/dashboard${toQueryString(params)}`)));
     },
