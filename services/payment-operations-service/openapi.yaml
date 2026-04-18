@@ -50,6 +50,36 @@ paths:
         '200': { description: Payment run detail }
         '404': { description: Not found }
 
+  /v1/internal/payment-runs/{runId}/items:
+    post:
+      operationId: addPaymentInstructionToRun
+      summary: Add a payment instruction reference to a run
+      parameters:
+        - { name: runId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenantId, paymentInstruction]
+              properties:
+                tenantId: { type: string }
+                paymentInstruction:
+                  type: object
+                  required: [id, ktgCaseId, payeeType, payeeReference, paymentPeriodStart, paymentPeriodEnd, grossAmountChf, netAmountChf]
+                  properties:
+                    id: { type: string }
+                    ktgCaseId: { type: string }
+                    payeeType: { type: string, enum: [employer, employee] }
+                    payeeReference: { type: string }
+                    paymentPeriodStart: { type: string, format: date }
+                    paymentPeriodEnd: { type: string, format: date }
+                    grossAmountChf: { type: number }
+                    netAmountChf: { type: number }
+      responses:
+        '200': { description: Payment run item }
+
   /v1/internal/payment-runs/{runId}/ready:
     post:
       operationId: markInternalPaymentRunReady

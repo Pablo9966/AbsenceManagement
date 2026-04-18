@@ -5,6 +5,8 @@ export const internalNavigation: NavigationItemConfig[] = [
   { app: "internal", key: "intake", labelKey: "nav.intake", routePattern: "/[locale]/intake", requiredPermission: { resourceType: "claims_intake_workspace", action: "read" } },
   { app: "internal", key: "cases", labelKey: "nav.cases", routePattern: "/[locale]/ktg-cases", requiredPermission: { resourceType: "ktg_case", action: "read_internal" } },
   { app: "internal", key: "benefits", labelKey: "nav.benefits", routePattern: "/[locale]/benefits", requiredPermission: { resourceType: "benefit_calculation", action: "read" } },
+  { app: "internal", key: "paymentRuns", labelKey: "nav.paymentRuns", routePattern: "/[locale]/payment-runs", requiredPermission: { resourceType: "payment_run", action: "read_internal" } },
+  { app: "internal", key: "monthEnd", labelKey: "nav.monthEnd", routePattern: "/[locale]/month-end", requiredPermission: { resourceType: "reconciliation", action: "read_internal" } },
   { app: "internal", key: "compliance", labelKey: "nav.compliance", routePattern: "/[locale]/compliance", requiredPermission: { resourceType: "audit", action: "view" } },
   { app: "internal", key: "admin", labelKey: "nav.admin", routePattern: "/[locale]/admin", requiredPermission: { resourceType: "internal_admin", action: "manage" } }
 ];
@@ -17,6 +19,9 @@ export const internalRouteAccessRules: RouteAccessRule[] = [
   { routePattern: "/[locale]/ktg-cases/[caseId]", resourceType: "ktg_case", action: "read_internal", fallbackBehavior: "permission_denied" },
   { routePattern: "/[locale]/benefits", resourceType: "benefit_calculation", action: "read", fallbackBehavior: "permission_denied" },
   { routePattern: "/[locale]/benefits/[calculationId]", resourceType: "benefit_calculation", action: "read", fallbackBehavior: "permission_denied" },
+  { routePattern: "/[locale]/payment-runs", resourceType: "payment_run", action: "read_internal", fallbackBehavior: "permission_denied" },
+  { routePattern: "/[locale]/payment-runs/[runId]", resourceType: "payment_run", action: "read_internal", fallbackBehavior: "permission_denied" },
+  { routePattern: "/[locale]/month-end", resourceType: "reconciliation", action: "read_internal", fallbackBehavior: "permission_denied" },
   { routePattern: "/[locale]/compliance", resourceType: "audit", action: "view", fallbackBehavior: "permission_denied" },
   { routePattern: "/[locale]/admin", resourceType: "internal_admin", action: "manage", fallbackBehavior: "redirect_dashboard" }
 ];

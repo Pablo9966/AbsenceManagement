@@ -18,7 +18,7 @@ export default async function InternalMonthEndPage(props: {
   const { locale } = await props.params;
   const runtime = await getInternalPortalRuntime({ routeLocale: locale });
   const access = resolveRouteAccess(
-    runtime.routeRules.find((rule: RouteAccessRule) => rule.routePattern === "/[locale]/payment-runs"),
+    runtime.routeRules.find((rule: RouteAccessRule) => rule.routePattern === "/[locale]/month-end"),
     runtime.userContext,
   );
 

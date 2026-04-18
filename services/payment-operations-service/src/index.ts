@@ -8,3 +8,4 @@ export type {
 export { buildStatementPdf } from "./domain/pdf-builder.js";
 export * from "./domain/types.js";
 export * from "./domain/validations.js";
+export { createPaymentOperationsHttpServer, executePaymentOperationsRequest } from "./server.js";

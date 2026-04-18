@@ -23,6 +23,8 @@ const deCommon: MessageCatalog = {
   "nav.admin": "Administration",
   "nav.intake": "Intake",
   "nav.benefits": "Leistungen",
+  "nav.paymentRuns": "Zahlungsläufe",
+  "nav.monthEnd": "Monatsabschluss",
   "nav.compliance": "Compliance",
   "nav.adminUsers": "Benutzer",
   "nav.adminOnboarding": "Onboarding",
@@ -45,6 +47,9 @@ const deCommon: MessageCatalog = {
   "page.intakeDetail.title": "Intake-Arbeitsbereich",
   "page.benefits.title": "Leistungsberechnungen",
   "page.benefitDetail.title": "Berechnungsdetail",
+  "page.paymentRuns.title": "Zahlungsläufe",
+  "page.paymentRunDetail.title": "Zahlungslaufdetail",
+  "page.monthEnd.title": "Monatsabschluss",
   "page.compliance.title": "Compliance"
 };
 
@@ -71,6 +76,8 @@ const enCommon: MessageCatalog = {
   "nav.admin": "Admin",
   "nav.intake": "Intake",
   "nav.benefits": "Benefits",
+  "nav.paymentRuns": "Payment Runs",
+  "nav.monthEnd": "Month End",
   "nav.compliance": "Compliance",
   "nav.adminUsers": "Users",
   "nav.adminOnboarding": "Onboarding",
@@ -93,6 +100,9 @@ const enCommon: MessageCatalog = {
   "page.intakeDetail.title": "Intake Workspace",
   "page.benefits.title": "Benefit Calculations",
   "page.benefitDetail.title": "Calculation Detail",
+  "page.paymentRuns.title": "Payment Runs",
+  "page.paymentRunDetail.title": "Payment Run Detail",
+  "page.monthEnd.title": "Month End",
   "page.compliance.title": "Compliance"
 };
 

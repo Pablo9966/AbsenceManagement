@@ -32,6 +32,8 @@ const internalClaimsPermissions: PermissionCheck[] = [
   { resourceType: "claims_intake_workspace", action: "read" },
   { resourceType: "ktg_case", action: "read_internal" },
   { resourceType: "benefit_calculation", action: "read" },
+  { resourceType: "payment_run", action: "read_internal" },
+  { resourceType: "reconciliation", action: "read_internal" },
 ];
 
 const internalCompliancePermissions: PermissionCheck[] = [

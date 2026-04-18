@@ -22,8 +22,7 @@
     "app/**/*.ts",
     "app/**/*.tsx",
     "src/**/*.ts",
-    "src/**/*.tsx",
-    ".next/types/**/*.ts"
+    "src/**/*.tsx"
   ],
   "references": [
     {
