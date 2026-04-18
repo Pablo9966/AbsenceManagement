@@ -1,67 +1,71 @@
+import {
+  EmptyState,
+  ErrorState,
+  PageHeader,
+  PermissionDeniedState,
+  RedirectDashboardState,
+  WorkflowTable,
+  resolveRouteAccess,
+  type RouteAccessRule,
+} from "../../../src/frontend.js";
 import { getEmployerPortalRuntime } from "../../../src/runtime.js";
-
-const MOCK_DOCUMENTS = [
-  { id: 'D-501', title: 'Medical Certificate - A. Smith', type: 'Arztzeugnis', date: '2026-04-12', linkedTo: 'Absence A-1001', status: 'Verified' },
-  { id: 'D-502', title: 'Accident Report - B. Jones', type: 'Unfallmeldung', date: '2026-04-15', linkedTo: 'Absence A-1002', status: 'Pending Review' },
-];
 
 export default async function EmployerDocumentsPage(props: {
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await props.params;
   const runtime = await getEmployerPortalRuntime(locale);
-
-  return (
-    <div className="surface-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <p className="page-eyebrow">Employer Portal</p>
-          <h1 className="page-title">Document Inbox</h1>
-          <p className="page-description">Manage incoming medical certificates and related documents.</p>
-        </div>
-        <button className="btn-primary">Upload Document</button>
-      </div>
-
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Title</th>
-            <th>Type</th>
-            <th>Received Date</th>
-            <th>Linked To</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {MOCK_DOCUMENTS.map(doc => (
-            <tr key={doc.id}>
-              <td><strong>{doc.id}</strong></td>
-              <td>{doc.title}</td>
-              <td>{doc.type}</td>
-              <td>{doc.date}</td>
-              <td>{doc.linkedTo}</td>
-              <td>
-                <span style={{ 
-                  padding: '4px 8px', 
-                  borderRadius: '12px', 
-                  fontSize: '0.75rem', 
-                  backgroundColor: doc.status === 'Verified' ? 'rgba(52, 168, 83, 0.1)' : 'rgba(251, 188, 5, 0.1)',
-                  color: doc.status === 'Verified' ? 'var(--secondary-color)' : 'var(--warning-color)'
-                }}>
-                  {doc.status}
-                </span>
-              </td>
-              <td>
-                <button style={{
-                  background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontWeight: 500
-                }}>View Document</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+  const access = resolveRouteAccess(
+    runtime.routeRules.find((rule: RouteAccessRule) => rule.routePattern === "/[locale]/documents"),
+    runtime.userContext,
   );
+
+  if (access === "permission_denied") {
+    return <PermissionDeniedState title="Access denied" message="You do not have access to employer documents." />;
+  }
+
+  if (access === "redirect_dashboard") {
+    return <RedirectDashboardState title="Documents" dashboardHref={`/${runtime.locale}/dashboard`} />;
+  }
+
+  try {
+    const response = await runtime.workflowClient.listEmployerDocuments({
+      tenantId: runtime.tenantContext.tenantId,
+      locale: runtime.locale,
+    });
+
+    if (response.data.length === 0) {
+      return <EmptyState title="No documents" message="There are no employer-visible documents right now." />;
+    }
+
+    return (
+      <div className="surface-card">
+        <PageHeader eyebrow="Employer Portal" title="Document Inbox" description="Certificate and document visibility with links back to the related absence and KTG case." />
+        <WorkflowTable>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Employee</th>
+              <th>Status</th>
+              <th>Absence</th>
+              <th>Case</th>
+            </tr>
+          </thead>
+          <tbody>
+            {response.data.map((document) => (
+              <tr key={document.documentId}>
+                <td>{document.title}</td>
+                <td>{document.employeeName}</td>
+                <td>{document.status}</td>
+                <td>{document.linkedEpisodeId ? <a href={`/${runtime.locale}/absences/${document.linkedEpisodeId}`}>{document.linkedEpisodeId}</a> : "-"}</td>
+                <td>{document.linkedCaseId ? <a href={`/${runtime.locale}/cases/${document.linkedCaseId}`}>{document.linkedCaseId}</a> : "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </WorkflowTable>
+      </div>
+    );
+  } catch (error) {
+    return <ErrorState title="Documents unavailable" message={error instanceof Error ? error.message : "Unable to load documents."} />;
+  }
 }

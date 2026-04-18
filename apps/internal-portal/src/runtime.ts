@@ -15,9 +15,13 @@ import type {
   RoleAssignmentDto,
 } from "@elipslife/identity-access-client";
 import { createIdentityAccessClient } from "@elipslife/identity-access-client";
+import { createPortalWorkflowClient } from "@elipslife/portal-workflow-client";
 
 const identityAccessClient = createIdentityAccessClient({
   baseUrl: process.env.IDENTITY_ACCESS_SERVICE_BASE_URL ?? "http://127.0.0.1:4010",
+});
+const portalWorkflowClient = createPortalWorkflowClient({
+  baseUrl: process.env.PORTAL_WORKFLOW_SERVICE_BASE_URL ?? "http://127.0.0.1:4020",
 });
 
 const internalPortalConfig = {
@@ -102,6 +106,7 @@ export const getInternalPortalRuntime = async (input?: {
     routeRules: internalRouteAccessRules,
     bootstrap,
     client: identityAccessClient,
+    workflowClient: portalWorkflowClient,
     sessionToken: session.sessionToken,
   };
 };

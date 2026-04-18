@@ -1,68 +1,71 @@
+import {
+  EmptyState,
+  ErrorState,
+  PageHeader,
+  PermissionDeniedState,
+  RedirectDashboardState,
+  WorkflowTable,
+  resolveRouteAccess,
+  type RouteAccessRule,
+} from "../../../src/frontend.js";
 import { getInternalPortalRuntime } from "../../../src/runtime.js";
-
-const MOCK_CALCULATIONS = [
-  { id: 'CALC-501', caseId: 'C-8910', employee: 'Charlie Brown', calculationDate: '2026-03-25', period: 'March 2026', totalBenefit: 'CHF 4,500.00', status: 'Approved' },
-  { id: 'CALC-502', caseId: 'C-8921', employee: 'Alice Smith', calculationDate: 'Pending', period: 'April 2026', totalBenefit: '-', status: 'Draft' },
-];
 
 export default async function InternalBenefitsPage(props: {
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await props.params;
   const runtime = await getInternalPortalRuntime({ routeLocale: locale });
-
-  return (
-    <div className="surface-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <p className="page-eyebrow">Internal Operations</p>
-          <h1 className="page-title">Benefit Calculation Workspace</h1>
-          <p className="page-description">Calculate daily allowances, adjust for coordinate benefits, and finalize amounts.</p>
-        </div>
-      </div>
-
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Calc ID</th>
-            <th>Case ID</th>
-            <th>Employee</th>
-            <th>Period</th>
-            <th>Calc Date</th>
-            <th>Total Benefit</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {MOCK_CALCULATIONS.map(calc => (
-            <tr key={calc.id}>
-              <td><strong>{calc.id}</strong></td>
-              <td>{calc.caseId}</td>
-              <td>{calc.employee}</td>
-              <td>{calc.period}</td>
-              <td>{calc.calculationDate}</td>
-              <td>{calc.totalBenefit}</td>
-              <td>
-                <span style={{ 
-                  padding: '4px 8px', 
-                  borderRadius: '12px', 
-                  fontSize: '0.75rem', 
-                  backgroundColor: calc.status === 'Approved' ? 'rgba(52, 168, 83, 0.1)' : 'rgba(251, 188, 5, 0.1)',
-                  color: calc.status === 'Approved' ? 'var(--secondary-color)' : 'var(--warning-color)'
-                }}>
-                  {calc.status}
-                </span>
-              </td>
-              <td>
-                <button style={{
-                  background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontWeight: 500
-                }}>Review Calculation</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+  const access = resolveRouteAccess(
+    runtime.routeRules.find((rule: RouteAccessRule) => rule.routePattern === "/[locale]/benefits"),
+    runtime.userContext,
   );
+
+  if (access === "permission_denied") {
+    return <PermissionDeniedState title="Access denied" message="You do not have access to benefit calculations." />;
+  }
+
+  if (access === "redirect_dashboard") {
+    return <RedirectDashboardState title="Benefit Review" dashboardHref={`/${runtime.locale}/dashboard`} />;
+  }
+
+  try {
+    const response = await runtime.workflowClient.listInternalBenefits({
+      tenantId: runtime.tenantContext.tenantId,
+      locale: runtime.locale,
+    });
+
+    if (response.data.length === 0) {
+      return <EmptyState title="No calculations" message="There are no benefit calculations ready for review." />;
+    }
+
+    return (
+      <div className="surface-card">
+        <PageHeader eyebrow="Internal Portal" title="Benefit Review" description="Calculation review list with status, case reference, and entitlement period visibility." />
+        <WorkflowTable>
+          <thead>
+            <tr>
+              <th>Calculation</th>
+              <th>Case</th>
+              <th>Status</th>
+              <th>Reference date</th>
+              <th>Periods</th>
+            </tr>
+          </thead>
+          <tbody>
+            {response.data.map((calculation) => (
+              <tr key={calculation.calculationId}>
+                <td><a href={`/${runtime.locale}/benefits/${calculation.calculationId}`}>{calculation.calculationId}</a></td>
+                <td><a href={`/${runtime.locale}/ktg-cases/${calculation.ktgCaseId}`}>{calculation.ktgCaseId}</a></td>
+                <td>{calculation.status}</td>
+                <td>{calculation.referenceDate}</td>
+                <td>{calculation.periodCount}</td>
+              </tr>
+            ))}
+          </tbody>
+        </WorkflowTable>
+      </div>
+    );
+  } catch (error) {
+    return <ErrorState title="Benefit review unavailable" message={error instanceof Error ? error.message : "Unable to load benefit calculations."} />;
+  }
 }

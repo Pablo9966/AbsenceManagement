@@ -30,6 +30,9 @@
       "path": "../../packages/identity-access-client"
     },
     {
+      "path": "../../packages/portal-workflow-client"
+    },
+    {
       "path": "../../packages/frontend-platform"
     }
   ],

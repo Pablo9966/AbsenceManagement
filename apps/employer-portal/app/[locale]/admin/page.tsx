@@ -33,7 +33,7 @@ export default async function EmployerAdminPage(props: {
       <h1>Admin</h1>
       <p>
         Tenant <strong>{runtime.tenantContext.tenantName}</strong> is now loading administration data from the
-        identity-access service demo context instead of page-local permission fixtures.
+        identity-access service backend instead of page-local permission fixtures.
       </p>
       <dl>
         <dt>Resolved locale</dt>

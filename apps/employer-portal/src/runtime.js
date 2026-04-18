@@ -7,9 +7,13 @@ import {
   resolveLocale,
 } from "./frontend.js";
 import { createIdentityAccessClient } from "../../../packages/identity-access-client/src/client.js";
+import { createPortalWorkflowClient } from "../../../packages/portal-workflow-client/src/client.js";
 
 const identityAccessClient = createIdentityAccessClient({
   baseUrl: process.env.IDENTITY_ACCESS_SERVICE_BASE_URL ?? "http://127.0.0.1:4010",
+});
+const portalWorkflowClient = createPortalWorkflowClient({
+  baseUrl: process.env.PORTAL_WORKFLOW_SERVICE_BASE_URL ?? "http://127.0.0.1:4020",
 });
 
 const employerPortalConfig = {
@@ -84,6 +88,7 @@ export const getEmployerPortalRuntime = async (routeLocale) => {
     routeRules: employerRouteAccessRules,
     bootstrap,
     client: identityAccessClient,
+    workflowClient: portalWorkflowClient,
     sessionToken: session.sessionToken,
   };
 };

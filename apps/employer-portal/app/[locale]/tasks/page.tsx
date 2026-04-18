@@ -1,64 +1,69 @@
+import {
+  EmptyState,
+  ErrorState,
+  PageHeader,
+  PermissionDeniedState,
+  RedirectDashboardState,
+  WorkflowTable,
+  resolveRouteAccess,
+  type RouteAccessRule,
+} from "../../../src/frontend.js";
 import { getEmployerPortalRuntime } from "../../../src/runtime.js";
-
-const MOCK_TASKS = [
-  { id: 'T-9001', title: 'Submit salary details for Alice Smith', dueDate: '2026-04-25', priority: 'High', status: 'Pending' },
-  { id: 'T-9002', title: 'Review KTG settlement C-8910', dueDate: '2026-04-30', priority: 'Medium', status: 'Pending' },
-];
 
 export default async function EmployerTasksPage(props: {
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await props.params;
   const runtime = await getEmployerPortalRuntime(locale);
-
-  return (
-    <div className="surface-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <p className="page-eyebrow">Employer Portal</p>
-          <h1 className="page-title">Tasks & Deadlines</h1>
-          <p className="page-description">Manage your pending actions, review deadlines, and resolve blocked items.</p>
-        </div>
-      </div>
-
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Title</th>
-            <th>Due Date</th>
-            <th>Priority</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {MOCK_TASKS.map(task => (
-            <tr key={task.id}>
-              <td><strong>{task.id}</strong></td>
-              <td>{task.title}</td>
-              <td style={{ color: task.priority === 'High' ? 'var(--accent-color)' : 'inherit' }}>{task.dueDate}</td>
-              <td>
-                <span style={{ 
-                  padding: '4px 8px', 
-                  borderRadius: '12px', 
-                  fontSize: '0.75rem', 
-                  backgroundColor: task.priority === 'High' ? 'rgba(234, 67, 53, 0.1)' : 'rgba(251, 188, 5, 0.1)',
-                  color: task.priority === 'High' ? 'var(--accent-color)' : 'var(--warning-color)'
-                }}>
-                  {task.priority}
-                </span>
-              </td>
-              <td>{task.status}</td>
-              <td>
-                <button style={{
-                  background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontWeight: 500
-                }}>Resolve</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+  const access = resolveRouteAccess(
+    runtime.routeRules.find((rule: RouteAccessRule) => rule.routePattern === "/[locale]/tasks"),
+    runtime.userContext,
   );
+
+  if (access === "permission_denied") {
+    return <PermissionDeniedState title="Access denied" message="You do not have access to tasks and deadlines." />;
+  }
+
+  if (access === "redirect_dashboard") {
+    return <RedirectDashboardState title="Tasks" dashboardHref={`/${runtime.locale}/dashboard`} />;
+  }
+
+  try {
+    const response = await runtime.workflowClient.listEmployerTasks({
+      tenantId: runtime.tenantContext.tenantId,
+      locale: runtime.locale,
+    });
+
+    if (response.data.length === 0) {
+      return <EmptyState title="No tasks" message="There are no open tasks or deadlines for this tenant." />;
+    }
+
+    return (
+      <div className="surface-card">
+        <PageHeader eyebrow="Employer Portal" title="Tasks & Deadlines" description="Read-only operational tasks with direct links to downstream workflow screens." />
+        <WorkflowTable>
+          <thead>
+            <tr>
+              <th>Task</th>
+              <th>Status</th>
+              <th>Due</th>
+              <th>Link</th>
+            </tr>
+          </thead>
+          <tbody>
+            {response.data.map((task) => (
+              <tr key={task.taskId}>
+                <td>{task.title}</td>
+                <td>{task.status}</td>
+                <td>{task.dueAt ?? "-"}</td>
+                <td><a href={task.href}>Open</a></td>
+              </tr>
+            ))}
+          </tbody>
+        </WorkflowTable>
+      </div>
+    );
+  } catch (error) {
+    return <ErrorState title="Tasks unavailable" message={error instanceof Error ? error.message : "Unable to load tasks."} />;
+  }
 }

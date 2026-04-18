@@ -30,7 +30,7 @@ export default async function EmployerAdminOnboardingPage(props: {
     <section>
       <p>Employer Portal</p>
       <h1>Onboarding</h1>
-      <p>The onboarding workspace is now sourced from the identity-access service demo context.</p>
+      <p>The onboarding workspace is sourced from the identity-access service backend.</p>
       <dl>
         <dt>Tenant</dt>
         <dd>{runtime.tenantContext.tenantName}</dd>

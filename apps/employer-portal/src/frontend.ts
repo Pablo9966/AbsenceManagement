@@ -14,6 +14,16 @@ export {
   createPortalShellModel,
 } from "../../../packages/frontend-platform/src/shell/model.js";
 export {
+  DetailList,
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  MetricCards,
+  PageHeader,
+  SectionCard,
+  WorkflowTable,
+} from "../../../packages/frontend-platform/src/workflow/components.js";
+export {
   employerNavigation,
   employerRouteAccessRules,
 } from "../../../packages/frontend-platform/src/navigation/employer.js";
@@ -26,3 +36,6 @@ export {
 export type {
   LocaleCode,
 } from "../../../packages/frontend-platform/src/i18n/types.js";
+export type {
+  RouteAccessRule,
+} from "../../../packages/frontend-platform/src/navigation/types.js";

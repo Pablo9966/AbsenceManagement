@@ -1,66 +1,71 @@
+import {
+  EmptyState,
+  ErrorState,
+  PageHeader,
+  PermissionDeniedState,
+  RedirectDashboardState,
+  WorkflowTable,
+  resolveRouteAccess,
+  type RouteAccessRule,
+} from "../../../src/frontend.js";
 import { getInternalPortalRuntime } from "../../../src/runtime.js";
-
-const MOCK_KTG_CASES = [
-  { id: 'C-8921', employer: 'Tech Corp AG', employee: 'Alice Smith', openDate: '2026-04-12', stage: 'Coverage Assessment', assignedTo: 'Sarah Handler' },
-  { id: 'C-8910', employer: 'Bakery GmbH', employee: 'Charlie Brown', openDate: '2026-03-05', stage: 'Ongoing Payments', assignedTo: 'Mike Validator' },
-];
 
 export default async function InternalKtgCasesPage(props: {
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await props.params;
   const runtime = await getInternalPortalRuntime({ routeLocale: locale });
-
-  return (
-    <div className="surface-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <p className="page-eyebrow">Internal Operations</p>
-          <h1 className="page-title">KTG Review Workspace</h1>
-          <p className="page-description">Assess coverage, determine liability, and manage ongoing claims.</p>
-        </div>
-      </div>
-
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Case ID</th>
-            <th>Employer</th>
-            <th>Employee</th>
-            <th>Open Date</th>
-            <th>Stage</th>
-            <th>Assigned To</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {MOCK_KTG_CASES.map(c => (
-            <tr key={c.id}>
-              <td><strong>{c.id}</strong></td>
-              <td>{c.employer}</td>
-              <td>{c.employee}</td>
-              <td>{c.openDate}</td>
-              <td>
-                <span style={{ 
-                  padding: '4px 8px', 
-                  borderRadius: '12px', 
-                  fontSize: '0.75rem', 
-                  backgroundColor: c.stage === 'Ongoing Payments' ? 'rgba(52, 168, 83, 0.1)' : 'rgba(66, 133, 244, 0.1)',
-                  color: c.stage === 'Ongoing Payments' ? 'var(--secondary-color)' : 'var(--primary-color)'
-                }}>
-                  {c.stage}
-                </span>
-              </td>
-              <td>{c.assignedTo}</td>
-              <td>
-                <button style={{
-                  background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontWeight: 500
-                }}>Open Workspace</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+  const access = resolveRouteAccess(
+    runtime.routeRules.find((rule: RouteAccessRule) => rule.routePattern === "/[locale]/ktg-cases"),
+    runtime.userContext,
   );
+
+  if (access === "permission_denied") {
+    return <PermissionDeniedState title="Access denied" message="You do not have access to internal KTG cases." />;
+  }
+
+  if (access === "redirect_dashboard") {
+    return <RedirectDashboardState title="KTG Review" dashboardHref={`/${runtime.locale}/dashboard`} />;
+  }
+
+  try {
+    const response = await runtime.workflowClient.listInternalCases({
+      tenantId: runtime.tenantContext.tenantId,
+      locale: runtime.locale,
+    });
+
+    if (response.data.length === 0) {
+      return <EmptyState title="No KTG cases" message="There are no internal KTG cases available for review." />;
+    }
+
+    return (
+      <div className="surface-card">
+        <PageHeader eyebrow="Internal Portal" title="KTG Review Workspace" description="Internal KTG case review with richer internal context than the employer portal." />
+        <WorkflowTable>
+          <thead>
+            <tr>
+              <th>Case</th>
+              <th>Employee</th>
+              <th>Status</th>
+              <th>Assigned team</th>
+              <th>Deadline</th>
+            </tr>
+          </thead>
+          <tbody>
+            {response.data.map((ktgCase) => (
+              <tr key={ktgCase.caseId}>
+                <td><a href={`/${runtime.locale}/ktg-cases/${ktgCase.caseId}`}>{ktgCase.caseNumber}</a></td>
+                <td>{ktgCase.employeeName}</td>
+                <td>{ktgCase.status}</td>
+                <td>{ktgCase.assignedTeam ?? "-"}</td>
+                <td>{ktgCase.deadlineAt ?? "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </WorkflowTable>
+      </div>
+    );
+  } catch (error) {
+    return <ErrorState title="KTG cases unavailable" message={error instanceof Error ? error.message : "Unable to load KTG cases."} />;
+  }
 }

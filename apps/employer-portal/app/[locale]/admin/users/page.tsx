@@ -37,7 +37,7 @@ export default async function EmployerAdminUsersPage(props: {
     <section>
       <p>Employer Portal</p>
       <h1>User Administration</h1>
-      <p>Memberships and invites are coming from the identity-access service demo repository.</p>
+      <p>Memberships and invites are coming from the identity-access service backend.</p>
       <h2>Memberships</h2>
       <table>
         <thead>

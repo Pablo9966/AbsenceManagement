@@ -12,6 +12,16 @@ export {
   createPortalShellModel,
 } from "../../../packages/frontend-platform/src/shell/model.js";
 export {
+  DetailList,
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  MetricCards,
+  PageHeader,
+  SectionCard,
+  WorkflowTable,
+} from "../../../packages/frontend-platform/src/workflow/components.js";
+export {
   internalNavigation,
   internalRouteAccessRules,
 } from "../../../packages/frontend-platform/src/navigation/internal.js";

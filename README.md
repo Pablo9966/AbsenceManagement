@@ -2,7 +2,7 @@
 
 Production-grade, Swiss-hosted Absence Management Platform for elipsLife AG.
 
-This workspace is being built module-by-module for Phase 1:
+This workspace is being built module-by-module across Phase 1 and Phase 2:
 
 1. Employee Master Data Management
 2. Absence Recording & Tracking
@@ -28,6 +28,7 @@ This repository currently contains:
 - Phase 1 architecture notes
 - Phase 2 identity and access foundation design package
 - Phase 2 employer and internal portal shell package
+- Phase 2 employer and internal core workflow package
 - Module 1 design package for Employee Master Data Management
 - Module 2 design package for Absence Recording and Tracking
 - Module 3 design package for KTG Case Registration and Deadline Management
@@ -46,14 +47,17 @@ This repository currently contains:
 - `benefit-engine-service` schema, API contract, and TypeScript service skeleton
 - `identity-access-service` schema, API contract, and TypeScript service skeleton
 - `frontend-platform` shared frontend package for locale, navigation, and shell modeling
-- `employer-portal` Next.js shell scaffold
-- `internal-portal` Next.js shell scaffold
+- `portal-workflow-client` shared route-family workflow client contract
+- `portal-workflow-service` route-oriented workflow aggregation service
+- `employer-portal` Next.js employer workflow application
+- `internal-portal` Next.js internal workflow application
 
 ## Repository Layout
 
 - [docs/phase-1/architecture.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-1/architecture.md)
 - [docs/phase-2/module-2a-identity-access.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-2/module-2a-identity-access.md)
 - [docs/phase-2/module-2a-portal-shells.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-2/module-2a-portal-shells.md)
+- [docs/phase-2/module-2b-core-product.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-2/module-2b-core-product.md)
 - [docs/phase-1/module-01-employee-master-data.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-1/module-01-employee-master-data.md)
 - [docs/phase-1/module-02-absence-recording.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-1/module-02-absence-recording.md)
 - [docs/phase-1/module-03-ktg-case-management.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-1/module-03-ktg-case-management.md)
@@ -122,4 +126,4 @@ This repository currently contains:
 
 ## Notes
 
-The local machine currently does not expose a working Node.js or Git toolchain in the shell, so the repository has been scaffolded as source-first artifacts without runtime verification yet.
+The repository currently validates root typecheck plus both portal builds. Runtime process orchestration and end-to-end environment wiring still need explicit service startup and integration verification.

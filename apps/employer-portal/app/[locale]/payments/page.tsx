@@ -1,68 +1,69 @@
+import {
+  EmptyState,
+  ErrorState,
+  PageHeader,
+  PermissionDeniedState,
+  RedirectDashboardState,
+  WorkflowTable,
+  resolveRouteAccess,
+  type RouteAccessRule,
+} from "../../../src/frontend.js";
 import { getEmployerPortalRuntime } from "../../../src/runtime.js";
-
-const MOCK_PAYMENTS = [
-  { id: 'PAY-100', runDate: '2026-03-31', period: 'March 2026', totalAmount: 'CHF 12,450.00', status: 'Settled', statement: 'Available' },
-  { id: 'PAY-101', runDate: '2026-04-30', period: 'April 2026', totalAmount: 'CHF 4,200.00', status: 'Pending Calculation', statement: 'Not Available' },
-];
 
 export default async function EmployerPaymentsPage(props: {
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await props.params;
   const runtime = await getEmployerPortalRuntime(locale);
-
-  return (
-    <div className="surface-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <p className="page-eyebrow">Employer Portal</p>
-          <h1 className="page-title">Payments & Calculations</h1>
-          <p className="page-description">View payment runs, statement PDFs, and basic calculation details.</p>
-        </div>
-      </div>
-
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Run ID</th>
-            <th>Period</th>
-            <th>Run Date</th>
-            <th>Total Amount</th>
-            <th>Status</th>
-            <th>Statement</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {MOCK_PAYMENTS.map(pay => (
-            <tr key={pay.id}>
-              <td><strong>{pay.id}</strong></td>
-              <td>{pay.period}</td>
-              <td>{pay.runDate}</td>
-              <td>{pay.totalAmount}</td>
-              <td>
-                <span style={{ 
-                  padding: '4px 8px', 
-                  borderRadius: '12px', 
-                  fontSize: '0.75rem', 
-                  backgroundColor: pay.status === 'Settled' ? 'rgba(52, 168, 83, 0.1)' : 'rgba(251, 188, 5, 0.1)',
-                  color: pay.status === 'Settled' ? 'var(--secondary-color)' : 'var(--warning-color)'
-                }}>
-                  {pay.status}
-                </span>
-              </td>
-              <td>{pay.statement}</td>
-              <td>
-                <button style={{
-                  background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontWeight: 500
-                }} disabled={pay.statement === 'Not Available'}>
-                  Download PDF
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+  const access = resolveRouteAccess(
+    runtime.routeRules.find((rule: RouteAccessRule) => rule.routePattern === "/[locale]/payments"),
+    runtime.userContext,
   );
+
+  if (access === "permission_denied") {
+    return <PermissionDeniedState title="Access denied" message="You do not have access to payment visibility." />;
+  }
+
+  if (access === "redirect_dashboard") {
+    return <RedirectDashboardState title="Payments" dashboardHref={`/${runtime.locale}/dashboard`} />;
+  }
+
+  try {
+    const response = await runtime.workflowClient.listEmployerPayments({
+      tenantId: runtime.tenantContext.tenantId,
+      locale: runtime.locale,
+    });
+
+    if (response.data.length === 0) {
+      return <EmptyState title="No payment summaries" message="There are no read-only payment summaries available yet." />;
+    }
+
+    return (
+      <div className="surface-card">
+        <PageHeader eyebrow="Employer Portal" title="Payments" description="Read-only payment visibility without payment-run orchestration or operational controls." />
+        <WorkflowTable>
+          <thead>
+            <tr>
+              <th>Case</th>
+              <th>Period</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {response.data.map((payment) => (
+              <tr key={payment.paymentSummaryId}>
+                <td><a href={`/${runtime.locale}/cases/${payment.caseId}`}>{payment.caseNumber}</a></td>
+                <td>{payment.periodLabel}</td>
+                <td>CHF {payment.amountChf.toFixed(2)}</td>
+                <td>{payment.status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </WorkflowTable>
+      </div>
+    );
+  } catch (error) {
+    return <ErrorState title="Payments unavailable" message={error instanceof Error ? error.message : "Unable to load payment visibility."} />;
+  }
 }
