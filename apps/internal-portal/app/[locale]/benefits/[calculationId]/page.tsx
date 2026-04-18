@@ -2,9 +2,10 @@ import { GuardedPortalPage } from "../../../../src/frontend.js";
 import { getInternalPortalRuntime } from "../../../../src/runtime.js";
 
 export default async function InternalBenefitDetailPage(props: {
-  params: { locale: "de-CH" | "en-CH" | "fr-CH" | "it-CH"; calculationId: string };
+  params: Promise<{ locale: string; calculationId: string }>;
 }) {
-  const runtime = await getInternalPortalRuntime({ routeLocale: props.params.locale });
+  const { locale, calculationId } = await props.params;
+  const runtime = await getInternalPortalRuntime({ routeLocale: locale });
 
   return (
     <GuardedPortalPage
@@ -15,7 +16,7 @@ export default async function InternalBenefitDetailPage(props: {
       eyebrow="Internal Portal"
       title="Calculation Detail"
       description="Placeholder calculation detail for salary basis, entitlement periods, and Taggelddispositiv context."
-      identifier={props.params.calculationId}
+      identifier={calculationId}
     />
   );
 }

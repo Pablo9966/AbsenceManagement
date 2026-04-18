@@ -10,8 +10,10 @@ export default async function InternalCompliancePage(props) {
         return <RedirectDashboardState title="Compliance" dashboardHref={`/${runtime.locale}/dashboard`}/>;
     }
     const [auditEvents, purposeRecords] = await Promise.all([
-        runtime.demoService.listAccessAuditEvents(runtime.tenantContext.tenantId),
-        runtime.demoService.listAccessPurposeRecords(runtime.tenantContext.tenantId),
+        runtime.client.listAuditEvents(runtime.sessionToken, runtime.tenantContext.tenantId, {
+            resource: "access_control",
+        }),
+        runtime.client.listAccessPurposeRecords(runtime.sessionToken, runtime.tenantContext.tenantId),
     ]);
     return (<section>
       <p>Internal Portal</p>

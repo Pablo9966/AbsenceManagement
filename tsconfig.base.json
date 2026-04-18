@@ -13,6 +13,9 @@
     "jsx": "react-jsx",
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
+    "types": [
+      "node"
+    ],
     "typeRoots": [
       "./types",
       "./node_modules/@types"
@@ -20,6 +23,9 @@
     "paths": {
       "@elipslife/frontend-platform": [
         "packages/frontend-platform/src/index.ts"
+      ],
+      "@elipslife/identity-access-client": [
+        "packages/identity-access-client/src/index.ts"
       ],
       "@elipslife/identity-access-service": [
         "services/identity-access-service/src/index.ts"

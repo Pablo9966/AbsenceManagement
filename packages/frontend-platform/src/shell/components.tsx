@@ -6,7 +6,7 @@ import type { PortalShellModel } from "./model.js";
 export interface PortalLayoutProps {
   shell: PortalShellModel;
   messages: MessageCatalog;
-  children?: unknown;
+  children?: any;
 }
 
 export const PortalLayout = (props: PortalLayoutProps) => (

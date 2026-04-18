@@ -2,10 +2,11 @@ import { PortalLayout } from "../../src/frontend.js";
 import { getEmployerPortalRuntime } from "../../src/runtime.js";
 
 export default async function EmployerPortalLayout(props: {
-  children: unknown;
-  params: { locale: "de-CH" | "en-CH" | "fr-CH" | "it-CH" };
+  children: any;
+  params: Promise<{ locale: string }>;
 }) {
-  const runtime = await getEmployerPortalRuntime(props.params.locale);
+  const { locale } = await props.params;
+  const runtime = await getEmployerPortalRuntime(locale);
 
   return (
     <html lang={runtime.locale}>

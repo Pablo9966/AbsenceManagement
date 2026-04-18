@@ -32,6 +32,9 @@
       "path": "./packages/frontend-platform"
     },
     {
+      "path": "./packages/identity-access-client"
+    },
+    {
       "path": "./apps/employer-portal"
     },
     {

@@ -10,7 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@elipslife/identity-access-service": "0.1.0",
+    "@elipslife/identity-access-client": "0.1.0",
     "@elipslife/frontend-platform": "0.1.0",
     "next": "^15.3.0",
     "react": "^19.0.0",

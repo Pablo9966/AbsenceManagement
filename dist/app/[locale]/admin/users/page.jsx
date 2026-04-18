@@ -10,8 +10,8 @@ export default async function EmployerAdminUsersPage(props) {
         return <RedirectDashboardState title="User Administration" dashboardHref={`/${runtime.locale}/dashboard`}/>;
     }
     const [memberships, invites] = await Promise.all([
-        runtime.demoService.listTenantMemberships(runtime.tenantContext.tenantId),
-        runtime.demoService.listProvisioningInvites(runtime.tenantContext.tenantId),
+        runtime.client.listMemberships(runtime.sessionToken, runtime.tenantContext.tenantId),
+        runtime.client.listProvisioningInvites(runtime.sessionToken, runtime.tenantContext.tenantId),
     ]);
     return (<section>
       <p>Employer Portal</p>

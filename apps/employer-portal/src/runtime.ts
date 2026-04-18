@@ -9,12 +9,24 @@ import {
   type PortalTenantContext,
   type PortalUserContext,
 } from "./frontend.js";
-import { getDemoIdentityAccessContext } from "../../../services/identity-access-service/src/testing/demo-context.js";
 import type {
-  EffectivePermissionSnapshot,
+  EffectivePermissionSnapshotDto,
   PermissionCheck,
-  RoleAssignment,
-} from "../../../services/identity-access-service/src/domain/types.js";
+  RoleAssignmentDto,
+} from "@elipslife/identity-access-client";
+import { createIdentityAccessClient } from "@elipslife/identity-access-client";
+
+const identityAccessClient = createIdentityAccessClient({
+  baseUrl: process.env.IDENTITY_ACCESS_SERVICE_BASE_URL ?? "http://127.0.0.1:4010",
+});
+
+const employerPortalConfig = {
+  tenantId: process.env.EMPLOYER_PORTAL_TENANT_ID ?? "tenant-employer-demo",
+  tenantName: process.env.EMPLOYER_PORTAL_TENANT_NAME ?? "elipsLife Demo Kunde",
+  defaultLocale: "de-CH" as LocaleCode,
+  signInEmail: process.env.EMPLOYER_PORTAL_SIGN_IN_EMAIL ?? "hr.admin@demo.elipslife.ch",
+  featureFlags: ["dashboard-shell", "admin-shell", "phase-2a-api-bootstrap"],
+};
 
 const employerPortalPermissions: PermissionCheck[] = [
   { resourceType: "dashboard", action: "read" },
@@ -27,40 +39,39 @@ const employerPortalPermissions: PermissionCheck[] = [
   { resourceType: "tenant_admin", action: "manage" },
 ];
 
-export const getEmployerPortalRuntime = async (routeLocale?: LocaleCode) => {
-  const demo = await getDemoIdentityAccessContext();
-  const bootstrap = await demo.service.getPortalBootstrap({
-    tenantId: demo.tenants.employer.tenantId,
-    userId: demo.users.employerAdmin.userId,
-    routeLocale,
-    tenantDefaultLanguage: demo.tenants.employer.defaultLocale,
+export const getEmployerPortalRuntime = async (routeLocale?: string) => {
+  const session = await identityAccessClient.signIn({
+    email: employerPortalConfig.signInEmail,
+    tenantId: employerPortalConfig.tenantId,
+  });
+  const bootstrap = await identityAccessClient.getPortalBootstrap(session.sessionToken, {
+    routeLocale: routeLocale as LocaleCode | undefined,
     permissions: employerPortalPermissions,
-    effectiveAt: "2026-04-18T08:00:00.000Z",
   });
   const locale = resolveLocale({
-    routeLocale,
+    routeLocale: routeLocale as LocaleCode | undefined,
     userPreferredLanguage: bootstrap.user.preferredLanguage,
-    tenantDefaultLanguage: demo.tenants.employer.defaultLocale,
+    tenantDefaultLanguage: employerPortalConfig.defaultLocale,
   });
   const messages = loadCatalog(locale);
   const userContext: PortalUserContext = {
     userId: bootstrap.user.id,
-    tenantId: demo.tenants.employer.tenantId,
+    tenantId: employerPortalConfig.tenantId,
     locale,
     roleCodes: bootstrap.roleAssignments
-      .filter((assignment: RoleAssignment) => !assignment.revokedAt)
-      .map((assignment: RoleAssignment) => assignment.roleCode),
-    effectivePermissions: bootstrap.effectivePermissions.map((permission: EffectivePermissionSnapshot) => ({
+      .filter((assignment: RoleAssignmentDto) => !assignment.revokedAt)
+      .map((assignment: RoleAssignmentDto) => assignment.roleCode),
+    effectivePermissions: bootstrap.effectivePermissions.map((permission: EffectivePermissionSnapshotDto) => ({
       resourceType: permission.resourceType,
       action: permission.action,
       allowed: permission.allowed,
     })),
   };
   const tenantContext: PortalTenantContext = {
-    tenantId: demo.tenants.employer.tenantId,
-    tenantName: demo.tenants.employer.tenantName,
+    tenantId: employerPortalConfig.tenantId,
+    tenantName: employerPortalConfig.tenantName,
     defaultLocale: locale,
-    featureFlags: demo.tenants.employer.featureFlags,
+    featureFlags: employerPortalConfig.featureFlags,
   };
   const navigation = filterVisibleNavigation(employerNavigation, userContext);
   const shell = createPortalShellModel({
@@ -80,6 +91,7 @@ export const getEmployerPortalRuntime = async (routeLocale?: LocaleCode) => {
     shell,
     routeRules: employerRouteAccessRules,
     bootstrap,
-    demoService: demo.service,
+    client: identityAccessClient,
+    sessionToken: session.sessionToken,
   };
 };

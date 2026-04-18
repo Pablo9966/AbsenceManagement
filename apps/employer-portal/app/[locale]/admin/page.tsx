@@ -4,13 +4,14 @@ import {
   resolveRouteAccess,
 } from "../../../src/frontend.js";
 import type { RouteAccessRule } from "../../../../../packages/frontend-platform/src/navigation/types.js";
-import type { ProvisioningInvite } from "../../../../../services/identity-access-service/src/domain/types.js";
+import type { ProvisioningInviteDto } from "@elipslife/identity-access-client";
 import { getEmployerPortalRuntime } from "../../../src/runtime.js";
 
 export default async function EmployerAdminPage(props: {
-  params: { locale: "de-CH" | "en-CH" | "fr-CH" | "it-CH" };
+  params: Promise<{ locale: string }>;
 }) {
-  const runtime = await getEmployerPortalRuntime(props.params.locale);
+  const { locale } = await props.params;
+  const runtime = await getEmployerPortalRuntime(locale);
   const access = resolveRouteAccess(
     runtime.routeRules.find((rule: RouteAccessRule) => rule.routePattern === "/[locale]/admin"),
     runtime.userContext,
@@ -24,7 +25,7 @@ export default async function EmployerAdminPage(props: {
     return <RedirectDashboardState title="Admin" dashboardHref={`/${runtime.locale}/dashboard`} />;
   }
 
-  const invites = await runtime.demoService.listProvisioningInvites(runtime.tenantContext.tenantId);
+  const invites = await runtime.client.listProvisioningInvites(runtime.sessionToken, runtime.tenantContext.tenantId);
 
   return (
     <section>
@@ -42,7 +43,7 @@ export default async function EmployerAdminPage(props: {
         <dt>Onboarding ready for go-live</dt>
         <dd>{runtime.bootstrap.onboardingReadiness.value ? "Yes" : "No"}</dd>
         <dt>Open invites</dt>
-        <dd>{invites.filter((invite: ProvisioningInvite) => invite.inviteStatus === "pending").length}</dd>
+        <dd>{invites.filter((invite: ProvisioningInviteDto) => invite.inviteStatus === "pending").length}</dd>
       </dl>
     </section>
   );

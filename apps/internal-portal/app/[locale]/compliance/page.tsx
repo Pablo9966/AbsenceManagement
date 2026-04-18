@@ -5,16 +5,17 @@ import {
 } from "../../../src/frontend.js";
 import type { RouteAccessRule } from "../../../../../packages/frontend-platform/src/navigation/types.js";
 import type {
-  AccessAuditEvent,
-  AccessPurposeRecord,
-  AuditAccessPolicy,
-} from "../../../../../services/identity-access-service/src/domain/types.js";
+  AccessAuditEventDto,
+  AccessPurposeRecordDto,
+  AuditAccessPolicyDto,
+} from "@elipslife/identity-access-client";
 import { getInternalPortalRuntime } from "../../../src/runtime.js";
 
 export default async function InternalCompliancePage(props: {
-  params: { locale: "de-CH" | "en-CH" | "fr-CH" | "it-CH" };
+  params: Promise<{ locale: string }>;
 }) {
-  const runtime = await getInternalPortalRuntime({ routeLocale: props.params.locale, viewer: "compliance" });
+  const { locale } = await props.params;
+  const runtime = await getInternalPortalRuntime({ routeLocale: locale, viewer: "compliance" });
   const access = resolveRouteAccess(
     runtime.routeRules.find((rule: RouteAccessRule) => rule.routePattern === "/[locale]/compliance"),
     runtime.userContext,
@@ -29,8 +30,10 @@ export default async function InternalCompliancePage(props: {
   }
 
   const [auditEvents, purposeRecords] = await Promise.all([
-    runtime.demoService.listAccessAuditEvents(runtime.tenantContext.tenantId),
-    runtime.demoService.listAccessPurposeRecords(runtime.tenantContext.tenantId),
+    runtime.client.listAuditEvents(runtime.sessionToken, runtime.tenantContext.tenantId, {
+      resource: "access_control",
+    }),
+    runtime.client.listAccessPurposeRecords(runtime.sessionToken, runtime.tenantContext.tenantId),
   ]);
 
   return (
@@ -44,7 +47,7 @@ export default async function InternalCompliancePage(props: {
         <dt>Audit policy count</dt>
         <dd>{runtime.bootstrap.auditAccessPolicies.length}</dd>
         <dt>Export allowed</dt>
-        <dd>{runtime.bootstrap.auditAccessPolicies.some((policy: AuditAccessPolicy) => policy.canExportAuditFlag) ? "Yes" : "No"}</dd>
+        <dd>{runtime.bootstrap.auditAccessPolicies.some((policy: AuditAccessPolicyDto) => policy.canExportAuditFlag) ? "Yes" : "No"}</dd>
       </dl>
       <h2>Recent Audit Events</h2>
       <table>
@@ -57,7 +60,7 @@ export default async function InternalCompliancePage(props: {
           </tr>
         </thead>
         <tbody>
-          {auditEvents.map((event: AccessAuditEvent) => (
+          {auditEvents.map((event: AccessAuditEventDto) => (
             <tr key={event.id}>
               <td>{event.occurredAt}</td>
               <td>{event.resourceType}</td>
@@ -78,7 +81,7 @@ export default async function InternalCompliancePage(props: {
           </tr>
         </thead>
         <tbody>
-          {purposeRecords.map((record: AccessPurposeRecord) => (
+          {purposeRecords.map((record: AccessPurposeRecordDto) => (
             <tr key={record.id}>
               <td>{record.purposeCode}</td>
               <td>{record.lawfulBasis}</td>

@@ -5,15 +5,16 @@ import {
 } from "../../../../src/frontend.js";
 import type { RouteAccessRule } from "../../../../../../packages/frontend-platform/src/navigation/types.js";
 import type {
-  ProvisioningInvite,
-  TenantMembership,
-} from "../../../../../../services/identity-access-service/src/domain/types.js";
+  ProvisioningInviteDto,
+  TenantMembershipDto,
+} from "@elipslife/identity-access-client";
 import { getEmployerPortalRuntime } from "../../../../src/runtime.js";
 
 export default async function EmployerAdminUsersPage(props: {
-  params: { locale: "de-CH" | "en-CH" | "fr-CH" | "it-CH" };
+  params: Promise<{ locale: string }>;
 }) {
-  const runtime = await getEmployerPortalRuntime(props.params.locale);
+  const { locale } = await props.params;
+  const runtime = await getEmployerPortalRuntime(locale);
   const access = resolveRouteAccess(
     runtime.routeRules.find((rule: RouteAccessRule) => rule.routePattern === "/[locale]/admin/users"),
     runtime.userContext,
@@ -28,8 +29,8 @@ export default async function EmployerAdminUsersPage(props: {
   }
 
   const [memberships, invites] = await Promise.all([
-    runtime.demoService.listTenantMemberships(runtime.tenantContext.tenantId),
-    runtime.demoService.listProvisioningInvites(runtime.tenantContext.tenantId),
+    runtime.client.listMemberships(runtime.sessionToken, runtime.tenantContext.tenantId),
+    runtime.client.listProvisioningInvites(runtime.sessionToken, runtime.tenantContext.tenantId),
   ]);
 
   return (
@@ -47,7 +48,7 @@ export default async function EmployerAdminUsersPage(props: {
           </tr>
         </thead>
         <tbody>
-          {memberships.map((membership: TenantMembership) => (
+          {memberships.map((membership: TenantMembershipDto) => (
             <tr key={membership.id}>
               <td>{membership.userId}</td>
               <td>{membership.membershipStatus}</td>
@@ -67,7 +68,7 @@ export default async function EmployerAdminUsersPage(props: {
           </tr>
         </thead>
         <tbody>
-          {invites.map((invite: ProvisioningInvite) => (
+          {invites.map((invite: ProvisioningInviteDto) => (
             <tr key={invite.id}>
               <td>{invite.email}</td>
               <td>{invite.targetRoleCode}</td>

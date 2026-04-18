@@ -2,9 +2,10 @@ import { GuardedPortalPage } from "../../../src/frontend.js";
 import { getInternalPortalRuntime } from "../../../src/runtime.js";
 
 export default async function InternalAdminPage(props: {
-  params: { locale: "de-CH" | "en-CH" | "fr-CH" | "it-CH" };
+  params: Promise<{ locale: string }>;
 }) {
-  const runtime = await getInternalPortalRuntime({ routeLocale: props.params.locale, viewer: "compliance" });
+  const { locale } = await props.params;
+  const runtime = await getInternalPortalRuntime({ routeLocale: locale, viewer: "compliance" });
 
   return (
     <GuardedPortalPage

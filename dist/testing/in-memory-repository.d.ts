@@ -1,5 +1,21 @@
 import type { AccessAuditEvent, AccessPurposeRecord, AuditAccessPolicy, OnboardingWorkspace, PermissionGrant, PermissionPolicySet, PlatformUser, PortalSessionPolicy, ProvisioningInvite, RoleAssignment, SsoConfiguration, TenantMembership, UserEmployeeLink, UserProfile } from "../domain/types.js";
 import type { IdentityAccessRepository, IdentityAccessRepositoryContext } from "../application/identity-access.service.js";
+export interface IdentityAccessRepositorySnapshot {
+    platformUsers: PlatformUser[];
+    userProfiles: UserProfile[];
+    tenantMemberships: TenantMembership[];
+    userEmployeeLinks: UserEmployeeLink[];
+    roleAssignments: RoleAssignment[];
+    permissionPolicySets: PermissionPolicySet[];
+    permissionGrants: PermissionGrant[];
+    portalSessionPolicies: PortalSessionPolicy[];
+    ssoConfigurations: SsoConfiguration[];
+    accessPurposeRecords: AccessPurposeRecord[];
+    auditAccessPolicies: AuditAccessPolicy[];
+    onboardingWorkspaces: OnboardingWorkspace[];
+    provisioningInvites: ProvisioningInvite[];
+    accessAuditEvents: AccessAuditEvent[];
+}
 export declare class InMemoryIdentityAccessRepository implements IdentityAccessRepository {
     private platformUsers;
     private userProfiles;
@@ -58,4 +74,6 @@ export declare class InMemoryIdentityAccessRepository implements IdentityAccessR
         resourceType?: string;
         lawfulBasis?: AccessPurposeRecord["lawfulBasis"];
     }): Promise<AccessAuditEvent[]>;
+    exportSnapshot(): IdentityAccessRepositorySnapshot;
+    loadSnapshot(snapshot: IdentityAccessRepositorySnapshot): void;
 }

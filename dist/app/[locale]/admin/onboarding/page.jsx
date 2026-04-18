@@ -9,7 +9,7 @@ export default async function EmployerAdminOnboardingPage(props) {
     if (access === "redirect_dashboard") {
         return <RedirectDashboardState title="Onboarding" dashboardHref={`/${runtime.locale}/dashboard`}/>;
     }
-    const workspace = await runtime.demoService.getOnboardingWorkspace(runtime.tenantContext.tenantId);
+    const workspace = await runtime.client.getOnboardingWorkspace(runtime.sessionToken, runtime.tenantContext.tenantId);
     return (<section>
       <p>Employer Portal</p>
       <h1>Onboarding</h1>

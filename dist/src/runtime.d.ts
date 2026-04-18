@@ -9,6 +9,7 @@ export declare const getInternalPortalRuntime: (input?: {
     tenantContext: PortalTenantContext;
     shell: import("packages/frontend-platform/src/shell/model.js").PortalShellModel;
     routeRules: import("packages/frontend-platform/src/navigation/types.js").RouteAccessRule[];
-    bootstrap: import("../../../services/identity-access-service/src/domain/types.js").PortalBootstrap;
-    demoService: import("services/identity-access-service/src/application/identity-access.service.js").IdentityAccessService;
+    bootstrap: import("@elipslife/identity-access-client").PortalBootstrapDto;
+    client: import("@elipslife/identity-access-client").IdentityAccessClient;
+    sessionToken: string;
 }>;

@@ -12,6 +12,9 @@
     "lint": "echo \"lint configuration pending\""
   },
   "devDependencies": {
+    "@types/node": "^24.7.2",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
     "typescript": "^6.0.3"
   }
 }

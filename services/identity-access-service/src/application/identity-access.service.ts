@@ -618,6 +618,10 @@ export class IdentityAccessService {
     return this.repository.listTenantMemberships(tenantId);
   }
 
+  async listRoleAssignments(tenantId: string, userId: string): Promise<RoleAssignment[]> {
+    return this.repository.listRoleAssignmentsByUser(tenantId, userId);
+  }
+
   async listProvisioningInvites(
     tenantId: string,
     filters?: {

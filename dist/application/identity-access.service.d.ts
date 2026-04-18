@@ -87,6 +87,7 @@ export declare class IdentityAccessService {
     }): Promise<CommandResult<OnboardingWorkspace>>;
     createProvisioningInvite(invite: ProvisioningInvite): Promise<CommandResult<ProvisioningInvite>>;
     listTenantMemberships(tenantId: string): Promise<TenantMembership[]>;
+    listRoleAssignments(tenantId: string, userId: string): Promise<RoleAssignment[]>;
     listProvisioningInvites(tenantId: string, filters?: {
         inviteStatus?: ProvisioningInvite["inviteStatus"];
     }): Promise<ProvisioningInvite[]>;

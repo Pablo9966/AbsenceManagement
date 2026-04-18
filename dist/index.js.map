@@ -1,1 +1,1 @@
-{"version":3,"file":"index.js","sourceRoot":"","sources":["../packages/frontend-platform/src/index.ts"],"names":[],"mappings":"AAAA,cAAc,oBAAoB,CAAC;AACnC,cAAc,kBAAkB,CAAC;AACjC,cAAc,wBAAwB,CAAC;AACvC,cAAc,0BAA0B,CAAC;AACzC,cAAc,iBAAiB,CAAC;AAChC,cAAc,0BAA0B,CAAC;AACzC,cAAc,0BAA0B,CAAC;AACzC,cAAc,uBAAuB,CAAC;AACtC,cAAc,kBAAkB,CAAC;AACjC,cAAc,uBAAuB,CAAC;AACtC,cAAc,kBAAkB,CAAC"}
+{"version":3,"file":"index.js","sourceRoot":"","sources":["../packages/identity-access-client/src/index.ts"],"names":[],"mappings":"AAAA,cAAc,aAAa,CAAC;AAC5B,cAAc,YAAY,CAAC"}

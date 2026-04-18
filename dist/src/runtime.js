@@ -1,5 +1,16 @@
 import { createPortalShellModel, filterVisibleNavigation, internalNavigation, internalRouteAccessRules, loadCatalog, resolveLocale, } from "./frontend.js";
-import { getDemoIdentityAccessContext } from "../../../services/identity-access-service/src/testing/demo-context.js";
+import { createIdentityAccessClient } from "@elipslife/identity-access-client";
+const identityAccessClient = createIdentityAccessClient({
+    baseUrl: process.env.IDENTITY_ACCESS_SERVICE_BASE_URL ?? "http://127.0.0.1:4010",
+});
+const internalPortalConfig = {
+    tenantId: process.env.INTERNAL_PORTAL_TENANT_ID ?? "tenant-internal-demo",
+    tenantName: process.env.INTERNAL_PORTAL_TENANT_NAME ?? "elipsLife Intern",
+    defaultLocale: "de-CH",
+    claimsSignInEmail: process.env.INTERNAL_PORTAL_CLAIMS_EMAIL ?? "claims.handler@elipslife.ch",
+    complianceSignInEmail: process.env.INTERNAL_PORTAL_COMPLIANCE_EMAIL ?? "compliance.user@elipslife.ch",
+    featureFlags: ["dashboard-shell", "compliance-shell", "phase-2a-api-bootstrap"],
+};
 const internalClaimsPermissions = [
     { resourceType: "dashboard", action: "read_internal" },
     { resourceType: "claims_intake_workspace", action: "read" },
@@ -12,31 +23,27 @@ const internalCompliancePermissions = [
     { resourceType: "internal_admin", action: "manage" },
 ];
 export const getInternalPortalRuntime = async (input) => {
-    const demo = await getDemoIdentityAccessContext();
     const viewer = input?.viewer ?? "claims";
-    const selectedUser = viewer === "compliance"
-        ? demo.users.internalCompliance.userId
-        : demo.users.internalClaims.userId;
     const permissions = viewer === "compliance"
         ? internalCompliancePermissions
         : internalClaimsPermissions;
-    const bootstrap = await demo.service.getPortalBootstrap({
-        tenantId: demo.tenants.internal.tenantId,
-        userId: selectedUser,
+    const session = await identityAccessClient.signIn({
+        email: viewer === "compliance" ? internalPortalConfig.complianceSignInEmail : internalPortalConfig.claimsSignInEmail,
+        tenantId: internalPortalConfig.tenantId,
+    });
+    const bootstrap = await identityAccessClient.getPortalBootstrap(session.sessionToken, {
         routeLocale: input?.routeLocale,
-        tenantDefaultLanguage: demo.tenants.internal.defaultLocale,
         permissions,
-        effectiveAt: "2026-04-18T08:00:00.000Z",
     });
     const locale = resolveLocale({
         routeLocale: input?.routeLocale,
         userPreferredLanguage: bootstrap.user.preferredLanguage,
-        tenantDefaultLanguage: demo.tenants.internal.defaultLocale,
+        tenantDefaultLanguage: internalPortalConfig.defaultLocale,
     });
     const messages = loadCatalog(locale);
     const userContext = {
         userId: bootstrap.user.id,
-        tenantId: demo.tenants.internal.tenantId,
+        tenantId: internalPortalConfig.tenantId,
         locale,
         roleCodes: bootstrap.roleAssignments
             .filter((assignment) => !assignment.revokedAt)
@@ -48,10 +55,10 @@ export const getInternalPortalRuntime = async (input) => {
         })),
     };
     const tenantContext = {
-        tenantId: demo.tenants.internal.tenantId,
-        tenantName: demo.tenants.internal.tenantName,
+        tenantId: internalPortalConfig.tenantId,
+        tenantName: internalPortalConfig.tenantName,
         defaultLocale: locale,
-        featureFlags: demo.tenants.internal.featureFlags,
+        featureFlags: internalPortalConfig.featureFlags,
     };
     const navigation = filterVisibleNavigation(internalNavigation, userContext);
     const shell = createPortalShellModel({
@@ -70,7 +77,8 @@ export const getInternalPortalRuntime = async (input) => {
         shell,
         routeRules: internalRouteAccessRules,
         bootstrap,
-        demoService: demo.service,
+        client: identityAccessClient,
+        sessionToken: session.sessionToken,
     };
 };
 //# sourceMappingURL=runtime.js.map

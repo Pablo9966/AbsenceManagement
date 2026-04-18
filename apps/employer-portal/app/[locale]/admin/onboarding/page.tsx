@@ -7,9 +7,10 @@ import type { RouteAccessRule } from "../../../../../../packages/frontend-platfo
 import { getEmployerPortalRuntime } from "../../../../src/runtime.js";
 
 export default async function EmployerAdminOnboardingPage(props: {
-  params: { locale: "de-CH" | "en-CH" | "fr-CH" | "it-CH" };
+  params: Promise<{ locale: string }>;
 }) {
-  const runtime = await getEmployerPortalRuntime(props.params.locale);
+  const { locale } = await props.params;
+  const runtime = await getEmployerPortalRuntime(locale);
   const access = resolveRouteAccess(
     runtime.routeRules.find((rule: RouteAccessRule) => rule.routePattern === "/[locale]/admin/onboarding"),
     runtime.userContext,
@@ -23,7 +24,7 @@ export default async function EmployerAdminOnboardingPage(props: {
     return <RedirectDashboardState title="Onboarding" dashboardHref={`/${runtime.locale}/dashboard`} />;
   }
 
-  const workspace = await runtime.demoService.getOnboardingWorkspace(runtime.tenantContext.tenantId);
+  const workspace = await runtime.client.getOnboardingWorkspace(runtime.sessionToken, runtime.tenantContext.tenantId);
 
   return (
     <section>

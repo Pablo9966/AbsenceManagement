@@ -195,5 +195,39 @@ export class InMemoryIdentityAccessRepository {
             .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt))
             .map(clone);
     }
+    exportSnapshot() {
+        return {
+            platformUsers: [...this.platformUsers.values()].map(clone),
+            userProfiles: [...this.userProfiles.values()].map(clone),
+            tenantMemberships: [...this.tenantMemberships.values()].map(clone),
+            userEmployeeLinks: [...this.userEmployeeLinks.values()].map(clone),
+            roleAssignments: [...this.roleAssignments.values()].map(clone),
+            permissionPolicySets: [...this.permissionPolicySets.values()].map(clone),
+            permissionGrants: [...this.permissionGrants.values()].map(clone),
+            portalSessionPolicies: [...this.portalSessionPolicies.values()].map(clone),
+            ssoConfigurations: [...this.ssoConfigurations.values()].map(clone),
+            accessPurposeRecords: [...this.accessPurposeRecords.values()].map(clone),
+            auditAccessPolicies: [...this.auditAccessPolicies.values()].map(clone),
+            onboardingWorkspaces: [...this.onboardingWorkspaces.values()].map(clone),
+            provisioningInvites: [...this.provisioningInvites.values()].map(clone),
+            accessAuditEvents: [...this.accessAuditEvents.values()].map(clone),
+        };
+    }
+    loadSnapshot(snapshot) {
+        this.platformUsers = new Map(snapshot.platformUsers.map((item) => [item.id, clone(item)]));
+        this.userProfiles = new Map(snapshot.userProfiles.map((item) => [item.userId, clone(item)]));
+        this.tenantMemberships = new Map(snapshot.tenantMemberships.map((item) => [item.id, clone(item)]));
+        this.userEmployeeLinks = new Map(snapshot.userEmployeeLinks.map((item) => [item.id, clone(item)]));
+        this.roleAssignments = new Map(snapshot.roleAssignments.map((item) => [item.id, clone(item)]));
+        this.permissionPolicySets = new Map(snapshot.permissionPolicySets.map((item) => [item.id, clone(item)]));
+        this.permissionGrants = new Map(snapshot.permissionGrants.map((item) => [item.id, clone(item)]));
+        this.portalSessionPolicies = new Map(snapshot.portalSessionPolicies.map((item) => [item.tenantId, clone(item)]));
+        this.ssoConfigurations = new Map(snapshot.ssoConfigurations.map((item) => [item.id, clone(item)]));
+        this.accessPurposeRecords = new Map(snapshot.accessPurposeRecords.map((item) => [item.id, clone(item)]));
+        this.auditAccessPolicies = new Map(snapshot.auditAccessPolicies.map((item) => [`${item.tenantId}:${item.roleCode}`, clone(item)]));
+        this.onboardingWorkspaces = new Map(snapshot.onboardingWorkspaces.map((item) => [item.id, clone(item)]));
+        this.provisioningInvites = new Map(snapshot.provisioningInvites.map((item) => [item.id, clone(item)]));
+        this.accessAuditEvents = new Map(snapshot.accessAuditEvents.map((item) => [item.id, clone(item)]));
+    }
 }
 //# sourceMappingURL=in-memory-repository.js.map

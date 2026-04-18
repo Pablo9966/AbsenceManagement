@@ -2,9 +2,10 @@ import { GuardedPortalPage } from "../../../../src/frontend.js";
 import { getInternalPortalRuntime } from "../../../../src/runtime.js";
 
 export default async function InternalIntakeDetailPage(props: {
-  params: { locale: "de-CH" | "en-CH" | "fr-CH" | "it-CH"; workspaceId: string };
+  params: Promise<{ locale: string; workspaceId: string }>;
 }) {
-  const runtime = await getInternalPortalRuntime({ routeLocale: props.params.locale });
+  const { locale, workspaceId } = await props.params;
+  const runtime = await getInternalPortalRuntime({ routeLocale: locale });
 
   return (
     <GuardedPortalPage
@@ -15,7 +16,7 @@ export default async function InternalIntakeDetailPage(props: {
       eyebrow="Internal Portal"
       title="Intake Workspace"
       description="Placeholder workspace detail for intake checklist, evidence links, and queue actions."
-      identifier={props.params.workspaceId}
+      identifier={workspaceId}
     />
   );
 }

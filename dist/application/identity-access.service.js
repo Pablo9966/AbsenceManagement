@@ -374,6 +374,9 @@ export class IdentityAccessService {
     async listTenantMemberships(tenantId) {
         return this.repository.listTenantMemberships(tenantId);
     }
+    async listRoleAssignments(tenantId, userId) {
+        return this.repository.listRoleAssignmentsByUser(tenantId, userId);
+    }
     async listProvisioningInvites(tenantId, filters) {
         return this.repository.listProvisioningInvites(tenantId, filters);
     }

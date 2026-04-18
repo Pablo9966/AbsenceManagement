@@ -2,9 +2,10 @@ import { GuardedPortalPage } from "../../../../src/frontend.js";
 import { getInternalPortalRuntime } from "../../../../src/runtime.js";
 
 export default async function InternalKtgCaseDetailPage(props: {
-  params: { locale: "de-CH" | "en-CH" | "fr-CH" | "it-CH"; caseId: string };
+  params: Promise<{ locale: string; caseId: string }>;
 }) {
-  const runtime = await getInternalPortalRuntime({ routeLocale: props.params.locale });
+  const { locale, caseId } = await props.params;
+  const runtime = await getInternalPortalRuntime({ routeLocale: locale });
 
   return (
     <GuardedPortalPage
@@ -15,7 +16,7 @@ export default async function InternalKtgCaseDetailPage(props: {
       eyebrow="Internal Portal"
       title="Case Detail"
       description="Placeholder internal KTG case workspace aligned with case, intake, and benefit modules."
-      identifier={props.params.caseId}
+      identifier={caseId}
     />
   );
 }
