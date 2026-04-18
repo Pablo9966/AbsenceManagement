@@ -3,22 +3,22 @@ import { URL } from "node:url";
 
 import type { PortalLocale } from "@elipslife/portal-workflow-client";
 import {
-  buildEmployerAbsenceDetail,
-  buildEmployerAbsenceList,
-  buildEmployerCaseDetail,
-  buildEmployerCaseList,
-  buildEmployerDashboard,
-  buildEmployerDocuments,
-  buildEmployerPayments,
-  buildEmployerTasks,
-  buildInternalBenefitDetail,
-  buildInternalBenefitList,
-  buildInternalCaseDetail,
-  buildInternalCaseList,
-  buildInternalDashboard,
-  buildInternalIntakeDetail,
-  buildInternalIntakeList,
-} from "./demo-data.js";
+  getEmployerAbsenceDetail,
+  getEmployerCaseDetail,
+  getEmployerDashboard,
+  getInternalBenefitDetail,
+  getInternalCaseDetail,
+  getInternalDashboard,
+  getInternalIntakeDetail,
+  listEmployerAbsences,
+  listEmployerCases,
+  listEmployerDocuments,
+  listEmployerPayments,
+  listEmployerTasks,
+  listInternalBenefits,
+  listInternalCases,
+  listInternalIntake,
+} from "./service-context.js";
 
 const PORT = Number(process.env.PORTAL_WORKFLOW_SERVICE_PORT ?? "4020");
 
@@ -47,86 +47,111 @@ const notFound = (response: ServerResponse): void => {
   writeJson(response, 404, { error: "Not found." });
 };
 
-const handleEmployerRoutes = (pathname: string, requestUrl: URL, response: ServerResponse): boolean => {
+const handleEmployerRoutes = async (pathname: string, requestUrl: URL, response: ServerResponse): Promise<boolean> => {
   const tenantId = getTenantId(requestUrl);
   const locale = getLocale(requestUrl);
 
   if (pathname === "/v1/employer/dashboard") {
-    writeJson(response, 200, buildEmployerDashboard(tenantId, locale));
+    writeJson(response, 200, await getEmployerDashboard(tenantId, locale));
     return true;
   }
   if (pathname === "/v1/employer/absences") {
-    writeJson(response, 200, buildEmployerAbsenceList(tenantId, locale, {
+    writeJson(response, 200, await listEmployerAbsences(tenantId, locale, {
       status: requestUrl.searchParams.get("status") ?? undefined,
       employee: requestUrl.searchParams.get("employee") ?? undefined,
     }));
     return true;
   }
   if (pathname.startsWith("/v1/employer/absences/")) {
-    writeJson(response, 200, buildEmployerAbsenceDetail(tenantId, locale, pathname.split("/").at(-1) ?? ""));
+    const detail = await getEmployerAbsenceDetail(tenantId, locale, pathname.split("/").at(-1) ?? "");
+    if (!detail) {
+      notFound(response);
+      return true;
+    }
+    writeJson(response, 200, detail);
     return true;
   }
   if (pathname === "/v1/employer/cases") {
-    writeJson(response, 200, buildEmployerCaseList(tenantId, locale));
+    writeJson(response, 200, await listEmployerCases(tenantId, locale));
     return true;
   }
   if (pathname.startsWith("/v1/employer/cases/")) {
-    writeJson(response, 200, buildEmployerCaseDetail(tenantId, locale, pathname.split("/").at(-1) ?? ""));
+    const detail = await getEmployerCaseDetail(tenantId, locale, pathname.split("/").at(-1) ?? "");
+    if (!detail) {
+      notFound(response);
+      return true;
+    }
+    writeJson(response, 200, detail);
     return true;
   }
   if (pathname === "/v1/employer/documents") {
-    writeJson(response, 200, buildEmployerDocuments(tenantId, locale));
+    writeJson(response, 200, await listEmployerDocuments(tenantId, locale));
     return true;
   }
   if (pathname === "/v1/employer/tasks") {
-    writeJson(response, 200, buildEmployerTasks(tenantId, locale));
+    writeJson(response, 200, await listEmployerTasks(tenantId, locale));
     return true;
   }
   if (pathname === "/v1/employer/payments") {
-    writeJson(response, 200, buildEmployerPayments(tenantId, locale));
+    writeJson(response, 200, await listEmployerPayments(tenantId, locale));
     return true;
   }
 
   return false;
 };
 
-const handleInternalRoutes = (pathname: string, requestUrl: URL, response: ServerResponse): boolean => {
-  const tenantId = getTenantId(requestUrl).replace("employer", "internal");
+const handleInternalRoutes = async (pathname: string, requestUrl: URL, response: ServerResponse): Promise<boolean> => {
+  const tenantId = getTenantId(requestUrl);
   const locale = getLocale(requestUrl);
 
   if (pathname === "/v1/internal/dashboard") {
-    writeJson(response, 200, buildInternalDashboard(tenantId, locale));
+    writeJson(response, 200, await getInternalDashboard(tenantId, locale));
     return true;
   }
   if (pathname === "/v1/internal/intake") {
-    writeJson(response, 200, buildInternalIntakeList(tenantId, locale));
+    writeJson(response, 200, await listInternalIntake(tenantId, locale));
     return true;
   }
   if (pathname.startsWith("/v1/internal/intake/")) {
-    writeJson(response, 200, buildInternalIntakeDetail(tenantId, locale, pathname.split("/").at(-1) ?? ""));
+    const detail = await getInternalIntakeDetail(tenantId, locale, pathname.split("/").at(-1) ?? "");
+    if (!detail) {
+      notFound(response);
+      return true;
+    }
+    writeJson(response, 200, detail);
     return true;
   }
   if (pathname === "/v1/internal/ktg-cases") {
-    writeJson(response, 200, buildInternalCaseList(tenantId, locale));
+    writeJson(response, 200, await listInternalCases(tenantId, locale));
     return true;
   }
   if (pathname.startsWith("/v1/internal/ktg-cases/")) {
-    writeJson(response, 200, buildInternalCaseDetail(tenantId, locale, pathname.split("/").at(-1) ?? ""));
+    const detail = await getInternalCaseDetail(tenantId, locale, pathname.split("/").at(-1) ?? "");
+    if (!detail) {
+      notFound(response);
+      return true;
+    }
+    writeJson(response, 200, detail);
     return true;
   }
   if (pathname === "/v1/internal/benefits") {
-    writeJson(response, 200, buildInternalBenefitList(tenantId, locale));
+    writeJson(response, 200, await listInternalBenefits(tenantId, locale));
     return true;
   }
   if (pathname.startsWith("/v1/internal/benefits/")) {
-    writeJson(response, 200, buildInternalBenefitDetail(tenantId, locale, pathname.split("/").at(-1) ?? ""));
+    const detail = await getInternalBenefitDetail(tenantId, locale, pathname.split("/").at(-1) ?? "");
+    if (!detail) {
+      notFound(response);
+      return true;
+    }
+    writeJson(response, 200, detail);
     return true;
   }
 
   return false;
 };
 
-const requestHandler = (request: IncomingMessage, response: ServerResponse): void => {
+const requestHandler = async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
   if (!request.url) {
     notFound(response);
     return;
@@ -136,11 +161,11 @@ const requestHandler = (request: IncomingMessage, response: ServerResponse): voi
   const { pathname } = requestUrl;
 
   try {
-    if (handleEmployerRoutes(pathname, requestUrl, response)) {
+    if (await handleEmployerRoutes(pathname, requestUrl, response)) {
       return;
     }
 
-    if (handleInternalRoutes(pathname, requestUrl, response)) {
+    if (await handleInternalRoutes(pathname, requestUrl, response)) {
       return;
     }
 

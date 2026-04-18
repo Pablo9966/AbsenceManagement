@@ -11,6 +11,27 @@
   ],
   "references": [
     {
+      "path": "../../services/absence-service"
+    },
+    {
+      "path": "../../services/ktg-case-service"
+    },
+    {
+      "path": "../../services/document-service"
+    },
+    {
+      "path": "../../services/inbox-notification-service"
+    },
+    {
+      "path": "../../services/dashboard-projection-service"
+    },
+    {
+      "path": "../../services/claims-intake-workspace-service"
+    },
+    {
+      "path": "../../services/benefit-engine-service"
+    },
+    {
       "path": "../../packages/portal-workflow-client"
     }
   ]

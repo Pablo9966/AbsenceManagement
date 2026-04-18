@@ -24,6 +24,27 @@
       "@elipslife/frontend-platform": [
         "packages/frontend-platform/src/index.ts"
       ],
+      "@elipslife/absence-service": [
+        "services/absence-service/src/index.ts"
+      ],
+      "@elipslife/ktg-case-service": [
+        "services/ktg-case-service/src/index.ts"
+      ],
+      "@elipslife/document-service": [
+        "services/document-service/src/index.ts"
+      ],
+      "@elipslife/inbox-notification-service": [
+        "services/inbox-notification-service/src/index.ts"
+      ],
+      "@elipslife/dashboard-projection-service": [
+        "services/dashboard-projection-service/src/index.ts"
+      ],
+      "@elipslife/claims-intake-workspace-service": [
+        "services/claims-intake-workspace-service/src/index.ts"
+      ],
+      "@elipslife/benefit-engine-service": [
+        "services/benefit-engine-service/src/index.ts"
+      ],
       "@elipslife/portal-workflow-client": [
         "packages/portal-workflow-client/src/index.ts"
       ],
