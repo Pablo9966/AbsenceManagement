@@ -771,11 +771,12 @@ export class IdentityAccessService {
     permissions: PermissionCheck[];
     effectiveAt: string;
   }): Promise<PortalBootstrap> {
-    const [user, profile, memberships, roleAssignments, locale, onboardingReadiness, effectivePermissions, auditAccessPolicies] =
+    const [user, profile, memberships, employeeLinks, roleAssignments, locale, onboardingReadiness, effectivePermissions, auditAccessPolicies] =
       await Promise.all([
         this.repository.getPlatformUserById(params.userId),
         this.repository.getUserProfileByUserId(params.userId),
         this.repository.listTenantMemberships(params.tenantId),
+        this.repository.listUserEmployeeLinksByUser(params.tenantId, params.userId),
         this.repository.listRoleAssignmentsByUser(params.tenantId, params.userId),
         this.getResolvedLocale({
           userId: params.userId,
@@ -805,6 +806,9 @@ export class IdentityAccessService {
           membership.userId === params.userId &&
           membership.membershipStatus === "active" &&
           membership.leftAt === undefined,
+      ) ?? null,
+      employeeLink: employeeLinks.find(
+        (link) => link.linkType === "employee_self_service" && link.revokedAt === undefined,
       ) ?? null,
       locale,
       roleAssignments,

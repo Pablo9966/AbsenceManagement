@@ -425,6 +425,81 @@ export class AbsenceRecordingService {
     return { data: created, issues };
   }
 
+  async confirmReturnToWork(params: {
+    tenantId: string;
+    employeeId: string;
+    episodeId: string;
+    actualReturnDate: string;
+  }, actor: ActorContext): Promise<CommandResult<AbsenceEpisode>> {
+    return this.repository.withTransaction(async (transaction) => {
+      const existing = await transaction.getEpisodeById(params.tenantId, params.episodeId);
+      if (!existing || existing.employeeId !== params.employeeId) {
+        return {
+          issues: [{
+            field: "episodeId",
+            message: "Absenzfall wurde nicht gefunden.",
+            severity: "error",
+          }],
+        };
+      }
+
+      let transitionFromStatus = existing.status;
+      if (existing.status === "reported" || existing.status === "acknowledged") {
+        transitionFromStatus = "in_progress";
+        await transaction.createStatusEvent({
+          id: generateId(),
+          tenantId: existing.tenantId,
+          episodeId: existing.id,
+          fromStatus: existing.status,
+          toStatus: transitionFromStatus,
+          eventType: "started",
+          eventAt: actor.effectiveAt,
+          actorId: actor.actorId,
+          actorRole: actor.actorRole,
+          correlationId: actor.correlationId,
+          payload: {
+            source: "employee_return_to_work_confirmation",
+          },
+        });
+      }
+
+      const transitionIssues = validateStatusTransition(transitionFromStatus, "closed");
+      if (hasBlockingIssues(transitionIssues)) {
+        return { issues: transitionIssues };
+      }
+
+      const updatedCandidate: AbsenceEpisode = {
+        ...existing,
+        actualEndDate: params.actualReturnDate,
+        status: "closed",
+      };
+      const issues = validateAbsenceEpisode(updatedCandidate);
+      if (hasBlockingIssues(issues)) {
+        return { issues };
+      }
+
+      const updated = await transaction.updateEpisode(updatedCandidate);
+      await transaction.createStatusEvent({
+        id: generateId(),
+        tenantId: updated.tenantId,
+        episodeId: updated.id,
+        fromStatus: transitionFromStatus,
+        toStatus: updated.status,
+        eventType: "closed",
+        eventAt: actor.effectiveAt,
+        actorId: actor.actorId,
+        actorRole: actor.actorRole,
+        correlationId: actor.correlationId,
+        payload: {
+          actualReturnDate: params.actualReturnDate,
+          source: "employee_return_to_work_confirmation",
+        },
+      });
+
+      return { data: updated, issues };
+    });
+  }
+
   async linkToRecurrenceGroup(params: {
     tenantId: string;
     episodeId: string;

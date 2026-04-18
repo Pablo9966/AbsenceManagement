@@ -34,6 +34,115 @@ export interface WorkflowResponse<T> {
   links: WorkflowLink[];
 }
 
+export interface EmployeeDashboardSummary {
+  employeeId: string;
+  employeeName: string;
+  activeAbsenceCount: number;
+  recentDocumentCount: number;
+  pendingActionCount: number;
+  currentStatus: string;
+  activeAbsences: EmployeeAbsenceListItem[];
+  recentDocuments: EmployeeDocumentListItem[];
+  pendingActions: Array<{
+    key: string;
+    label: string;
+    href: string;
+  }>;
+  returnToWorkPrompt?: EmployeeReturnToWorkState;
+}
+
+export interface EmployeeAbsenceListItem {
+  episodeId: string;
+  employeeId: string;
+  periodLabel: string;
+  displayStatus: string;
+  status: string;
+  source: string;
+  startDate: string;
+  expectedEndDate?: string;
+  actualEndDate?: string;
+  certificateDocumentIds: string[];
+}
+
+export interface EmployeeAbsenceDetail {
+  episodeId: string;
+  employeeId: string;
+  periodLabel: string;
+  displayStatus: string;
+  status: string;
+  source: string;
+  startDate: string;
+  expectedEndDate?: string;
+  actualEndDate?: string;
+  timeline: Array<{
+    date: string;
+    label: string;
+    type: "status" | "daily_record";
+  }>;
+  documents: Array<{
+    documentId: string;
+    title: string;
+    status: string;
+  }>;
+}
+
+export interface EmployeeDocumentListItem {
+  documentId: string;
+  employeeId: string;
+  title: string;
+  documentType: string;
+  status: string;
+  uploadedAt: string;
+  linkedEpisodeId?: string;
+  certificateStatus?: string;
+}
+
+export interface EmployeeDocumentDetail {
+  documentId: string;
+  employeeId: string;
+  title: string;
+  documentType: string;
+  status: string;
+  uploadedAt: string;
+  linkedEpisodeId?: string;
+  certificateStatus?: string;
+  coverageLabel?: string;
+}
+
+export interface EmployeeStatusSummary {
+  employeeId: string;
+  employeeName: string;
+  activeAbsences: EmployeeAbsenceListItem[];
+  documents: EmployeeDocumentListItem[];
+  currentStatus: string;
+}
+
+export interface EmployeeReturnToWorkState {
+  episodeId: string;
+  periodLabel: string;
+  currentStatus: string;
+  suggestedReturnDate?: string;
+}
+
+export interface EmployeeAbsenceSubmissionResult {
+  episodeId: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface EmployeeCertificateUploadResult {
+  documentId: string;
+  status: string;
+  linkedEpisodeId?: string;
+  uploadedAt: string;
+}
+
+export interface EmployeeReturnToWorkResult {
+  episodeId: string;
+  status: string;
+  actualEndDate: string;
+}
+
 export interface EmployerDashboardSummary {
   cards: Array<{
     key: "open_absences" | "open_cases" | "pending_certificates" | "tasks_deadlines";

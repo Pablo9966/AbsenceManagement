@@ -1,4 +1,14 @@
 import type {
+  EmployeeAbsenceDetail,
+  EmployeeAbsenceListItem,
+  EmployeeAbsenceSubmissionResult,
+  EmployeeCertificateUploadResult,
+  EmployeeDashboardSummary,
+  EmployeeDocumentDetail,
+  EmployeeDocumentListItem,
+  EmployeeReturnToWorkResult,
+  EmployeeReturnToWorkState,
+  EmployeeStatusSummary,
   EmployerAbsenceDetail,
   EmployerAbsenceListItem,
   EmployerCaseDetail,
@@ -27,6 +37,75 @@ import type {
 } from "./types.js";
 
 export interface PortalWorkflowClient {
+  getEmployeeDashboard(input: { tenantId: string; locale: PortalLocale; employeeId: string }): Promise<WorkflowResponse<EmployeeDashboardSummary>>;
+  listEmployeeAbsences(input: WorkflowListQuery & {
+    tenantId: string;
+    locale: PortalLocale;
+    employeeId: string;
+    status?: string;
+  }): Promise<WorkflowResponse<EmployeeAbsenceListItem[]>>;
+  getEmployeeAbsenceDetail(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    employeeId: string;
+    episodeId: string;
+  }): Promise<WorkflowResponse<EmployeeAbsenceDetail>>;
+  listEmployeeDocuments(input: WorkflowListQuery & {
+    tenantId: string;
+    locale: PortalLocale;
+    employeeId: string;
+    status?: string;
+  }): Promise<WorkflowResponse<EmployeeDocumentListItem[]>>;
+  getEmployeeDocumentDetail(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    employeeId: string;
+    documentId: string;
+  }): Promise<WorkflowResponse<EmployeeDocumentDetail>>;
+  getEmployeeStatusSummary(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    employeeId: string;
+  }): Promise<WorkflowResponse<EmployeeStatusSummary>>;
+  getEmployeeReturnToWorkState(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    employeeId: string;
+  }): Promise<WorkflowResponse<EmployeeReturnToWorkState[]>>;
+  submitEmployeeAbsence(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    employeeId: string;
+    userId: string;
+    absenceType: string;
+    startDate: string;
+    expectedEndDate?: string;
+    comment?: string;
+  }): Promise<WorkflowResponse<EmployeeAbsenceSubmissionResult>>;
+  uploadEmployeeCertificate(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    employeeId: string;
+    userId: string;
+    documentType: string;
+    fileName: string;
+    mimeType: string;
+    fileSizeBytes: number;
+    absenceEpisodeId?: string;
+    certificateStartDate: string;
+    certificateEndDate?: string;
+    incapacityPercentage: number;
+    issuingProviderName?: string;
+  }): Promise<WorkflowResponse<EmployeeCertificateUploadResult>>;
+  confirmEmployeeReturnToWork(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    employeeId: string;
+    userId: string;
+    episodeId: string;
+    actualReturnDate: string;
+  }): Promise<WorkflowResponse<EmployeeReturnToWorkResult>>;
+
   // Phase 2C: Payment Operations — Employer (read-only)
   listEmployerPaymentRunSummaries(input: WorkflowListQuery & {
     tenantId: string;
@@ -162,6 +241,56 @@ export const createPortalWorkflowClient = (input: {
   const withBaseUrl = (path: string): string => `${input.baseUrl.replace(/\/$/, "")}${path}`;
 
   return {
+    async getEmployeeDashboard(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/employee/dashboard${toQueryString(params)}`)));
+    },
+    async listEmployeeAbsences(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/employee/absences${toQueryString(params)}`)));
+    },
+    async getEmployeeAbsenceDetail(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/employee/absences/${params.episodeId}${toQueryString({
+        tenantId: params.tenantId,
+        locale: params.locale,
+        employeeId: params.employeeId,
+      })}`)));
+    },
+    async listEmployeeDocuments(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/employee/documents${toQueryString(params)}`)));
+    },
+    async getEmployeeDocumentDetail(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/employee/documents/${params.documentId}${toQueryString({
+        tenantId: params.tenantId,
+        locale: params.locale,
+        employeeId: params.employeeId,
+      })}`)));
+    },
+    async getEmployeeStatusSummary(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/employee/status${toQueryString(params)}`)));
+    },
+    async getEmployeeReturnToWorkState(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/employee/return-to-work${toQueryString(params)}`)));
+    },
+    async submitEmployeeAbsence(params) {
+      return readJson(await fetchFn(withBaseUrl("/v1/employee/report-absence"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      }));
+    },
+    async uploadEmployeeCertificate(params) {
+      return readJson(await fetchFn(withBaseUrl("/v1/employee/documents/upload"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      }));
+    },
+    async confirmEmployeeReturnToWork(params) {
+      return readJson(await fetchFn(withBaseUrl("/v1/employee/return-to-work"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      }));
+    },
     async listEmployerPaymentRunSummaries(params) {
       return readJson(await fetchFn(withBaseUrl(`/v1/employer/payment-runs${toQueryString(params)}`)));
     },

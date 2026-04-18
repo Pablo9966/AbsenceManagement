@@ -1,10 +1,7 @@
-import { Inter, Roboto } from "next/font/google";
 import { PortalLayout } from "../../src/frontend.js";
 import { getEmployeePortalRuntime } from "../../src/runtime.js";
 import "../../src/globals.css";
-
-const inter = Inter({ subsets: ["latin"], variable: '--font-inter' });
-const roboto = Roboto({ weight: ['400', '500', '700'], subsets: ["latin"], variable: '--font-roboto' });
+export const dynamic = "force-dynamic";
 
 export default async function EmployeePortalLayout(props: {
   children: any;
@@ -14,7 +11,7 @@ export default async function EmployeePortalLayout(props: {
   const runtime = await getEmployeePortalRuntime(locale);
 
   return (
-    <html lang={runtime.locale} className={`${inter.variable} ${roboto.variable}`}>
+    <html lang={runtime.locale}>
       <body>
         <PortalLayout shell={runtime.shell} messages={runtime.messages}>
           {props.children}

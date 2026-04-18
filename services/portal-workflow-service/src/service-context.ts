@@ -1,4 +1,15 @@
+import { randomBytes, randomUUID } from "node:crypto";
 import type {
+  EmployeeAbsenceDetail,
+  EmployeeAbsenceListItem,
+  EmployeeAbsenceSubmissionResult,
+  EmployeeCertificateUploadResult,
+  EmployeeDashboardSummary,
+  EmployeeDocumentDetail,
+  EmployeeDocumentListItem,
+  EmployeeReturnToWorkResult,
+  EmployeeReturnToWorkState,
+  EmployeeStatusSummary,
   EmployerAbsenceDetail,
   EmployerAbsenceListItem,
   EmployerCaseDetail,
@@ -23,6 +34,7 @@ import {
   AbsenceRecordingService,
   type AbsenceRepository,
 } from "../../absence-service/src/index.js";
+import type { AbsenceType, WorkingTimeModel } from "../../absence-service/src/domain/types.js";
 import {
   BenefitEngineService,
   type BenefitEngineRepository,
@@ -39,6 +51,7 @@ import {
   DocumentService,
   type DocumentRepository,
 } from "../../document-service/src/index.js";
+import type { DocumentType, ProcessingPurpose } from "../../document-service/src/domain/types.js";
 import {
   InboxNotificationService,
   type InboxNotificationRepository,
@@ -132,6 +145,14 @@ const internalPermissions: WorkflowPermission[] = [
   { resourceType: "reconciliation", action: "write_internal", allowed: true },
 ];
 
+const employeePermissions: WorkflowPermission[] = [
+  { resourceType: "dashboard", action: "read", allowed: true },
+  { resourceType: "absence", action: "read", allowed: true },
+  { resourceType: "absence", action: "write", allowed: true },
+  { resourceType: "document", action: "read", allowed: true },
+  { resourceType: "document", action: "write", allowed: true },
+];
+
 const employeeDirectory: Record<string, { name: string }> = {
   "employee-0001": { name: "Anna Keller" },
   "employee-0002": { name: "Luca Meier" },
@@ -145,6 +166,94 @@ const employeeIdsByTenant: Record<string, string[]> = {
 const baseLinks = (locale: PortalLocale): WorkflowLink[] => [
   { label: "dashboard", href: `/${locale}` },
 ];
+
+const toDisplayStatus = (status: string): string =>
+  status
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+
+const requireEmployeeTenant = (tenantId: string): void => {
+  if (tenantId !== EMPLOYER_TENANT_ID) {
+    throw new WorkflowForbiddenError("Employee self-service is only available for employer tenants.");
+  }
+};
+
+const linkHref = (locale: PortalLocale, href: string, relatedId?: string): WorkflowLink => ({
+  label: href,
+  href: `/${locale}${href}`,
+  relatedId,
+});
+
+const getEmployeeEpisodeDocuments = async (
+  documentRepository: DocumentRepository,
+  tenantId: string,
+  employeeId: string,
+  episodeId: string,
+) => {
+  const documents = await documentRepository.listDocuments(tenantId, { employeeId });
+  const matches = await Promise.all(documents.map(async (document) => ({
+    document,
+    detail: await documentRepository.getMedicalCertificateFactByDocument(tenantId, document.id),
+    links: await documentRepository.listDocumentLinksByDocument(tenantId, document.id),
+  })));
+
+  return matches.filter((entry) =>
+    entry.links.some((link) => link.linkTargetType === "absence_episode" && link.linkTargetId === episodeId),
+  );
+};
+
+const inferEmploymentContract = async (
+  absenceService: AbsenceRecordingService,
+  tenantId: string,
+  employeeId: string,
+): Promise<{
+  employmentContractId: string;
+  workingTimeModel: WorkingTimeModel;
+  employmentPercentageSnapshot: number;
+  scheduledHoursPerWeekSnapshot?: number;
+} | null> => {
+  const episodes = await absenceService.getEmployeeTimeline({
+    tenantId,
+    employeeId,
+    from: "2025-01-01",
+    to: "2026-12-31",
+  });
+  for (const timelineItem of episodes) {
+    const detail = await absenceService.getEpisodeDetail(tenantId, timelineItem.episodeId);
+    const contractImpact = detail?.contractImpacts[0];
+    if (contractImpact) {
+      return {
+        employmentContractId: contractImpact.employmentContractId,
+        workingTimeModel: contractImpact.workingTimeModel,
+        employmentPercentageSnapshot: contractImpact.employmentPercentageSnapshot,
+        scheduledHoursPerWeekSnapshot: contractImpact.scheduledHoursPerWeekSnapshot,
+      };
+    }
+  }
+
+  return null;
+};
+
+const buildEmployeeAbsenceListItem = async (
+  repositories: PortalWorkflowContext["repositories"],
+  tenantId: string,
+  episode: AbsenceEpisode,
+): Promise<EmployeeAbsenceListItem> => {
+  const documents = await getEmployeeEpisodeDocuments(repositories.documentRepository, tenantId, episode.employeeId, episode.id);
+  return {
+    episodeId: episode.id,
+    employeeId: episode.employeeId,
+    periodLabel: `${episode.startDate} - ${episode.actualEndDate ?? episode.expectedEndDate ?? "open"}`,
+    displayStatus: toDisplayStatus(episode.status),
+    status: episode.status,
+    source: episode.source,
+    startDate: episode.startDate,
+    expectedEndDate: episode.expectedEndDate,
+    actualEndDate: episode.actualEndDate,
+    certificateDocumentIds: documents.map((entry) => entry.document.id),
+  };
+};
 
 const paginateItems = <T>(
   items: T[],
@@ -224,6 +333,454 @@ const makeResponse = <T>(
   permissions,
   links: baseLinks(locale),
 });
+
+export const getEmployeeDashboard = async (
+  tenantId: string,
+  locale: PortalLocale,
+  employeeId: string,
+): Promise<WorkflowResponse<EmployeeDashboardSummary>> => {
+  requireEmployeeTenant(tenantId);
+  const { repositories } = getPortalWorkflowServices();
+  const episodes = await repositories.absenceRepository.listEpisodesByEmployee(tenantId, employeeId);
+  const activeEpisodes = episodes.filter((episode) => !["closed", "cancelled"].includes(episode.status));
+  const activeAbsences = await Promise.all(activeEpisodes.map((episode) => buildEmployeeAbsenceListItem(repositories, tenantId, episode)));
+  const documents = await listEmployeeDocuments(tenantId, locale, employeeId, { page: 1, pageSize: 3 });
+  const returnToWork = await getEmployeeReturnToWorkState(tenantId, locale, employeeId);
+
+  return makeResponse({
+    employeeId,
+    employeeName: getEmployeeName(employeeId),
+    activeAbsenceCount: activeAbsences.length,
+    recentDocumentCount: documents.data.length,
+    pendingActionCount: returnToWork.data.length + (documents.data.some((item) => item.status === "under_review") ? 1 : 0),
+    currentStatus: activeAbsences.length > 0 ? "absence_active" : "clear",
+    activeAbsences,
+    recentDocuments: documents.data,
+    pendingActions: [
+      ...returnToWork.data.map((state) => ({
+        key: `return-${state.episodeId}`,
+        label: "Confirm return to work",
+        href: `/${locale}/return-to-work`,
+      })),
+      {
+        key: "upload-certificate",
+        label: "Upload certificate",
+        href: `/${locale}/documents/upload`,
+      },
+    ],
+    returnToWorkPrompt: returnToWork.data[0],
+  }, tenantId, locale, employeePermissions);
+};
+
+export const listEmployeeAbsences = async (
+  tenantId: string,
+  locale: PortalLocale,
+  employeeId: string,
+  filters?: { status?: string; page?: number; pageSize?: number },
+): Promise<WorkflowResponse<EmployeeAbsenceListItem[]>> => {
+  requireEmployeeTenant(tenantId);
+  const { repositories } = getPortalWorkflowServices();
+  const episodes = await repositories.absenceRepository.listEpisodesByEmployee(tenantId, employeeId);
+  const filtered = episodes
+    .filter((episode) => !filters?.status || episode.status === filters.status)
+    .sort((left, right) => right.startDate.localeCompare(left.startDate));
+  const items = await Promise.all(filtered.map((episode) => buildEmployeeAbsenceListItem(repositories, tenantId, episode)));
+  const paginated = paginateItems(items, filters);
+
+  return makeResponse(paginated.items, tenantId, locale, employeePermissions, {
+    totalCount: paginated.totalCount,
+    page: paginated.page,
+    pageSize: paginated.pageSize,
+    totalPages: paginated.totalPages,
+    appliedFilters: filters?.status ? { status: filters.status } : undefined,
+  });
+};
+
+export const getEmployeeAbsenceDetail = async (
+  tenantId: string,
+  locale: PortalLocale,
+  employeeId: string,
+  episodeId: string,
+): Promise<WorkflowResponse<EmployeeAbsenceDetail>> => {
+  requireEmployeeTenant(tenantId);
+  const { repositories, services } = getPortalWorkflowServices();
+  const detail = await services.absenceService.getEpisodeDetail(tenantId, episodeId);
+  if (!detail || detail.episode.employeeId !== employeeId) {
+    throw new WorkflowNotFoundError();
+  }
+
+  const documents = await getEmployeeEpisodeDocuments(repositories.documentRepository, tenantId, employeeId, episodeId);
+  return makeResponse({
+    episodeId: detail.episode.id,
+    employeeId: detail.episode.employeeId,
+    periodLabel: `${detail.episode.startDate} - ${detail.episode.actualEndDate ?? detail.episode.expectedEndDate ?? "open"}`,
+    displayStatus: toDisplayStatus(detail.episode.status),
+    status: detail.episode.status,
+    source: detail.episode.source,
+    startDate: detail.episode.startDate,
+    expectedEndDate: detail.episode.expectedEndDate,
+    actualEndDate: detail.episode.actualEndDate,
+    timeline: [
+      ...detail.statusEvents.map((event) => ({
+        date: event.eventAt,
+        label: `${toDisplayStatus(event.toStatus)} (${event.eventType})`,
+        type: "status" as const,
+      })),
+      ...detail.dailyRecords.map((record) => ({
+        date: record.absenceDate,
+        label: `${record.incapacityPercentage}% incapacity`,
+        type: "daily_record" as const,
+      })),
+    ].sort((left, right) => left.date.localeCompare(right.date)),
+    documents: documents.map((entry) => ({
+      documentId: entry.document.id,
+      title: entry.document.fileName,
+      status: entry.document.status,
+    })),
+  }, tenantId, locale, employeePermissions);
+};
+
+export const listEmployeeDocuments = async (
+  tenantId: string,
+  locale: PortalLocale,
+  employeeId: string,
+  filters?: { status?: string; page?: number; pageSize?: number },
+): Promise<WorkflowResponse<EmployeeDocumentListItem[]>> => {
+  requireEmployeeTenant(tenantId);
+  const { repositories, services } = getPortalWorkflowServices();
+  const documents = await repositories.documentRepository.listDocuments(tenantId, {
+    employeeId,
+    status: filters?.status as "uploaded" | "available" | "under_review" | "superseded" | "quarantined" | "deleted" | undefined,
+  });
+  const items = await Promise.all(documents.map(async (document) => {
+    const detail = await services.documentService.getDocumentDetail(tenantId, document.id, REFERENCE_AT);
+    const absenceLink = detail?.links.find((link) => link.linkTargetType === "absence_episode");
+    return {
+      documentId: document.id,
+      employeeId,
+      title: document.fileName,
+      documentType: document.documentType,
+      status: document.status,
+      uploadedAt: document.uploadedAt,
+      linkedEpisodeId: absenceLink?.linkTargetId,
+      certificateStatus: detail?.certificateCoverageWindow?.certificateStatus,
+    } satisfies EmployeeDocumentListItem;
+  }));
+  const sorted = items.sort((left, right) => right.uploadedAt.localeCompare(left.uploadedAt));
+  const paginated = paginateItems(sorted, filters);
+
+  return makeResponse(paginated.items, tenantId, locale, employeePermissions, {
+    totalCount: paginated.totalCount,
+    page: paginated.page,
+    pageSize: paginated.pageSize,
+    totalPages: paginated.totalPages,
+    appliedFilters: filters?.status ? { status: filters.status } : undefined,
+  });
+};
+
+export const getEmployeeDocumentDetail = async (
+  tenantId: string,
+  locale: PortalLocale,
+  employeeId: string,
+  documentId: string,
+): Promise<WorkflowResponse<EmployeeDocumentDetail>> => {
+  requireEmployeeTenant(tenantId);
+  const { services } = getPortalWorkflowServices();
+  const detail = await services.documentService.getDocumentDetail(tenantId, documentId, REFERENCE_AT);
+  if (!detail || detail.employeeId !== employeeId) {
+    throw new WorkflowNotFoundError();
+  }
+  const absenceLink = detail.links.find((link) => link.linkTargetType === "absence_episode");
+  return makeResponse({
+    documentId: detail.id,
+    employeeId,
+    title: detail.fileName,
+    documentType: detail.documentType,
+    status: detail.status,
+    uploadedAt: detail.uploadedAt,
+    linkedEpisodeId: absenceLink?.linkTargetId,
+    certificateStatus: detail.certificateCoverageWindow?.certificateStatus,
+    coverageLabel: detail.certificateCoverageWindow
+      ? `${detail.certificateCoverageWindow.coveredFrom} - ${detail.certificateCoverageWindow.coveredTo ?? "open"}`
+      : undefined,
+  }, tenantId, locale, employeePermissions);
+};
+
+export const getEmployeeStatusSummary = async (
+  tenantId: string,
+  locale: PortalLocale,
+  employeeId: string,
+): Promise<WorkflowResponse<EmployeeStatusSummary>> => {
+  requireEmployeeTenant(tenantId);
+  const [absences, documents] = await Promise.all([
+    listEmployeeAbsences(tenantId, locale, employeeId, { page: 1, pageSize: 10 }),
+    listEmployeeDocuments(tenantId, locale, employeeId, { page: 1, pageSize: 10 }),
+  ]);
+  return makeResponse({
+    employeeId,
+    employeeName: getEmployeeName(employeeId),
+    activeAbsences: absences.data,
+    documents: documents.data,
+    currentStatus: absences.data.some((absence) => absence.status !== "closed" && absence.status !== "cancelled")
+      ? "absence_active"
+      : "clear",
+  }, tenantId, locale, employeePermissions);
+};
+
+export const getEmployeeReturnToWorkState = async (
+  tenantId: string,
+  locale: PortalLocale,
+  employeeId: string,
+): Promise<WorkflowResponse<EmployeeReturnToWorkState[]>> => {
+  requireEmployeeTenant(tenantId);
+  const { repositories } = getPortalWorkflowServices();
+  const episodes = await repositories.absenceRepository.listEpisodesByEmployee(tenantId, employeeId);
+  const actionable = episodes
+    .filter((episode) => ["reported", "acknowledged", "in_progress", "partially_returned"].includes(episode.status))
+    .sort((left, right) => right.startDate.localeCompare(left.startDate))
+    .map((episode) => ({
+      episodeId: episode.id,
+      periodLabel: `${episode.startDate} - ${episode.expectedEndDate ?? "open"}`,
+      currentStatus: toDisplayStatus(episode.status),
+      suggestedReturnDate: episode.expectedEndDate,
+    }));
+  return makeResponse(actionable, tenantId, locale, employeePermissions);
+};
+
+export const submitEmployeeAbsence = async (input: {
+  tenantId: string;
+  locale: PortalLocale;
+  employeeId: string;
+  userId: string;
+  absenceType: string;
+  startDate: string;
+  expectedEndDate?: string;
+  comment?: string;
+}): Promise<WorkflowResponse<EmployeeAbsenceSubmissionResult>> => {
+  requireEmployeeTenant(input.tenantId);
+  const { services } = getPortalWorkflowServices();
+  const contract = await inferEmploymentContract(services.absenceService, input.tenantId, input.employeeId);
+  const episodeId = randomUUID();
+  const episode = await services.absenceService.createEpisode({
+    id: episodeId,
+    tenantId: input.tenantId,
+    employeeId: input.employeeId,
+    primaryAbsenceType: input.absenceType as AbsenceType,
+    source: "employee_portal",
+    reportedAt: REFERENCE_AT,
+    reportedByUserId: input.userId,
+    reportedByRole: "employee",
+    startDate: input.startDate,
+    firstDayOfIncapacity: input.startDate,
+    expectedEndDate: input.expectedEndDate,
+    status: "reported",
+    reasonCategory: "self_reported_sickness",
+    lineManagerAckRequired: false,
+  }, {
+    actorId: input.userId,
+    actorRole: "employee",
+    effectiveAt: REFERENCE_AT,
+  });
+  if (!episode.data) {
+    throw new Error(episode.issues.map((issue) => issue.message).join(", "));
+  }
+
+  if (contract) {
+    const contractImpactId = randomUUID();
+    await services.absenceService.createContractImpact({
+      id: contractImpactId,
+      tenantId: input.tenantId,
+      episodeId,
+      employmentContractId: contract.employmentContractId,
+      affectedEmploymentPercentage: 100,
+      employmentPercentageSnapshot: contract.employmentPercentageSnapshot,
+      workingTimeModel: contract.workingTimeModel,
+      scheduledHoursPerWeekSnapshot: contract.scheduledHoursPerWeekSnapshot,
+    }, {
+      actorId: input.userId,
+      actorRole: "employee",
+      effectiveAt: REFERENCE_AT,
+    });
+    await services.absenceService.createDailyRecord({
+      id: randomUUID(),
+      tenantId: input.tenantId,
+      episodeId,
+      contractImpactId,
+      employeeId: input.employeeId,
+      employmentContractId: contract.employmentContractId,
+      absenceDate: input.startDate,
+      incapacityPercentage: 100,
+      partialDayPercentage: 100,
+      scheduledWorkMinutes: 480,
+      lostWorkMinutes: 480,
+      certifiedFlag: false,
+      returnToWorkFlag: false,
+      coordinatedOverlapFlag: false,
+    }, {
+      actorId: input.userId,
+      actorRole: "employee",
+      effectiveAt: REFERENCE_AT,
+    });
+  }
+
+  if (input.comment?.trim()) {
+    await services.absenceService.createComment({
+      id: randomUUID(),
+      tenantId: input.tenantId,
+      episodeId,
+      authorId: input.userId,
+      authorRole: "employee",
+      visibility: "employee_visible",
+      message: input.comment.trim(),
+      createdAt: REFERENCE_AT,
+    });
+  }
+
+  return makeResponse({
+    episodeId,
+    status: episode.data.status,
+    createdAt: episode.data.reportedAt,
+  }, input.tenantId, input.locale, employeePermissions);
+};
+
+export const uploadEmployeeCertificate = async (input: {
+  tenantId: string;
+  locale: PortalLocale;
+  employeeId: string;
+  userId: string;
+  documentType: string;
+  fileName: string;
+  mimeType: string;
+  fileSizeBytes: number;
+  absenceEpisodeId?: string;
+  certificateStartDate: string;
+  certificateEndDate?: string;
+  incapacityPercentage: number;
+  issuingProviderName?: string;
+}): Promise<WorkflowResponse<EmployeeCertificateUploadResult>> => {
+  requireEmployeeTenant(input.tenantId);
+  const { services } = getPortalWorkflowServices();
+  const uploadedAt = REFERENCE_AT;
+  const documentId = randomUUID();
+  const document = await services.documentService.createDocument({
+    id: documentId,
+    tenantId: input.tenantId,
+    employeeId: input.employeeId,
+    uploaderUserId: input.userId,
+    uploaderRole: "employee",
+    documentType: input.documentType as DocumentType,
+    documentCategory: "health_sensitive",
+    sourceChannel: "employee_portal",
+    storageObjectKey: `employee-uploads/${documentId}/${input.fileName}`,
+    storageRegion: "CH",
+    mimeType: input.mimeType,
+    fileName: input.fileName,
+    fileSizeBytes: input.fileSizeBytes,
+    checksumSha256: randomBytes(32).toString("hex"),
+    encryptionKeyRef: "kms-ch-demo",
+    status: "uploaded",
+    retentionStatus: "active_retention",
+    legalHoldFlag: false,
+    retentionUntil: "2036-04-18",
+    retentionPolicyCode: "medical_certificate_default",
+    uploadedAt,
+  });
+  if (!document.data) {
+    throw new Error(document.issues.map((issue) => issue.message).join(", "));
+  }
+
+  if (input.absenceEpisodeId) {
+    await services.documentService.createDocumentLink({
+      id: randomUUID(),
+      tenantId: input.tenantId,
+      documentId,
+      linkTargetType: "absence_episode",
+      linkTargetId: input.absenceEpisodeId,
+      isPrimary: true,
+      linkedAt: uploadedAt,
+    });
+  }
+
+  await services.documentService.createMedicalCertificateFact({
+    id: randomUUID(),
+    tenantId: input.tenantId,
+    documentId,
+    absenceEpisodeId: input.absenceEpisodeId,
+    certificateReferenceId: `CERT-${documentId.slice(0, 8)}`,
+    firstDayOfIncapacity: input.certificateStartDate,
+    certificateStartDate: input.certificateStartDate,
+    certificateEndDate: input.certificateEndDate,
+    incapacityPercentage: input.incapacityPercentage,
+    issuingProviderName: input.issuingProviderName,
+    extractionStatus: "pending",
+    extractionConfidence: 0.5,
+    reviewRequiredFlag: true,
+  }, {
+    actorId: input.userId,
+    actorRole: "employee",
+    effectiveAt: uploadedAt,
+  });
+
+  await services.documentService.createDocumentAccessEvent({
+    id: randomUUID(),
+    tenantId: input.tenantId,
+    documentId,
+    actorId: input.userId,
+    actorRole: "employee",
+    accessType: "view_metadata",
+    purposeOfUse: "absence_tracking",
+    accessedAt: uploadedAt,
+    result: "allowed",
+  });
+
+  await services.documentService.createDocumentConsentReference({
+    id: randomUUID(),
+    tenantId: input.tenantId,
+    documentId,
+    employeeId: input.employeeId,
+    consentRecordId: `consent-${documentId}`,
+    processingPurpose: "absence_tracking" satisfies ProcessingPurpose,
+    recordedAt: uploadedAt,
+  });
+
+  return makeResponse({
+    documentId,
+    status: document.data.status,
+    linkedEpisodeId: input.absenceEpisodeId,
+    uploadedAt,
+  }, input.tenantId, input.locale, employeePermissions);
+};
+
+export const confirmEmployeeReturnToWork = async (input: {
+  tenantId: string;
+  locale: PortalLocale;
+  employeeId: string;
+  userId: string;
+  episodeId: string;
+  actualReturnDate: string;
+}): Promise<WorkflowResponse<EmployeeReturnToWorkResult>> => {
+  requireEmployeeTenant(input.tenantId);
+  const { services } = getPortalWorkflowServices();
+  const result = await services.absenceService.confirmReturnToWork({
+    tenantId: input.tenantId,
+    employeeId: input.employeeId,
+    episodeId: input.episodeId,
+    actualReturnDate: input.actualReturnDate,
+  }, {
+    actorId: input.userId,
+    actorRole: "employee",
+    effectiveAt: REFERENCE_AT,
+  });
+  if (!result.data) {
+    throw new Error(result.issues.map((issue) => issue.message).join(", "));
+  }
+
+  return makeResponse({
+    episodeId: result.data.id,
+    status: result.data.status,
+    actualEndDate: result.data.actualEndDate ?? input.actualReturnDate,
+  }, input.tenantId, input.locale, employeePermissions);
+};
 
 export const getEmployerDashboard = async (tenantId: string, locale: PortalLocale): Promise<WorkflowResponse<EmployerDashboardSummary>> => {
   const { services } = getPortalWorkflowServices();

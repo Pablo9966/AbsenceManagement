@@ -1,38 +1,78 @@
+import {
+  EmptyState,
+  ErrorState,
+  PageHeader,
+  PermissionDeniedState,
+  RedirectDashboardState,
+  resolveRouteAccess,
+  SectionCard,
+} from "../../../src/frontend.js";
 import { getEmployeePortalRuntime } from "../../../src/runtime.js";
+import { confirmReturnToWorkAction } from "../actions.js";
 
 export default async function ReturnToWorkPage(props: {
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await props.params;
-  const runtime = await getEmployeePortalRuntime(locale);
 
-  return (
-    <div className="surface-card">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <p className="page-eyebrow">Employee Portal</p>
-          <h1 className="page-title">Return to Work Confirmation</h1>
-          <p className="page-description">Confirm that you have returned to work and close an active absence.</p>
-        </div>
+  try {
+    const runtime = await getEmployeePortalRuntime(locale);
+    const access = resolveRouteAccess(
+      runtime.routeRules.find((rule) => rule.routePattern === "/[locale]/return-to-work"),
+      runtime.userContext,
+    );
+    if (access === "permission_denied") {
+      return <PermissionDeniedState title={runtime.messages["common.permissionDenied"] ?? "Access denied"} />;
+    }
+    if (access === "redirect_dashboard") {
+      return <RedirectDashboardState title={runtime.messages["page.employeeReturnToWork.title"] ?? "Confirm Return to Work"} dashboardHref={`/${runtime.locale}/dashboard`} />;
+    }
+
+    const state = await runtime.workflowClient.getEmployeeReturnToWorkState({
+      tenantId: runtime.tenantContext.tenantId,
+      locale: runtime.locale,
+      employeeId: runtime.employeeLink.employeeId,
+    });
+
+    if (state.data.length === 0) {
+      return <EmptyState title={runtime.messages["page.employeeReturnToWork.title"] ?? "Confirm Return to Work"} message={runtime.messages["employee.empty.returnToWork"] ?? "No return-to-work confirmations pending."} />;
+    }
+
+    return (
+      <div className="surface-card">
+        <PageHeader
+          eyebrow={runtime.messages["shell.employeePortal"] ?? "Employee Portal"}
+          title={runtime.messages["page.employeeReturnToWork.title"] ?? "Confirm Return to Work"}
+          description={runtime.messages["employee.returnToWork.description"] ?? "Confirm your actual return-to-work date."}
+        />
+        <SectionCard title={runtime.messages["page.employeeReturnToWork.title"] ?? "Confirm Return to Work"}>
+          <form action={confirmReturnToWorkAction.bind(null, runtime.locale)} style={{ display: "grid", gap: "1rem", maxWidth: "42rem" }}>
+            <label>
+              <div>{runtime.messages["employee.field.absence"] ?? "Absence"}</div>
+              <select name="episodeId" required>
+                {state.data.map((item) => (
+                  <option key={item.episodeId} value={item.episodeId}>
+                    {item.periodLabel} ({item.currentStatus})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <div>{runtime.messages["employee.field.actualReturnDate"] ?? "Actual return date"}</div>
+              <input type="date" name="actualReturnDate" required />
+            </label>
+            <button type="submit" className="btn-primary">{runtime.messages["employee.cta.confirmReturnToWork"] ?? "Confirm return to work"}</button>
+          </form>
+        </SectionCard>
       </div>
-
-      <form style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '600px' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Select Active Absence</label>
-          <select style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '1rem' }}>
-            <option>A-1001 (Illness: Started 2026-04-10)</option>
-          </select>
-        </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Actual Return Date</label>
-          <input type="date" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '1rem' }} />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <input type="checkbox" id="workCapacity" style={{ width: '1.25rem', height: '1.25rem' }} />
-          <label htmlFor="workCapacity" style={{ fontWeight: 500 }}>I have returned with 100% working capacity.</label>
-        </div>
-        <button type="button" className="btn-primary" style={{ alignSelf: 'flex-start' }}>Confirm Return</button>
-      </form>
-    </div>
-  );
+    );
+  } catch (error) {
+    const runtime = await getEmployeePortalRuntime(locale);
+    return (
+      <ErrorState
+        title={runtime.messages["employee.error.returnToWork.title"] ?? "Return to work unavailable"}
+        message={error instanceof Error ? error.message : runtime.messages["employee.error.returnToWork.message"] ?? "Unable to load return-to-work state."}
+      />
+    );
+  }
 }

@@ -12,6 +12,7 @@ import type {
   ProvisioningInvite,
   RoleAssignment,
   TenantMembership,
+  UserEmployeeLink,
   UserProfile,
 } from "../domain/types.js";
 
@@ -22,6 +23,7 @@ export const PHASE_2A_REFERENCE_ROLES = {
     tenantAdmin: "tenant_admin",
     hrManager: "hr_manager",
     payrollSpecialist: "payroll_specialist",
+    employeeSelfService: "employee_self_service",
   },
   internal: {
     claimsHandler: "claims_handler",
@@ -32,6 +34,7 @@ export const PHASE_2A_REFERENCE_ROLES = {
 
 export const PHASE_2A_POLICY_CODES = {
   employerPortalShell: "employer_portal_shell",
+  employeePortalShell: "employee_portal_shell",
   internalPortalShell: "internal_portal_shell",
 } as const;
 
@@ -59,6 +62,14 @@ export const INTERNAL_COMPLIANCE_BOOTSTRAP_PERMISSIONS: PermissionCheck[] = [
   { resourceType: "internal_admin", action: "manage" },
 ];
 
+export const EMPLOYEE_PORTAL_BOOTSTRAP_PERMISSIONS: PermissionCheck[] = [
+  { resourceType: "dashboard", action: "read" },
+  { resourceType: "absence", action: "read" },
+  { resourceType: "absence", action: "write" },
+  { resourceType: "document", action: "read" },
+  { resourceType: "document", action: "write" },
+];
+
 export interface ReferenceTenantContext {
   tenantId: string;
   tenantName: string;
@@ -74,6 +85,7 @@ export interface Phase2AReferenceData {
   };
   users: {
     employerAdmin: { user: PlatformUser; profile: UserProfile };
+    employeeSelfService: { user: PlatformUser; profile: UserProfile };
     internalClaims: { user: PlatformUser; profile: UserProfile };
     internalCompliance: { user: PlatformUser; profile: UserProfile };
   };
@@ -176,6 +188,11 @@ export const createPhase2AReferenceData = (): Phase2AReferenceData => ({
       lastName: "Admin",
       displayName: "Hanna Admin",
     }),
+    employeeSelfService: buildPlatformUser("user-employee-self", "employee@demo.elipslife.ch", "de-CH", {
+      firstName: "Anna",
+      lastName: "Keller",
+      displayName: "Anna Keller",
+    }),
     internalClaims: buildPlatformUser("user-internal-claims", "claims.handler@elipslife.ch", "en-CH", {
       firstName: "Cleo",
       lastName: "Claims",
@@ -202,6 +219,10 @@ export const seedPhase2AReferenceData = async (service: IdentityAccessService): 
     actor,
   );
   await service.createTenantMembership(
+    buildMembership("membership-employee-self", tenants.employer.tenantId, users.employeeSelfService.user.id),
+    actor,
+  );
+  await service.createTenantMembership(
     buildMembership("membership-internal-claims", tenants.internal.tenantId, users.internalClaims.user.id),
     actor,
   );
@@ -212,6 +233,10 @@ export const seedPhase2AReferenceData = async (service: IdentityAccessService): 
 
   await service.createRoleAssignment(
     buildRoleAssignment("role-employer-admin", tenants.employer.tenantId, users.employerAdmin.user.id, PHASE_2A_REFERENCE_ROLES.employer.tenantAdmin),
+    actor,
+  );
+  await service.createRoleAssignment(
+    buildRoleAssignment("role-employee-self", tenants.employer.tenantId, users.employeeSelfService.user.id, PHASE_2A_REFERENCE_ROLES.employer.employeeSelfService),
     actor,
   );
   await service.createRoleAssignment(
@@ -228,6 +253,11 @@ export const seedPhase2AReferenceData = async (service: IdentityAccessService): 
     tenants.employer.tenantId,
     PHASE_2A_POLICY_CODES.employerPortalShell,
   );
+  const employeePolicySet = buildPermissionPolicySet(
+    "policy-employee-shell-v1",
+    tenants.employer.tenantId,
+    PHASE_2A_POLICY_CODES.employeePortalShell,
+  );
   const internalPolicySet = buildPermissionPolicySet(
     "policy-internal-shell-v1",
     tenants.internal.tenantId,
@@ -235,6 +265,7 @@ export const seedPhase2AReferenceData = async (service: IdentityAccessService): 
   );
 
   await service.createPermissionPolicySet(employerPolicySet, actor);
+  await service.createPermissionPolicySet(employeePolicySet, actor);
   await service.createPermissionPolicySet(internalPolicySet, actor);
 
   for (const permission of EMPLOYER_PORTAL_BOOTSTRAP_PERMISSIONS) {
@@ -255,6 +286,18 @@ export const seedPhase2AReferenceData = async (service: IdentityAccessService): 
         tenants.internal.tenantId,
         internalPolicySet.id,
         PHASE_2A_REFERENCE_ROLES.internal.claimsHandler,
+        permission,
+      ),
+      actor,
+    );
+  }
+
+  for (const permission of EMPLOYEE_PORTAL_BOOTSTRAP_PERMISSIONS) {
+    await service.createPermissionGrant(
+      buildPermissionGrant(
+        tenants.employer.tenantId,
+        employeePolicySet.id,
+        PHASE_2A_REFERENCE_ROLES.employer.employeeSelfService,
         permission,
       ),
       actor,
@@ -343,6 +386,18 @@ export const seedPhase2AReferenceData = async (service: IdentityAccessService): 
       createdAt: REFERENCE_EFFECTIVE_AT,
     },
     {
+      id: "purpose-employee-self-service-document",
+      tenantId: tenants.employer.tenantId,
+      userId: users.employeeSelfService.user.id,
+      employeeId: "employee-0001",
+      purposeCode: "employee_self_service_document",
+      lawfulBasis: "consent",
+      grantedAt: REFERENCE_EFFECTIVE_AT,
+      source: "phase_2d_reference_seed",
+      referenceJson: { module: "employee-portal", sensitivity: "medical_document" },
+      createdAt: REFERENCE_EFFECTIVE_AT,
+    },
+    {
       id: "purpose-internal-audit-review",
       tenantId: tenants.internal.tenantId,
       userId: users.internalCompliance.user.id,
@@ -357,6 +412,16 @@ export const seedPhase2AReferenceData = async (service: IdentityAccessService): 
   for (const record of purposeRecords) {
     await service.createAccessPurposeRecord(record);
   }
+
+  const employeeLink: UserEmployeeLink = {
+    id: "user-employee-link-anna-self",
+    tenantId: tenants.employer.tenantId,
+    userId: users.employeeSelfService.user.id,
+    employeeId: "employee-0001",
+    linkType: "employee_self_service",
+    linkedAt: REFERENCE_EFFECTIVE_AT,
+  };
+  await service.createUserEmployeeLink(employeeLink, actor);
 
   const compliancePolicy: AuditAccessPolicy = {
     id: "audit-policy-compliance-user",

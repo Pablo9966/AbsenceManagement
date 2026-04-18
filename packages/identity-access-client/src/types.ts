@@ -44,6 +44,16 @@ export interface TenantMembershipDto {
   updatedAt: string;
 }
 
+export interface UserEmployeeLinkDto {
+  id: string;
+  tenantId: string;
+  userId: string;
+  employeeId: string;
+  linkType: string;
+  linkedAt: string;
+  revokedAt?: string;
+}
+
 export interface RoleAssignmentDto {
   id: string;
   tenantId: string;
@@ -152,6 +162,7 @@ export interface PortalBootstrapDto {
   user: PlatformUserDto;
   profile: UserProfileDto | null;
   membership: TenantMembershipDto | null;
+  employeeLink: UserEmployeeLinkDto | null;
   locale: TransparentLocale;
   roleAssignments: RoleAssignmentDto[];
   effectivePermissions: EffectivePermissionSnapshotDto[];

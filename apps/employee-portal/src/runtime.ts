@@ -1,23 +1,21 @@
 import {
-  createPortalShellModel,
+  createPortalBootstrapRuntime,
   employeeNavigation,
   employeeRouteAccessRules,
-  filterVisibleNavigation,
-  loadCatalog,
-  resolveLocale,
   type LocaleCode,
-  type PortalTenantContext,
-  type PortalUserContext,
 } from "./frontend.js";
 import type {
-  EffectivePermissionSnapshotDto,
   PermissionCheck,
-  RoleAssignmentDto,
-} from "@elipslife/identity-access-client";
-import { createIdentityAccessClient } from "@elipslife/identity-access-client";
+  UserEmployeeLinkDto,
+} from "../../../packages/identity-access-client/src/types.js";
+import { createIdentityAccessClient } from "../../../packages/identity-access-client/src/client.js";
+import { createPortalWorkflowClient } from "../../../packages/portal-workflow-client/src/client.js";
 
 const identityAccessClient = createIdentityAccessClient({
   baseUrl: process.env.IDENTITY_ACCESS_SERVICE_BASE_URL ?? "http://127.0.0.1:4010",
+});
+const portalWorkflowClient = createPortalWorkflowClient({
+  baseUrl: process.env.PORTAL_WORKFLOW_SERVICE_BASE_URL ?? "http://127.0.0.1:4020",
 });
 
 const employeePortalConfig = {
@@ -25,69 +23,42 @@ const employeePortalConfig = {
   tenantName: process.env.EMPLOYEE_PORTAL_TENANT_NAME ?? "elipsLife Demo Kunde",
   defaultLocale: "de-CH" as LocaleCode,
   signInEmail: process.env.EMPLOYEE_PORTAL_SIGN_IN_EMAIL ?? "employee@demo.elipslife.ch",
-  featureFlags: ["dashboard-shell"],
+  featureFlags: ["dashboard-shell", "employee-self-service"],
 };
 
 const employeePortalPermissions: PermissionCheck[] = [
   { resourceType: "dashboard", action: "read" },
   { resourceType: "absence", action: "read" },
+  { resourceType: "absence", action: "write" },
   { resourceType: "document", action: "read" },
+  { resourceType: "document", action: "write" },
 ];
 
 export const getEmployeePortalRuntime = async (routeLocale?: string) => {
-  const session = await identityAccessClient.signIn({
-    email: employeePortalConfig.signInEmail,
-    tenantId: employeePortalConfig.tenantId,
+  const runtime = await createPortalBootstrapRuntime({
+    identityAccessClient,
+    workflowClient: portalWorkflowClient,
+    routeLocale,
+    config: {
+      tenantId: employeePortalConfig.tenantId,
+      tenantName: employeePortalConfig.tenantName,
+      defaultLocale: employeePortalConfig.defaultLocale,
+      signInEmail: employeePortalConfig.signInEmail,
+      featureFlags: employeePortalConfig.featureFlags,
+      portalTitleKey: "shell.employeePortal",
+      navigation: employeeNavigation,
+      routeRules: employeeRouteAccessRules,
+      requestedPermissions: employeePortalPermissions,
+    },
   });
-  const bootstrap = await identityAccessClient.getPortalBootstrap(session.sessionToken, {
-    routeLocale: routeLocale as LocaleCode | undefined,
-    permissions: employeePortalPermissions,
-  });
-  const locale = resolveLocale({
-    routeLocale: routeLocale as LocaleCode | undefined,
-    userPreferredLanguage: bootstrap.user.preferredLanguage,
-    tenantDefaultLanguage: employeePortalConfig.defaultLocale,
-  });
-  const messages = loadCatalog(locale);
-
-  const userContext: PortalUserContext = {
-    userId: bootstrap.user.id,
-    tenantId: employeePortalConfig.tenantId,
-    locale,
-    roleCodes: bootstrap.roleAssignments
-      .filter((assignment: RoleAssignmentDto) => !assignment.revokedAt)
-      .map((assignment: RoleAssignmentDto) => assignment.roleCode),
-    effectivePermissions: bootstrap.effectivePermissions.map((permission: EffectivePermissionSnapshotDto) => ({
-      resourceType: permission.resourceType,
-      action: permission.action,
-      allowed: permission.allowed,
-    })),
-  };
-  const tenantContext: PortalTenantContext = {
-    tenantId: employeePortalConfig.tenantId,
-    tenantName: employeePortalConfig.tenantName,
-    defaultLocale: locale,
-    featureFlags: employeePortalConfig.featureFlags,
-  };
-  const navigation = filterVisibleNavigation(employeeNavigation, userContext);
-  const shell = createPortalShellModel({
-    locale,
-    portalTitleKey: "shell.employeePortal",
-    messages,
-    navigation,
-    tenantContext,
-    userContext,
-  });
+  const employeeLink = runtime.bootstrap.employeeLink as UserEmployeeLinkDto | null;
+  const hasEmployeeRole = runtime.userContext.roleCodes.includes("employee_self_service");
+  if (!employeeLink || employeeLink.linkType !== "employee_self_service" || !hasEmployeeRole) {
+    throw new Error("Employee portal requires an active employee self-service link.");
+  }
 
   return {
-    locale,
-    messages,
-    userContext,
-    tenantContext,
-    shell,
-    routeRules: employeeRouteAccessRules,
-    bootstrap,
-    client: identityAccessClient,
-    sessionToken: session.sessionToken,
+    ...runtime,
+    employeeLink,
   };
 };

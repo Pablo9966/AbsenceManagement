@@ -9,6 +9,12 @@ import { URL } from "node:url";
 
 import type { PortalLocale } from "@elipslife/portal-workflow-client";
 import {
+  confirmEmployeeReturnToWork,
+  getEmployeeAbsenceDetail,
+  getEmployeeDashboard,
+  getEmployeeDocumentDetail,
+  getEmployeeReturnToWorkState,
+  getEmployeeStatusSummary,
   getEmployerAbsenceDetail,
   getEmployerCaseDetail,
   getEmployerDashboard,
@@ -21,6 +27,8 @@ import {
   listEmployerDocuments,
   listEmployerPayments,
   listEmployerTasks,
+  listEmployeeAbsences,
+  listEmployeeDocuments,
   listInternalBenefits,
   listInternalCases,
   listInternalIntake,
@@ -31,6 +39,8 @@ import {
   listInternalReconciliationRecords,
   getInternalSettlementSummary,
   listInternalPaymentAuditEvents,
+  submitEmployeeAbsence,
+  uploadEmployeeCertificate,
 } from "./service-context.js";
 
 const PORT = Number(process.env.PORTAL_WORKFLOW_SERVICE_PORT ?? "4020");
@@ -39,6 +49,14 @@ const writeJson = (response: ServerResponse, statusCode: number, body: unknown):
   response.statusCode = statusCode;
   response.setHeader("Content-Type", "application/json");
   response.end(JSON.stringify(body));
+};
+
+const readRequestBody = async <T>(request: IncomingMessage): Promise<T> => {
+  const chunks: Buffer[] = [];
+  for await (const chunk of request) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  return JSON.parse(Buffer.concat(chunks).toString("utf-8")) as T;
 };
 
 const getLocale = (requestUrl: URL): PortalLocale => {
@@ -75,6 +93,101 @@ const getPageSize = (requestUrl: URL): number | undefined => {
 
 const notFound = (response: ServerResponse): void => {
   writeJson(response, 404, { error: "Not found." });
+};
+
+const handleEmployeeRoutes = async (
+  pathname: string,
+  requestUrl: URL,
+  request: IncomingMessage,
+  response: ServerResponse,
+): Promise<boolean> => {
+  const tenantId = getTenantId(requestUrl);
+  const locale = getLocale(requestUrl);
+  const employeeId = requestUrl.searchParams.get("employeeId");
+
+  if (pathname === "/v1/employee/dashboard") {
+    writeJson(response, 200, await getEmployeeDashboard(tenantId, locale, employeeId ?? ""));
+    return true;
+  }
+  if (pathname === "/v1/employee/absences") {
+    writeJson(response, 200, await listEmployeeAbsences(tenantId, locale, employeeId ?? "", {
+      status: requestUrl.searchParams.get("status") ?? undefined,
+      page: getPage(requestUrl),
+      pageSize: getPageSize(requestUrl),
+    }));
+    return true;
+  }
+  if (pathname.startsWith("/v1/employee/absences/")) {
+    writeJson(response, 200, await getEmployeeAbsenceDetail(tenantId, locale, employeeId ?? "", pathname.split("/").at(-1) ?? ""));
+    return true;
+  }
+  if (pathname === "/v1/employee/documents") {
+    writeJson(response, 200, await listEmployeeDocuments(tenantId, locale, employeeId ?? "", {
+      status: requestUrl.searchParams.get("status") ?? undefined,
+      page: getPage(requestUrl),
+      pageSize: getPageSize(requestUrl),
+    }));
+    return true;
+  }
+  if (pathname.startsWith("/v1/employee/documents/") && pathname !== "/v1/employee/documents/upload") {
+    writeJson(response, 200, await getEmployeeDocumentDetail(tenantId, locale, employeeId ?? "", pathname.split("/").at(-1) ?? ""));
+    return true;
+  }
+  if (pathname === "/v1/employee/status") {
+    writeJson(response, 200, await getEmployeeStatusSummary(tenantId, locale, employeeId ?? ""));
+    return true;
+  }
+  if (request.method === "GET" && pathname === "/v1/employee/return-to-work") {
+    writeJson(response, 200, await getEmployeeReturnToWorkState(tenantId, locale, employeeId ?? ""));
+    return true;
+  }
+  if (request.method === "POST" && pathname === "/v1/employee/report-absence") {
+    const payload = await readRequestBody<{
+      tenantId: string;
+      locale: PortalLocale;
+      employeeId: string;
+      userId: string;
+      absenceType: string;
+      startDate: string;
+      expectedEndDate?: string;
+      comment?: string;
+    }>(request);
+    writeJson(response, 200, await submitEmployeeAbsence(payload));
+    return true;
+  }
+  if (request.method === "POST" && pathname === "/v1/employee/documents/upload") {
+    const payload = await readRequestBody<{
+      tenantId: string;
+      locale: PortalLocale;
+      employeeId: string;
+      userId: string;
+      documentType: string;
+      fileName: string;
+      mimeType: string;
+      fileSizeBytes: number;
+      absenceEpisodeId?: string;
+      certificateStartDate: string;
+      certificateEndDate?: string;
+      incapacityPercentage: number;
+      issuingProviderName?: string;
+    }>(request);
+    writeJson(response, 200, await uploadEmployeeCertificate(payload));
+    return true;
+  }
+  if (request.method === "POST" && pathname === "/v1/employee/return-to-work") {
+    const payload = await readRequestBody<{
+      tenantId: string;
+      locale: PortalLocale;
+      employeeId: string;
+      userId: string;
+      episodeId: string;
+      actualReturnDate: string;
+    }>(request);
+    writeJson(response, 200, await confirmEmployeeReturnToWork(payload));
+    return true;
+  }
+
+  return false;
 };
 
 const handleEmployerRoutes = async (pathname: string, requestUrl: URL, response: ServerResponse): Promise<boolean> => {
@@ -250,6 +363,10 @@ const requestHandler = async (request: IncomingMessage, response: ServerResponse
   const { pathname } = requestUrl;
 
   try {
+    if (await handleEmployeeRoutes(pathname, requestUrl, request, response)) {
+      return;
+    }
+
     if (await handleEmployerRoutes(pathname, requestUrl, response)) {
       return;
     }
@@ -278,6 +395,7 @@ export const createPortalWorkflowHttpServer = () => createServer(requestHandler)
 
 export const executePortalWorkflowRequest = async (
   requestPath: string,
+  input?: { method?: "GET" | "POST"; body?: unknown },
 ): Promise<{ statusCode: number; body: unknown }> => {
   let statusCode = 200;
   let body;
@@ -299,7 +417,13 @@ export const executePortalWorkflowRequest = async (
 
   await requestHandler(
     {
+      method: input?.method ?? "GET",
       url: requestPath,
+      async *[Symbol.asyncIterator]() {
+        if (input?.body !== undefined) {
+          yield Buffer.from(JSON.stringify(input.body));
+        }
+      },
     } as IncomingMessage,
     response,
   );

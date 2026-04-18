@@ -5,7 +5,13 @@ export const employeeNavigation: NavigationItemConfig[] = [
     app: "employee",
     key: "nav.employee.dashboard",
     labelKey: "nav.dashboard",
-    routePattern: "/[locale]",
+    routePattern: "/[locale]/dashboard",
+  },
+  {
+    app: "employee",
+    key: "nav.employee.status",
+    labelKey: "nav.status",
+    routePattern: "/[locale]/status",
   },
   {
     app: "employee",
@@ -17,7 +23,7 @@ export const employeeNavigation: NavigationItemConfig[] = [
     app: "employee",
     key: "nav.employee.upload_certificate",
     labelKey: "nav.uploadCertificate",
-    routePattern: "/[locale]/upload-certificate",
+    routePattern: "/[locale]/documents/upload",
   },
   {
     app: "employee",
@@ -35,21 +41,45 @@ export const employeeRouteAccessRules: RouteAccessRule[] = [
     fallbackBehavior: "redirect_dashboard",
   },
   {
-    routePattern: "/[locale]/report-absence",
+    routePattern: "/[locale]/dashboard",
+    resourceType: "dashboard",
+    action: "read",
+    fallbackBehavior: "redirect_dashboard",
+  },
+  {
+    routePattern: "/[locale]/status",
     resourceType: "absence",
     action: "read",
     fallbackBehavior: "permission_denied",
   },
   {
-    routePattern: "/[locale]/upload-certificate",
+    routePattern: "/[locale]/report-absence",
+    resourceType: "absence",
+    action: "write",
+    fallbackBehavior: "permission_denied",
+  },
+  {
+    routePattern: "/[locale]/documents/upload",
     resourceType: "document",
+    action: "write",
+    fallbackBehavior: "permission_denied",
+  },
+  {
+    routePattern: "/[locale]/documents/[documentId]",
+    resourceType: "document",
+    action: "read",
+    fallbackBehavior: "permission_denied",
+  },
+  {
+    routePattern: "/[locale]/absences/[episodeId]",
+    resourceType: "absence",
     action: "read",
     fallbackBehavior: "permission_denied",
   },
   {
     routePattern: "/[locale]/return-to-work",
     resourceType: "absence",
-    action: "read",
+    action: "write",
     fallbackBehavior: "permission_denied",
   },
 ];

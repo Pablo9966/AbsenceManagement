@@ -22,7 +22,8 @@
     "app/**/*.ts",
     "app/**/*.tsx",
     "src/**/*.ts",
-    "src/**/*.tsx"
+    "src/**/*.tsx",
+    ".next/types/**/*.ts"
   ],
   "references": [
     {
@@ -30,6 +31,9 @@
     },
     {
       "path": "../../packages/frontend-platform"
+    },
+    {
+      "path": "../../packages/portal-workflow-client"
     }
   ],
   "exclude": [

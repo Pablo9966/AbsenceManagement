@@ -205,6 +205,7 @@ export interface PortalBootstrap {
   user: PlatformUser;
   profile: UserProfile | null;
   membership: TenantMembership | null;
+  employeeLink: UserEmployeeLink | null;
   locale: TransparentLocale;
   roleAssignments: RoleAssignment[];
   effectivePermissions: EffectivePermissionSnapshot[];
