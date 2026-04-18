@@ -47,7 +47,10 @@ import {
   KtgCaseService,
   type KtgCaseRepository,
 } from "../../ktg-case-service/src/index.js";
-
+import {
+  PaymentOperationsService,
+  type PaymentOperationsRepository,
+} from "../../payment-operations-service/src/index.js";
 
 import { WorkflowForbiddenError, WorkflowNotFoundError } from "./errors.js";
 import type {
@@ -58,6 +61,19 @@ import type {
   IntakeCaseWorkspace, IntakeChecklistItem, MissingInformationRequest,
   WorkspaceNote, WorkspaceEvidenceReference, WorkspaceActivityEvent,
 } from "./adapters/memory-repositories.js";
+import type {
+  EmployerPaymentRunSummary,
+  InternalPaymentRunListItem,
+  InternalPaymentRunDetail,
+  InternalPaymentRunItemSummary,
+  InternalExportPackageSummary,
+  InternalStatementSummary,
+  InternalReconciliationRecord,
+  InternalMonthEndReport,
+  InternalMonthEndReportEntry,
+  InternalPaymentAuditEventItem,
+  InternalSettlementSummary,
+} from "@elipslife/portal-workflow-client";
 
 export interface PortalWorkflowContext {
   repositories: {
@@ -68,6 +84,7 @@ export interface PortalWorkflowContext {
     benefitRepository: BenefitEngineRepository;
     dashboardRepository: DashboardProjectionRepository;
     inboxRepository: InboxNotificationRepository;
+    paymentOperationsRepository: PaymentOperationsRepository;
   };
   services: {
     absenceService: AbsenceRecordingService;
@@ -77,6 +94,7 @@ export interface PortalWorkflowContext {
     benefitService: BenefitEngineService;
     dashboardService: DashboardProjectionService;
     inboxService: InboxNotificationService;
+    paymentOperationsService: PaymentOperationsService;
   };
 }
 
@@ -100,6 +118,7 @@ const employerPermissions: WorkflowPermission[] = [
   { resourceType: "document", action: "read", allowed: true },
   { resourceType: "task", action: "read", allowed: true },
   { resourceType: "payment_summary", action: "read", allowed: true },
+  { resourceType: "payment_run", action: "read", allowed: true },
 ];
 
 const internalPermissions: WorkflowPermission[] = [
@@ -107,6 +126,10 @@ const internalPermissions: WorkflowPermission[] = [
   { resourceType: "claims_intake_workspace", action: "read", allowed: true },
   { resourceType: "ktg_case", action: "read_internal", allowed: true },
   { resourceType: "benefit_calculation", action: "read", allowed: true },
+  { resourceType: "payment_run", action: "read_internal", allowed: true },
+  { resourceType: "payment_run", action: "write_internal", allowed: true },
+  { resourceType: "reconciliation", action: "read_internal", allowed: true },
+  { resourceType: "reconciliation", action: "write_internal", allowed: true },
 ];
 
 const employeeDirectory: Record<string, { name: string }> = {
@@ -745,4 +768,252 @@ export const getInternalBenefitDetail = async (
       amountChf: instruction.netAmountChf,
     })),
   }, tenantId, locale, internalPermissions);
+};
+
+// ─── Phase 2C: Payment Operations handlers ───────────────────────────────────
+
+export const listEmployerPaymentRunSummaries = async (
+  tenantId: string,
+  locale: PortalLocale,
+  filters?: { page?: number; pageSize?: number },
+): Promise<WorkflowResponse<EmployerPaymentRunSummary[]>> => {
+  const { services } = getPortalWorkflowServices();
+  const runs = await services.paymentOperationsService.listPaymentRuns(INTERNAL_TENANT_ID);
+  const items: EmployerPaymentRunSummary[] = runs.map((run) => ({
+    runId: run.id,
+    runNumber: run.runNumber,
+    totalNetAmountChf: run.totalNetAmountChf,
+    instructionCount: run.instructionCount,
+    runStatus: run.runStatus,
+    createdAt: run.createdAt.slice(0, 10),
+  }));
+  const paginated = paginateItems(items, filters);
+  return makeResponse(paginated.items, tenantId, locale, employerPermissions, {
+    totalCount: paginated.totalCount,
+    page: paginated.page,
+    pageSize: paginated.pageSize,
+    totalPages: paginated.totalPages,
+  });
+};
+
+export const listInternalPaymentRuns = async (
+  tenantId: string,
+  locale: PortalLocale,
+  filters?: { runStatus?: string; runType?: string; page?: number; pageSize?: number },
+): Promise<WorkflowResponse<InternalPaymentRunListItem[]>> => {
+  if (tenantId !== INTERNAL_TENANT_ID) {
+    throw new WorkflowForbiddenError("Internal routes are only accessible to internal tenants.");
+  }
+  const { services } = getPortalWorkflowServices();
+  const runs = await services.paymentOperationsService.listPaymentRuns(tenantId, filters);
+  const items: InternalPaymentRunListItem[] = runs.map((run) => ({
+    runId: run.id,
+    runNumber: run.runNumber,
+    runType: run.runType,
+    runStatus: run.runStatus,
+    instructionCount: run.instructionCount,
+    totalNetAmountChf: run.totalNetAmountChf,
+    reconciliationStatus: run.reconciliationStatus,
+    createdAt: run.createdAt.slice(0, 10),
+  }));
+  const paginated = paginateItems(items, filters);
+  return makeResponse(paginated.items, tenantId, locale, internalPermissions, {
+    totalCount: paginated.totalCount,
+    page: paginated.page,
+    pageSize: paginated.pageSize,
+    totalPages: paginated.totalPages,
+    appliedFilters: {
+      ...(filters?.runStatus ? { runStatus: filters.runStatus } : {}),
+      ...(filters?.runType ? { runType: filters.runType } : {}),
+    },
+  });
+};
+
+export const getInternalPaymentRunDetail = async (
+  tenantId: string,
+  locale: PortalLocale,
+  runId: string,
+): Promise<WorkflowResponse<InternalPaymentRunDetail>> => {
+  if (tenantId !== INTERNAL_TENANT_ID) {
+    throw new WorkflowForbiddenError("Internal routes are only accessible to internal tenants.");
+  }
+  const { services } = getPortalWorkflowServices();
+  const detail = await services.paymentOperationsService.getPaymentRunDetail(tenantId, runId);
+  if (!detail) {
+    throw new WorkflowNotFoundError();
+  }
+  return makeResponse({
+    runId: detail.id,
+    runNumber: detail.runNumber,
+    runType: detail.runType,
+    runStatus: detail.runStatus,
+    instructionCount: detail.instructionCount,
+    totalGrossAmountChf: detail.totalGrossAmountChf,
+    totalNetAmountChf: detail.totalNetAmountChf,
+    reconciliationStatus: detail.reconciliationStatus,
+    createdAt: detail.createdAt,
+    createdBy: detail.createdBy,
+    scheduledExecutionAt: detail.scheduledExecutionAt,
+    exportedAt: detail.exportedAt,
+    completedAt: detail.completedAt,
+    cancelledAt: detail.cancelledAt,
+    notes: detail.notes,
+    items: detail.items.map((i): InternalPaymentRunItemSummary => ({
+      runItemId: i.id,
+      paymentInstructionId: i.paymentInstructionId,
+      ktgCaseId: i.ktgCaseId,
+      payeeReference: i.payeeReference,
+      periodLabel: `${i.paymentPeriodStart} to ${i.paymentPeriodEnd}`,
+      netAmountChf: i.netAmountChf,
+      itemStatus: i.itemStatus,
+    })),
+    exportPackages: detail.exportPackages.map((p): InternalExportPackageSummary => ({
+      exportId: p.id,
+      exportFormat: p.exportFormat,
+      fileName: p.fileName,
+      exportStatus: p.exportStatus,
+      generatedAt: p.generatedAt,
+      generatedBy: p.generatedBy,
+    })),
+    statements: detail.statements.map((s): InternalStatementSummary => ({
+      statementId: s.id,
+      statementType: s.statementType,
+      ktgCaseId: s.ktgCaseId,
+      periodLabel: `${s.statementPeriodStart} to ${s.statementPeriodEnd}`,
+      fileName: s.fileName,
+      pdfSizeBytes: s.pdfSizeBytes,
+      generatedAt: s.generatedAt,
+    })),
+    reconciliation: detail.reconciliationRecord
+      ? ({
+          reconciliationId: detail.reconciliationRecord.id,
+          paymentRunId: detail.reconciliationRecord.paymentRunId,
+          reconciliationStatus: detail.reconciliationRecord.reconciliationStatus,
+          reconciledAt: detail.reconciliationRecord.reconciledAt,
+          reconciledBy: detail.reconciliationRecord.reconciledBy,
+          mismatchReason: detail.reconciliationRecord.mismatchReason,
+          payrollBookingReference: detail.reconciliationRecord.payrollBookingReference,
+          confirmationReceivedAt: detail.reconciliationRecord.confirmationReceivedAt,
+        } satisfies InternalReconciliationRecord)
+      : undefined,
+    bookingReference: detail.bookingConfirmation?.confirmationReference,
+  } satisfies InternalPaymentRunDetail, tenantId, locale, internalPermissions);
+};
+
+export const getInternalMonthEndReport = async (
+  tenantId: string,
+  locale: PortalLocale,
+): Promise<WorkflowResponse<InternalMonthEndReport>> => {
+  if (tenantId !== INTERNAL_TENANT_ID) {
+    throw new WorkflowForbiddenError("Internal routes are only accessible to internal tenants.");
+  }
+  const { services } = getPortalWorkflowServices();
+  const [runs, reconRecords] = await Promise.all([
+    services.paymentOperationsService.listPaymentRuns(tenantId),
+    services.paymentOperationsService.listReconciliationRecords(tenantId),
+  ]);
+
+  const reconByRunId = new Map(reconRecords.map((r) => [r.paymentRunId, r]));
+  const entries: InternalMonthEndReportEntry[] = runs.map((run) => {
+    const recon = reconByRunId.get(run.id);
+    return {
+      runId: run.id,
+      runNumber: run.runNumber,
+      runStatus: run.runStatus,
+      totalNetAmountChf: run.totalNetAmountChf,
+      reconciliationStatus: run.reconciliationStatus,
+      exportedAt: run.exportedAt,
+      completedAt: run.completedAt,
+      mismatch: recon?.reconciliationStatus === "mismatch",
+      bookingReference: recon?.payrollBookingReference,
+    };
+  });
+
+  const totalNetAmountChf = runs.reduce((sum, r) => sum + r.totalNetAmountChf, 0);
+  const confirmed = runs.filter((r) => r.reconciliationStatus === "confirmed").length;
+  const mismatches = runs.filter((r) => reconByRunId.get(r.id)?.reconciliationStatus === "mismatch").length;
+  const unresolved = runs.filter(
+    (r) => r.runStatus !== "cancelled" && r.reconciliationStatus !== "confirmed",
+  ).length;
+
+  return makeResponse({
+    reportGeneratedAt: REFERENCE_AT,
+    totalRuns: runs.length,
+    totalNetAmountChf,
+    confirmed,
+    unresolved,
+    mismatches,
+    entries,
+  } satisfies InternalMonthEndReport, tenantId, locale, internalPermissions);
+};
+
+export const listInternalReconciliationRecords = async (
+  tenantId: string,
+  locale: PortalLocale,
+  filters?: { reconciliationStatus?: string },
+): Promise<WorkflowResponse<InternalReconciliationRecord[]>> => {
+  if (tenantId !== INTERNAL_TENANT_ID) {
+    throw new WorkflowForbiddenError("Internal routes are only accessible to internal tenants.");
+  }
+  const { services } = getPortalWorkflowServices();
+  const records = await services.paymentOperationsService.listReconciliationRecords(tenantId, filters);
+  const items: InternalReconciliationRecord[] = records.map((r) => ({
+    reconciliationId: r.id,
+    paymentRunId: r.paymentRunId,
+    reconciliationStatus: r.reconciliationStatus,
+    reconciledAt: r.reconciledAt,
+    reconciledBy: r.reconciledBy,
+    mismatchReason: r.mismatchReason,
+    payrollBookingReference: r.payrollBookingReference,
+    confirmationReceivedAt: r.confirmationReceivedAt,
+  }));
+  return makeResponse(items, tenantId, locale, internalPermissions);
+};
+
+export const getInternalSettlementSummary = async (
+  tenantId: string,
+  locale: PortalLocale,
+  ktgCaseId: string,
+): Promise<WorkflowResponse<InternalSettlementSummary>> => {
+  if (tenantId !== INTERNAL_TENANT_ID) {
+    throw new WorkflowForbiddenError("Internal routes are only accessible to internal tenants.");
+  }
+  const { services } = getPortalWorkflowServices();
+  const summary = await services.paymentOperationsService.getSettlementSummaryByCase(tenantId, ktgCaseId);
+  if (!summary) {
+    throw new WorkflowNotFoundError();
+  }
+  return makeResponse({
+    summaryId: summary.id,
+    ktgCaseId: summary.ktgCaseId,
+    latestPaymentRunId: summary.latestPaymentRunId,
+    totalGrossPaidChf: summary.totalGrossPaidChf,
+    totalNetPaidChf: summary.totalNetPaidChf,
+    totalPayableDays: summary.totalPayableDays,
+    lastStatementAt: summary.lastStatementAt,
+    settlementStatus: summary.settlementStatus,
+    updatedAt: summary.updatedAt,
+  } satisfies InternalSettlementSummary, tenantId, locale, internalPermissions);
+};
+
+export const listInternalPaymentAuditEvents = async (
+  tenantId: string,
+  locale: PortalLocale,
+  filters?: { runId?: string },
+): Promise<WorkflowResponse<InternalPaymentAuditEventItem[]>> => {
+  if (tenantId !== INTERNAL_TENANT_ID) {
+    throw new WorkflowForbiddenError("Internal routes are only accessible to internal tenants.");
+  }
+  const { services } = getPortalWorkflowServices();
+  const events = await services.paymentOperationsService.listAuditEvents(tenantId, filters);
+  const items: InternalPaymentAuditEventItem[] = events.map((e) => ({
+    eventId: e.id,
+    paymentRunId: e.paymentRunId,
+    eventType: e.eventType,
+    occurredAt: e.occurredAt,
+    actorId: e.actorId,
+    actorRole: e.actorRole,
+    payload: e.payload,
+  }));
+  return makeResponse(items, tenantId, locale, internalPermissions);
 };

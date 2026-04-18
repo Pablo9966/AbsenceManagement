@@ -27,6 +27,23 @@ import {
   KtgCaseService,
   type KtgCaseRepository,
 } from "../../../ktg-case-service/src/index.js";
+import {
+  PaymentOperationsService,
+  type PaymentOperationsRepository,
+  type PaymentOperationsRepositoryContext,
+} from "../../../payment-operations-service/src/index.js";
+import type {
+  CaseSettlementSummary,
+  PaymentExportPackage,
+  PaymentOperationsAuditEvent,
+  PaymentReconciliationRecord,
+  PaymentRun,
+  PaymentRunItem,
+  PaymentStatement,
+  PayrollBookingConfirmation,
+} from "../../../payment-operations-service/src/index.js";
+export { PaymentOperationsService };
+export type { PaymentOperationsRepository, PaymentOperationsRepositoryContext };
 export type ArrayItem<T> = T extends readonly (infer U)[] ? U : T extends (infer U)[] ? U : never;
 export type AwaitedReturn<T extends (...args: never[]) => Promise<unknown>> = Awaited<ReturnType<T>>;
 
@@ -963,5 +980,160 @@ export class InboxNotificationMemoryRepository implements InboxNotificationRepos
       suppression.tenantId === tenantId &&
       (!filters?.recipientUserId || suppression.recipientUserId === filters.recipientUserId) &&
       (!filters?.notificationEventId || suppression.notificationEventId === filters.notificationEventId));
+  }
+}
+
+export class PaymentOperationsMemoryRepository implements PaymentOperationsRepository {
+  constructor(
+    private readonly runs: PaymentRun[],
+    private readonly runItems: PaymentRunItem[],
+    private readonly exportPackages: PaymentExportPackage[],
+    private readonly statements: PaymentStatement[],
+    private readonly settlementSummaries: CaseSettlementSummary[],
+    private readonly reconciliationRecords: PaymentReconciliationRecord[],
+    private readonly bookingConfirmations: PayrollBookingConfirmation[],
+    private readonly auditEvents: PaymentOperationsAuditEvent[],
+  ) {}
+
+  async withTransaction<T>(operation: (repo: PaymentOperationsRepositoryContext) => Promise<T>): Promise<T> {
+    return operation(this);
+  }
+
+  async createPaymentRun(run: PaymentRun): Promise<PaymentRun> {
+    return append(this.runs, run);
+  }
+
+  async getPaymentRunById(tenantId: string, runId: string): Promise<PaymentRun | null> {
+    return this.runs.find((r) => r.tenantId === tenantId && r.id === runId) ?? null;
+  }
+
+  async updatePaymentRun(run: PaymentRun): Promise<PaymentRun> {
+    replaceById(this.runs, run);
+    return run;
+  }
+
+  async listPaymentRuns(tenantId: string, filters?: { runStatus?: string; runType?: string }): Promise<PaymentRun[]> {
+    return this.runs.filter(
+      (r) =>
+        r.tenantId === tenantId &&
+        (!filters?.runStatus || r.runStatus === filters.runStatus) &&
+        (!filters?.runType || r.runType === filters.runType),
+    );
+  }
+
+  async createPaymentRunItem(item: PaymentRunItem): Promise<PaymentRunItem> {
+    return append(this.runItems, item);
+  }
+
+  async listPaymentRunItemsByRun(tenantId: string, runId: string): Promise<PaymentRunItem[]> {
+    return this.runItems.filter((i) => i.tenantId === tenantId && i.paymentRunId === runId);
+  }
+
+  async updatePaymentRunItem(item: PaymentRunItem): Promise<PaymentRunItem> {
+    replaceById(this.runItems, item);
+    return item;
+  }
+
+  async findActiveRunItemByInstruction(tenantId: string, paymentInstructionId: string): Promise<PaymentRunItem | null> {
+    return (
+      this.runItems.find(
+        (i) =>
+          i.tenantId === tenantId &&
+          i.paymentInstructionId === paymentInstructionId &&
+          (i.itemStatus === "included" || i.itemStatus === "exported"),
+      ) ?? null
+    );
+  }
+
+  async createExportPackage(pkg: PaymentExportPackage): Promise<PaymentExportPackage> {
+    return append(this.exportPackages, pkg);
+  }
+
+  async listExportPackagesByRun(tenantId: string, runId: string): Promise<PaymentExportPackage[]> {
+    return this.exportPackages.filter((p) => p.tenantId === tenantId && p.paymentRunId === runId);
+  }
+
+  async createPaymentStatement(stmt: PaymentStatement): Promise<PaymentStatement> {
+    return append(this.statements, stmt);
+  }
+
+  async listStatementsByRun(tenantId: string, runId: string): Promise<PaymentStatement[]> {
+    return this.statements.filter((s) => s.tenantId === tenantId && s.paymentRunId === runId);
+  }
+
+  async listStatementsByCase(tenantId: string, ktgCaseId: string): Promise<PaymentStatement[]> {
+    return this.statements.filter((s) => s.tenantId === tenantId && s.ktgCaseId === ktgCaseId);
+  }
+
+  async upsertSettlementSummary(summary: CaseSettlementSummary): Promise<CaseSettlementSummary> {
+    const existing = this.settlementSummaries.findIndex(
+      (s) => s.tenantId === summary.tenantId && s.ktgCaseId === summary.ktgCaseId,
+    );
+    if (existing === -1) {
+      this.settlementSummaries.push(summary);
+    } else {
+      this.settlementSummaries[existing] = summary;
+    }
+    return summary;
+  }
+
+  async getSettlementSummaryByCase(tenantId: string, ktgCaseId: string): Promise<CaseSettlementSummary | null> {
+    return this.settlementSummaries.find((s) => s.tenantId === tenantId && s.ktgCaseId === ktgCaseId) ?? null;
+  }
+
+  async listSettlementSummaries(tenantId: string): Promise<CaseSettlementSummary[]> {
+    return this.settlementSummaries.filter((s) => s.tenantId === tenantId);
+  }
+
+  async createReconciliationRecord(record: PaymentReconciliationRecord): Promise<PaymentReconciliationRecord> {
+    return append(this.reconciliationRecords, record);
+  }
+
+  async getReconciliationRecordByRun(tenantId: string, runId: string): Promise<PaymentReconciliationRecord | null> {
+    return this.reconciliationRecords.find((r) => r.tenantId === tenantId && r.paymentRunId === runId) ?? null;
+  }
+
+  async updateReconciliationRecord(record: PaymentReconciliationRecord): Promise<PaymentReconciliationRecord> {
+    replaceById(this.reconciliationRecords, record);
+    return record;
+  }
+
+  async listReconciliationRecords(
+    tenantId: string,
+    filters?: { reconciliationStatus?: string },
+  ): Promise<PaymentReconciliationRecord[]> {
+    return this.reconciliationRecords.filter(
+      (r) =>
+        r.tenantId === tenantId &&
+        (!filters?.reconciliationStatus || r.reconciliationStatus === filters.reconciliationStatus),
+    );
+  }
+
+  async createPayrollBookingConfirmation(conf: PayrollBookingConfirmation): Promise<PayrollBookingConfirmation> {
+    return append(this.bookingConfirmations, conf);
+  }
+
+  async getPayrollBookingConfirmationByRun(tenantId: string, runId: string): Promise<PayrollBookingConfirmation | null> {
+    return this.bookingConfirmations.find((c) => c.tenantId === tenantId && c.paymentRunId === runId) ?? null;
+  }
+
+  async createAuditEvent(event: PaymentOperationsAuditEvent): Promise<PaymentOperationsAuditEvent> {
+    return append(this.auditEvents, event);
+  }
+
+  async listAuditEventsByRun(tenantId: string, runId: string): Promise<PaymentOperationsAuditEvent[]> {
+    return this.auditEvents
+      .filter((e) => e.tenantId === tenantId && e.paymentRunId === runId)
+      .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
+  }
+
+  async listAuditEvents(tenantId: string, filters?: { runId?: string }): Promise<PaymentOperationsAuditEvent[]> {
+    return this.auditEvents
+      .filter(
+        (e) =>
+          e.tenantId === tenantId &&
+          (!filters?.runId || e.paymentRunId === filters.runId),
+      )
+      .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
   }
 }

@@ -97,10 +97,20 @@ import {
   BenefitEngineMemoryRepository,
   DashboardProjectionMemoryRepository,
   InboxNotificationMemoryRepository,
+  PaymentOperationsMemoryRepository,
+  PaymentOperationsService,
 } from "../adapters/memory-repositories.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type F<T> = T[];
 import {
+  paymentRuns as _paymentRuns,
+  paymentRunItems as _paymentRunItems,
+  exportPackages as _exportPackages,
+  paymentStatements as _paymentStatements,
+  settlementSummaries as _settlementSummaries,
+  reconciliationRecords as _reconciliationRecords,
+  bookingConfirmations as _bookingConfirmations,
+  paymentAuditEvents as _paymentAuditEvents,
   absenceEpisodes as _absenceEpisodes,
   absenceContractImpacts as _absenceContractImpacts,
   absenceDailyRecords as _absenceDailyRecords,
@@ -156,8 +166,28 @@ import {
   deliverySuppressions as _deliverySuppressions,
 } from "../testing/demo-fixtures.js";
 
+import type {
+  PaymentRun,
+  PaymentRunItem,
+  PaymentExportPackage,
+  PaymentStatement,
+  CaseSettlementSummary,
+  PaymentReconciliationRecord,
+  PayrollBookingConfirmation,
+  PaymentOperationsAuditEvent,
+} from "../../../payment-operations-service/src/index.js";
+
 // Cast fixture arrays from generic FixtureArray to the domain types derived from
 // the repository interfaces already imported above.
+const paymentRuns = _paymentRuns as F<PaymentRun>;
+const paymentRunItems = _paymentRunItems as F<PaymentRunItem>;
+const exportPackages = _exportPackages as F<PaymentExportPackage>;
+const paymentStatements = _paymentStatements as F<PaymentStatement>;
+const settlementSummaries = _settlementSummaries as F<CaseSettlementSummary>;
+const reconciliationRecords = _reconciliationRecords as F<PaymentReconciliationRecord>;
+const bookingConfirmations = _bookingConfirmations as F<PayrollBookingConfirmation>;
+const paymentAuditEvents = _paymentAuditEvents as F<PaymentOperationsAuditEvent>;
+
 const absenceEpisodes = _absenceEpisodes as F<AbsenceEpisode>;
 const absenceContractImpacts = _absenceContractImpacts as F<AbsenceContractImpact>;
 const absenceDailyRecords = _absenceDailyRecords as F<AbsenceDailyRecord>;
@@ -282,6 +312,16 @@ export const createServices = () => {
     clone(notificationDeliveries),
     clone(deliverySuppressions),
   );
+  const paymentOperationsRepository = new PaymentOperationsMemoryRepository(
+    clone(paymentRuns),
+    clone(paymentRunItems),
+    clone(exportPackages),
+    clone(paymentStatements),
+    clone(settlementSummaries),
+    clone(reconciliationRecords),
+    clone(bookingConfirmations),
+    clone(paymentAuditEvents),
+  );
 
   return {
     repositories: {
@@ -292,6 +332,7 @@ export const createServices = () => {
       benefitRepository,
       dashboardRepository,
       inboxRepository,
+      paymentOperationsRepository,
     },
     services: {
       absenceService: new AbsenceRecordingService(absenceRepository),
@@ -301,6 +342,7 @@ export const createServices = () => {
       benefitService: new BenefitEngineService(benefitRepository),
       dashboardService: new DashboardProjectionService(dashboardRepository),
       inboxService: new InboxNotificationService(inboxRepository),
+      paymentOperationsService: new PaymentOperationsService(paymentOperationsRepository),
     },
   };
 };
