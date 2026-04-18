@@ -15,6 +15,7 @@ It also introduces a shared frontend platform package for locale-aware routing, 
 - Structural support for `fr-CH` and `it-CH`
 - Shared app-shell components and navigation model
 - Permission-aware route and navigation configuration
+- Server-side route gating in placeholder pages using shared access rules
 - Placeholder dashboard and feature pages matching existing service boundaries
 - Shared frontend package for i18n, navigation, and route access helpers
 
@@ -66,13 +67,14 @@ The shared package provides:
 - navigation item config
 - route access rules
 - shell model helpers for app header and navigation rendering
+- shared shell components such as `PortalLayout`, `TopBar`, `SidebarNav`, and `PermissionDeniedState`
 - permission gate helpers
 
 ## UX Notes
 
 - German and English are populated now.
 - French and Italian message bundles exist as placeholders so route structure and loaders are future-safe.
-- Navigation visibility is permission-driven, but direct route access must still be denied server-side.
+- Navigation visibility is permission-driven, and placeholder pages already apply server-side route checks through the shared guard component.
 - `PortalUserContext` and `PortalTenantContext` remain read models that are intended to come from `identity-access-service` once live data wiring starts.
 
 ## Exit Criteria

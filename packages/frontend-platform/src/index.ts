@@ -7,4 +7,5 @@ export * from "./navigation/employer.js";
 export * from "./navigation/internal.js";
 export * from "./navigation/types.js";
 export * from "./shell/model.js";
+export * from "./shell/components.js";
 export * from "./shell/types.js";
