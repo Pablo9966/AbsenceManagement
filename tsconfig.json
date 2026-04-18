@@ -29,10 +29,16 @@
       "path": "./services/identity-access-service"
     },
     {
+      "path": "./services/portal-workflow-service"
+    },
+    {
       "path": "./packages/frontend-platform"
     },
     {
       "path": "./packages/identity-access-client"
+    },
+    {
+      "path": "./packages/portal-workflow-client"
     },
     {
       "path": "./apps/employer-portal"

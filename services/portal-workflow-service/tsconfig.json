@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "../../dist/services/portal-workflow-service",
+    "tsBuildInfoFile": "../../dist/services/portal-workflow-service.tsbuildinfo"
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../packages/portal-workflow-client"
+    }
+  ]
+}

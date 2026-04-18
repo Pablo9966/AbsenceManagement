@@ -24,6 +24,9 @@
       "@elipslife/frontend-platform": [
         "packages/frontend-platform/src/index.ts"
       ],
+      "@elipslife/portal-workflow-client": [
+        "packages/portal-workflow-client/src/index.ts"
+      ],
       "@elipslife/identity-access-client": [
         "packages/identity-access-client/src/index.ts"
       ],
