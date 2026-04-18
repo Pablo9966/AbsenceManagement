@@ -27,6 +27,15 @@
     },
     {
       "path": "./services/identity-access-service"
+    },
+    {
+      "path": "./packages/frontend-platform"
+    },
+    {
+      "path": "./apps/employer-portal"
+    },
+    {
+      "path": "./apps/internal-portal"
     }
   ]
 }

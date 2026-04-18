@@ -27,6 +27,7 @@ This repository currently contains:
 
 - Phase 1 architecture notes
 - Phase 2 identity and access foundation design package
+- Phase 2 employer and internal portal shell package
 - Module 1 design package for Employee Master Data Management
 - Module 2 design package for Absence Recording and Tracking
 - Module 3 design package for KTG Case Registration and Deadline Management
@@ -44,11 +45,15 @@ This repository currently contains:
 - `claims-intake-workspace-service` schema, API contract, and TypeScript service skeleton
 - `benefit-engine-service` schema, API contract, and TypeScript service skeleton
 - `identity-access-service` schema, API contract, and TypeScript service skeleton
+- `frontend-platform` shared frontend package for locale, navigation, and shell modeling
+- `employer-portal` Next.js shell scaffold
+- `internal-portal` Next.js shell scaffold
 
 ## Repository Layout
 
 - [docs/phase-1/architecture.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-1/architecture.md)
 - [docs/phase-2/module-2a-identity-access.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-2/module-2a-identity-access.md)
+- [docs/phase-2/module-2a-portal-shells.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-2/module-2a-portal-shells.md)
 - [docs/phase-1/module-01-employee-master-data.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-1/module-01-employee-master-data.md)
 - [docs/phase-1/module-02-absence-recording.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-1/module-02-absence-recording.md)
 - [docs/phase-1/module-03-ktg-case-management.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-1/module-03-ktg-case-management.md)
@@ -111,6 +116,9 @@ This repository currently contains:
 - [services/identity-access-service/src/domain/formulas.ts](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/services/identity-access-service/src/domain/formulas.ts)
 - [services/identity-access-service/src/domain/validations.ts](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/services/identity-access-service/src/domain/validations.ts)
 - [services/identity-access-service/src/application/identity-access.service.ts](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/services/identity-access-service/src/application/identity-access.service.ts)
+- [packages/frontend-platform/src/index.ts](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/packages/frontend-platform/src/index.ts)
+- [apps/employer-portal/app/[locale]/layout.tsx](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/apps/employer-portal/app/[locale]/layout.tsx)
+- [apps/internal-portal/app/[locale]/layout.tsx](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/apps/internal-portal/app/[locale]/layout.tsx)
 
 ## Notes
 
