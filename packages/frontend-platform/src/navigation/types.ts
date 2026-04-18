@@ -1,4 +1,4 @@
-export type PortalApp = "employer" | "internal";
+export type PortalApp = "employer" | "internal" | "employee";
 
 export interface NavigationItemConfig {
   app: PortalApp;

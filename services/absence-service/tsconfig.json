@@ -2,7 +2,9 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "rootDir": "src"
+    "rootDir": "src",
+    "outDir": "../../dist/services/absence-service",
+    "tsBuildInfoFile": "../../dist/services/absence-service.tsbuildinfo"
   },
   "include": [
     "src/**/*.ts"

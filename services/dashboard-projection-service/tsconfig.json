@@ -2,10 +2,11 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "rootDir": "src"
+    "rootDir": "src",
+    "outDir": "../../dist/services/dashboard-projection-service",
+    "tsBuildInfoFile": "../../dist/services/dashboard-projection-service.tsbuildinfo"
   },
   "include": [
     "src/**/*.ts"
   ]
 }
-

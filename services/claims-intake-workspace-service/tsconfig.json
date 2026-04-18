@@ -2,10 +2,11 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "rootDir": "src"
+    "rootDir": "src",
+    "outDir": "../../dist/services/claims-intake-workspace-service",
+    "tsBuildInfoFile": "../../dist/services/claims-intake-workspace-service.tsbuildinfo"
   },
   "include": [
     "src/**/*.ts"
   ]
 }
-

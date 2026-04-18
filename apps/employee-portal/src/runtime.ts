@@ -31,6 +31,7 @@ const employeePortalConfig = {
 const employeePortalPermissions: PermissionCheck[] = [
   { resourceType: "dashboard", action: "read" },
   { resourceType: "absence", action: "read" },
+  { resourceType: "document", action: "read" },
 ];
 
 export const getEmployeePortalRuntime = async (routeLocale?: string) => {
@@ -48,20 +49,14 @@ export const getEmployeePortalRuntime = async (routeLocale?: string) => {
     tenantDefaultLanguage: employeePortalConfig.defaultLocale,
   });
   const messages = loadCatalog(locale);
-  
-  // Hardcode ROLE_EMPLOYEE for mock
-  const roleCodes = bootstrap.roleAssignments
-    .filter((assignment: RoleAssignmentDto) => !assignment.revokedAt)
-    .map((assignment: RoleAssignmentDto) => assignment.roleCode);
-  if (!roleCodes.includes("ROLE_EMPLOYEE")) {
-    roleCodes.push("ROLE_EMPLOYEE");
-  }
 
   const userContext: PortalUserContext = {
     userId: bootstrap.user.id,
     tenantId: employeePortalConfig.tenantId,
     locale,
-    roleCodes,
+    roleCodes: bootstrap.roleAssignments
+      .filter((assignment: RoleAssignmentDto) => !assignment.revokedAt)
+      .map((assignment: RoleAssignmentDto) => assignment.roleCode),
     effectivePermissions: bootstrap.effectivePermissions.map((permission: EffectivePermissionSnapshotDto) => ({
       resourceType: permission.resourceType,
       action: permission.action,
@@ -83,8 +78,6 @@ export const getEmployeePortalRuntime = async (routeLocale?: string) => {
     tenantContext,
     userContext,
   });
-  shell.portalTitle = "Employee Portal";
-  shell.appName = "elipsLife Employee";
 
   return {
     locale,

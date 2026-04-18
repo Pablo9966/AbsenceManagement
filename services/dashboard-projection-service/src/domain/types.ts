@@ -86,6 +86,7 @@ export interface DashboardViewConfig {
 
 export interface BenchmarkSnapshot {
   id: string;
+  tenantId?: string;
   benchmarkScope: BenchmarkScope;
   industryCode?: string;
   metricKey: string;

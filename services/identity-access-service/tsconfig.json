@@ -2,7 +2,9 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "rootDir": "src"
+    "rootDir": "src",
+    "outDir": "../../dist/services/identity-access-service",
+    "tsBuildInfoFile": "../../dist/services/identity-access-service.tsbuildinfo"
   },
   "include": [
     "src/**/*.ts"

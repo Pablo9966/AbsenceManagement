@@ -22,31 +22,31 @@ import type {
 import {
   AbsenceRecordingService,
   type AbsenceRepository,
-} from "../../absence-service/src/application/absence-recording.service.js";
+} from "../../absence-service/src/index.js";
 import {
   BenefitEngineService,
   type BenefitEngineRepository,
-} from "../../benefit-engine-service/src/application/benefit-engine.service.js";
+} from "../../benefit-engine-service/src/index.js";
 import {
   ClaimsIntakeWorkspaceService,
   type ClaimsIntakeWorkspaceRepository,
-} from "../../claims-intake-workspace-service/src/application/claims-intake-workspace.service.js";
+} from "../../claims-intake-workspace-service/src/index.js";
 import {
   DashboardProjectionService,
   type DashboardProjectionRepository,
-} from "../../dashboard-projection-service/src/application/dashboard-projection.service.js";
+} from "../../dashboard-projection-service/src/index.js";
 import {
   DocumentService,
   type DocumentRepository,
-} from "../../document-service/src/application/document.service.js";
+} from "../../document-service/src/index.js";
 import {
   InboxNotificationService,
   type InboxNotificationRepository,
-} from "../../inbox-notification-service/src/application/inbox-notification.service.js";
+} from "../../inbox-notification-service/src/index.js";
 import {
   KtgCaseService,
   type KtgCaseRepository,
-} from "../../ktg-case-service/src/application/ktg-case.service.js";
+} from "../../ktg-case-service/src/index.js";
 
 type ArrayItem<T> = T extends readonly (infer U)[] ? U : T extends (infer U)[] ? U : never;
 type AwaitedReturn<T extends (...args: never[]) => Promise<unknown>> = Awaited<ReturnType<T>>;
@@ -1047,892 +1047,120 @@ class InboxNotificationMemoryRepository implements InboxNotificationRepository {
   }
 }
 
-const absenceEpisodes: AbsenceEpisode[] = [
-  {
-    id: "episode-1001",
-    tenantId: EMPLOYER_TENANT_ID,
-    employeeId: "employee-0001",
-    primaryAbsenceType: "ktg_sickness",
-    source: "hr_portal",
-    reportedAt: "2026-04-02T08:30:00.000Z",
-    reportedByUserId: "user-hr-01",
-    reportedByRole: "hr_manager",
-    startDate: "2026-04-02",
-    firstDayOfIncapacity: "2026-04-02",
-    expectedEndDate: "2026-04-18",
-    status: "in_progress",
-    reasonCategory: "illness",
-    lineManagerAckRequired: false,
-  },
-  {
-    id: "episode-1002",
-    tenantId: EMPLOYER_TENANT_ID,
-    employeeId: "employee-0002",
-    primaryAbsenceType: "ktg_sickness",
-    source: "hr_portal",
-    reportedAt: "2026-04-10T11:00:00.000Z",
-    reportedByUserId: "user-hr-01",
-    reportedByRole: "hr_manager",
-    startDate: "2026-04-10",
-    expectedEndDate: "2026-04-14",
-    actualEndDate: "2026-04-14",
-    status: "acknowledged",
-    reasonCategory: "illness",
-    lineManagerAckRequired: false,
-  },
-];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type F<T> = T[];
+import {
+  absenceEpisodes as _absenceEpisodes,
+  absenceContractImpacts as _absenceContractImpacts,
+  absenceDailyRecords as _absenceDailyRecords,
+  absenceStatusEvents as _absenceStatusEvents,
+  absenceComments as _absenceComments,
+  absenceRecurrenceGroups as _absenceRecurrenceGroups,
+  ktgCases as _ktgCases,
+  ktgAbsenceLinks as _ktgAbsenceLinks,
+  ktgCoverageSnapshots as _ktgCoverageSnapshots,
+  ktgSubmissions as _ktgSubmissions,
+  ktgDeadlines as _ktgDeadlines,
+  ktgTasks as _ktgTasks,
+  ktgNotes as _ktgNotes,
+  ktgDecisions as _ktgDecisions,
+  ktgStatusEvents as _ktgStatusEvents,
+  documents as _documents,
+  documentLinks as _documentLinks,
+  documentVersions as _documentVersions,
+  documentExtractionJobs as _documentExtractionJobs,
+  medicalCertificateFacts as _medicalCertificateFacts,
+  certificateCoverageWindows as _certificateCoverageWindows,
+  documentAccessEvents as _documentAccessEvents,
+  documentConsentReferences as _documentConsentReferences,
+  intakeWorkspaces as _intakeWorkspaces,
+  intakeChecklistItems as _intakeChecklistItems,
+  intakeMissingInformationRequests as _intakeMissingInformationRequests,
+  intakeQueueEntries as _intakeQueueEntries,
+  intakeNotes as _intakeNotes,
+  intakeRecommendations as _intakeRecommendations,
+  intakeActivityEvents as _intakeActivityEvents,
+  intakeEvidenceReferences as _intakeEvidenceReferences,
+  benefitCalculations as _benefitCalculations,
+  insuredSalarySnapshots as _insuredSalarySnapshots,
+  coordinationWindows as _coordinationWindows,
+  entitlementPeriods as _entitlementPeriods,
+  benefitDayBreakdowns as _benefitDayBreakdowns,
+  benefitAdjustments as _benefitAdjustments,
+  paymentInstructions as _paymentInstructions,
+  taggelddispositive as _taggelddispositive,
+  benefitAuditEvents as _benefitAuditEvents,
+  dashboardKpiSnapshots as _dashboardKpiSnapshots,
+  dashboardWidgetSnapshots as _dashboardWidgetSnapshots,
+  projectionJobs as _projectionJobs,
+  projectionWatermarks as _projectionWatermarks,
+  dashboardViewConfigs as _dashboardViewConfigs,
+  benchmarkSnapshots as _benchmarkSnapshots,
+  notificationEvents as _notificationEvents,
+  inboxItems as _inboxItems,
+  inboxAssignments as _inboxAssignments,
+  notificationPreferences as _notificationPreferences,
+  notificationTemplates as _notificationTemplates,
+  notificationDeliveries as _notificationDeliveries,
+  deliverySuppressions as _deliverySuppressions,
+} from "./testing/demo-fixtures.js";
 
-const absenceContractImpacts: AbsenceContractImpact[] = [
-  {
-    id: "impact-1101",
-    tenantId: EMPLOYER_TENANT_ID,
-    episodeId: "episode-1001",
-    employmentContractId: "contract-anna",
-    affectedEmploymentPercentage: 100,
-    employmentPercentageSnapshot: 100,
-    workingTimeModel: "fixed_schedule",
-    scheduledHoursPerWeekSnapshot: 42,
-  },
-  {
-    id: "impact-1102",
-    tenantId: EMPLOYER_TENANT_ID,
-    episodeId: "episode-1002",
-    employmentContractId: "contract-luca",
-    affectedEmploymentPercentage: 50,
-    employmentPercentageSnapshot: 100,
-    workingTimeModel: "fixed_schedule",
-    scheduledHoursPerWeekSnapshot: 40,
-  },
-];
+// Cast fixture arrays from generic FixtureArray to the domain types derived from
+// the repository interfaces already imported above.
+const absenceEpisodes = _absenceEpisodes as F<AbsenceEpisode>;
+const absenceContractImpacts = _absenceContractImpacts as F<AbsenceContractImpact>;
+const absenceDailyRecords = _absenceDailyRecords as F<AbsenceDailyRecord>;
+const absenceStatusEvents = _absenceStatusEvents as F<AbsenceStatusEvent>;
+const absenceComments = _absenceComments as F<AbsenceComment>;
+const absenceRecurrenceGroups = _absenceRecurrenceGroups as F<AbsenceRecurrenceGroup>;
+const ktgCases = _ktgCases as F<KtgCase>;
+const ktgAbsenceLinks = _ktgAbsenceLinks as F<KtgCaseAbsenceLink>;
+const ktgCoverageSnapshots = _ktgCoverageSnapshots as F<KtgCaseCoverageSnapshot>;
+const ktgSubmissions = _ktgSubmissions as F<KtgCaseSubmission>;
+const ktgDeadlines = _ktgDeadlines as F<KtgDeadline>;
+const ktgTasks = _ktgTasks as F<KtgTask>;
+const ktgNotes = _ktgNotes as F<KtgCaseNote>;
+const ktgDecisions = _ktgDecisions as F<KtgCaseDecision>;
+const ktgStatusEvents = _ktgStatusEvents as F<KtgCaseStatusEvent>;
+const documents = _documents as F<DocumentRecord>;
+const documentLinks = _documentLinks as F<DocumentLink>;
+const documentVersions = _documentVersions as F<DocumentVersion>;
+const documentExtractionJobs = _documentExtractionJobs as F<DocumentExtractionJob>;
+const medicalCertificateFacts = _medicalCertificateFacts as F<MedicalCertificateFact>;
+const certificateCoverageWindows = _certificateCoverageWindows as F<CertificateCoverageWindow>;
+const documentAccessEvents = _documentAccessEvents as F<DocumentAccessEvent>;
+const documentConsentReferences = _documentConsentReferences as F<DocumentConsentReference>;
+const intakeWorkspaces = _intakeWorkspaces as F<IntakeCaseWorkspace>;
+const intakeChecklistItems = _intakeChecklistItems as F<IntakeChecklistItem>;
+const intakeMissingInformationRequests = _intakeMissingInformationRequests as F<MissingInformationRequest>;
+const intakeQueueEntries = _intakeQueueEntries as F<HandlerWorkQueueEntry>;
+const intakeNotes = _intakeNotes as F<WorkspaceNote>;
+const intakeRecommendations = _intakeRecommendations as F<IntakeDecisionRecommendation>;
+const intakeActivityEvents = _intakeActivityEvents as F<WorkspaceActivityEvent>;
+const intakeEvidenceReferences = _intakeEvidenceReferences as F<WorkspaceEvidenceReference>;
+const benefitCalculations = _benefitCalculations as F<BenefitCaseCalculation>;
+const insuredSalarySnapshots = _insuredSalarySnapshots as F<InsuredSalarySnapshot>;
+const coordinationWindows = _coordinationWindows as F<CoordinationWindow>;
+const entitlementPeriods = _entitlementPeriods as F<BenefitEntitlementPeriod>;
+const benefitDayBreakdowns = _benefitDayBreakdowns as F<BenefitDayBreakdown>;
+const benefitAdjustments = _benefitAdjustments as F<BenefitAdjustment>;
+const paymentInstructions = _paymentInstructions as F<PaymentInstruction>;
+const taggelddispositive = _taggelddispositive as F<TaggelddispositivSnapshot>;
+const benefitAuditEvents = _benefitAuditEvents as F<CalculationAuditEvent>;
+const dashboardKpiSnapshots = _dashboardKpiSnapshots as F<DashboardKpiSnapshot>;
+const dashboardWidgetSnapshots = _dashboardWidgetSnapshots as F<DashboardWidgetSnapshot>;
+const projectionJobs = _projectionJobs as F<ProjectionJob>;
+const projectionWatermarks = _projectionWatermarks as F<ProjectionDependencyWatermark>;
+const dashboardViewConfigs = _dashboardViewConfigs as F<DashboardViewConfig>;
+const benchmarkSnapshots = _benchmarkSnapshots as F<BenchmarkSnapshot>;
+const notificationEvents = _notificationEvents as F<NotificationEvent>;
+const inboxItems = _inboxItems as F<InboxItem>;
+const inboxAssignments = _inboxAssignments as F<InboxItemAssignment>;
+const notificationPreferences = _notificationPreferences as F<NotificationPreference>;
+const notificationTemplates = _notificationTemplates as F<NotificationTemplate>;
+const notificationDeliveries = _notificationDeliveries as F<NotificationDelivery>;
+const deliverySuppressions = _deliverySuppressions as F<DeliverySuppression>;
 
-const absenceDailyRecords: AbsenceDailyRecord[] = [
-  {
-    id: "day-1201",
-    tenantId: EMPLOYER_TENANT_ID,
-    episodeId: "episode-1001",
-    contractImpactId: "impact-1101",
-    employeeId: "employee-0001",
-    employmentContractId: "contract-anna",
-    absenceDate: "2026-04-02",
-    incapacityPercentage: 100,
-    partialDayPercentage: 100,
-    scheduledWorkMinutes: 480,
-    lostWorkMinutes: 480,
-    certifiedFlag: true,
-    certificateReferenceId: "certificate-3001",
-    returnToWorkFlag: false,
-    coordinatedOverlapFlag: false,
-  },
-  {
-    id: "day-1202",
-    tenantId: EMPLOYER_TENANT_ID,
-    episodeId: "episode-1001",
-    contractImpactId: "impact-1101",
-    employeeId: "employee-0001",
-    employmentContractId: "contract-anna",
-    absenceDate: "2026-04-03",
-    incapacityPercentage: 100,
-    partialDayPercentage: 100,
-    scheduledWorkMinutes: 480,
-    lostWorkMinutes: 480,
-    certifiedFlag: true,
-    certificateReferenceId: "certificate-3001",
-    returnToWorkFlag: false,
-    coordinatedOverlapFlag: false,
-  },
-  {
-    id: "day-1203",
-    tenantId: EMPLOYER_TENANT_ID,
-    episodeId: "episode-1002",
-    contractImpactId: "impact-1102",
-    employeeId: "employee-0002",
-    employmentContractId: "contract-luca",
-    absenceDate: "2026-04-10",
-    incapacityPercentage: 50,
-    partialDayPercentage: 50,
-    scheduledWorkMinutes: 480,
-    lostWorkMinutes: 240,
-    certifiedFlag: false,
-    returnToWorkFlag: false,
-    coordinatedOverlapFlag: false,
-  },
-];
-
-const absenceStatusEvents: AbsenceStatusEvent[] = [
-  {
-    id: "absence-status-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    episodeId: "episode-1001",
-    toStatus: "reported",
-    eventType: "reported",
-    eventAt: "2026-04-02T08:30:00.000Z",
-    actorId: "user-hr-01",
-    actorRole: "hr_manager",
-  },
-  {
-    id: "absence-status-2",
-    tenantId: EMPLOYER_TENANT_ID,
-    episodeId: "episode-1001",
-    fromStatus: "reported",
-    toStatus: "in_progress",
-    eventType: "started",
-    eventAt: "2026-04-03T09:00:00.000Z",
-    actorId: "user-hr-01",
-    actorRole: "hr_manager",
-  },
-  {
-    id: "absence-status-3",
-    tenantId: EMPLOYER_TENANT_ID,
-    episodeId: "episode-1002",
-    toStatus: "reported",
-    eventType: "reported",
-    eventAt: "2026-04-10T11:00:00.000Z",
-    actorId: "user-hr-01",
-    actorRole: "hr_manager",
-  },
-  {
-    id: "absence-status-4",
-    tenantId: EMPLOYER_TENANT_ID,
-    episodeId: "episode-1002",
-    fromStatus: "reported",
-    toStatus: "acknowledged",
-    eventType: "acknowledged",
-    eventAt: "2026-04-10T13:00:00.000Z",
-    actorId: "user-hr-01",
-    actorRole: "hr_manager",
-  },
-];
-
-const absenceComments: AbsenceComment[] = [
-  {
-    id: "absence-comment-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    episodeId: "episode-1001",
-    authorId: "user-hr-01",
-    authorRole: "hr_manager",
-    visibility: "manager_visible",
-    message: "Medical certificate uploaded and case handoff prepared.",
-    createdAt: "2026-04-03T09:15:00.000Z",
-  },
-];
-
-const absenceRecurrenceGroups: AbsenceRecurrenceGroup[] = [];
-
-const ktgCases: KtgCase[] = [
-  {
-    id: "case-2001",
-    tenantId: EMPLOYER_TENANT_ID,
-    caseNumber: "KTG-2026-001",
-    employeeId: "employee-0001",
-    policyId: "policy-001",
-    status: "in_review",
-    submissionReadinessStatus: "ready",
-    benefitStartDate: "2026-04-05",
-    claimsSystemCaseId: "CLM-2001",
-  },
-];
-
-const ktgAbsenceLinks: KtgCaseAbsenceLink[] = [
-  {
-    id: "case-link-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    ktgCaseId: "case-2001",
-    absenceEpisodeId: "episode-1001",
-    isOriginatingEpisode: true,
-    linkedAt: "2026-04-03T10:00:00.000Z",
-  },
-];
-
-const ktgCoverageSnapshots: KtgCaseCoverageSnapshot[] = [
-  {
-    id: "coverage-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    ktgCaseId: "case-2001",
-    policyId: "policy-001",
-    coveragePercentage: 80,
-    wartezeitDays: 2,
-    leistungsdauerDays: 730,
-    lohnfortzahlungDays: 0,
-    salaryFormulaVersion: "v1",
-    insuredSalarySnapshotId: "salary-1",
-    insuredSalaryAmountChf: 92000,
-    insuredSalaryFormula: "annual_base_salary",
-    insuredSalaryInputs: { annualBaseSalaryChf: 92000 },
-    firstDayOfIncapacity: "2026-04-02",
-    capturedAt: "2026-04-04T09:00:00.000Z",
-  },
-];
-
-const ktgSubmissions: KtgCaseSubmission[] = [
-  {
-    id: "submission-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    ktgCaseId: "case-2001",
-    submittedAt: "2026-04-04T12:00:00.000Z",
-    submittedBy: "user-hr-01",
-    validationResult: "valid",
-    externalClaimsSystemId: "EXT-2001",
-    correspondenceChannel: "portal",
-    payloadSnapshot: { episodeId: "episode-1001" },
-  },
-];
-
-const ktgDeadlines: KtgDeadline[] = [
-  {
-    id: "deadline-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    ktgCaseId: "case-2001",
-    deadlineType: "certificate_renewal",
-    dueAt: "2026-04-22T00:00:00.000Z",
-    countingMethod: "calendar_days",
-    responsibleRole: "hr_manager",
-    escalationStatus: "not_escalated",
-  },
-  {
-    id: "deadline-2",
-    tenantId: EMPLOYER_TENANT_ID,
-    ktgCaseId: "case-2001",
-    deadlineType: "claims_reply",
-    dueAt: "2026-04-24T00:00:00.000Z",
-    countingMethod: "calendar_days",
-    responsibleRole: "claims_handler",
-    escalationStatus: "not_escalated",
-  },
-];
-
-const ktgTasks: KtgTask[] = [
-  {
-    id: "ktg-task-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    ktgCaseId: "case-2001",
-    deadlineId: "deadline-1",
-    taskType: "request_certificate",
-    status: "open",
-    priority: "high",
-    dueAt: "2026-04-22T00:00:00.000Z",
-    description: "Confirm follow-up certificate for ongoing incapacity.",
-  },
-];
-
-const ktgNotes: KtgCaseNote[] = [
-  {
-    id: "ktg-note-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    ktgCaseId: "case-2001",
-    authorId: "claims-handler-1",
-    authorRole: "claims_handler",
-    visibility: "shared_hr_claims",
-    message: "Coverage confirmed, waiting for follow-up certificate.",
-    createdAt: "2026-04-18T08:45:00.000Z",
-  },
-];
-
-const ktgDecisions: KtgCaseDecision[] = [
-  {
-    id: "decision-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    ktgCaseId: "case-2001",
-    decisionStatus: "accepted",
-    reasonCode: "preliminary_acceptance",
-    reasonText: "Preliminary eligibility confirmed.",
-    effectiveFrom: "2026-04-05",
-    decisionAt: "2026-04-18T08:30:00.000Z",
-    dailyAllowanceAmountChf: 246.71,
-  },
-];
-
-const ktgStatusEvents: KtgCaseStatusEvent[] = [
-  {
-    id: "case-status-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    ktgCaseId: "case-2001",
-    toStatus: "draft",
-    eventType: "drafted",
-    eventAt: "2026-04-03T10:00:00.000Z",
-    actorId: "claims-handler-1",
-    actorRole: "claims_handler",
-  },
-  {
-    id: "case-status-2",
-    tenantId: EMPLOYER_TENANT_ID,
-    ktgCaseId: "case-2001",
-    fromStatus: "draft",
-    toStatus: "submitted",
-    eventType: "submitted",
-    eventAt: "2026-04-04T12:00:00.000Z",
-    actorId: "user-hr-01",
-    actorRole: "hr_manager",
-  },
-  {
-    id: "case-status-3",
-    tenantId: EMPLOYER_TENANT_ID,
-    ktgCaseId: "case-2001",
-    fromStatus: "submitted",
-    toStatus: "in_review",
-    eventType: "in_review",
-    eventAt: "2026-04-05T09:00:00.000Z",
-    actorId: "claims-handler-1",
-    actorRole: "claims_handler",
-  },
-];
-
-const documents: DocumentRecord[] = [
-  {
-    id: "document-3001",
-    tenantId: EMPLOYER_TENANT_ID,
-    employeeId: "employee-0001",
-    uploaderUserId: "user-hr-01",
-    uploaderRole: "hr_manager",
-    documentType: "medical_certificate",
-    documentCategory: "health_sensitive",
-    sourceChannel: "hr_portal",
-    storageObjectKey: "docs/document-3001.pdf",
-    storageRegion: "CH",
-    mimeType: "application/pdf",
-    fileName: "medical-certificate-april.pdf",
-    fileSizeBytes: 240000,
-    checksumSha256: "checksum-3001",
-    encryptionKeyRef: "kms-key-1",
-    status: "available",
-    retentionStatus: "active_retention",
-    legalHoldFlag: false,
-    retentionUntil: "2036-04-18",
-    retentionPolicyCode: "medical-10y",
-    uploadedAt: "2026-04-03T08:55:00.000Z",
-  },
-];
-
-const documentLinks: DocumentLink[] = [
-  {
-    id: "document-link-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    documentId: "document-3001",
-    linkTargetType: "absence_episode",
-    linkTargetId: "episode-1001",
-    isPrimary: true,
-    linkedAt: "2026-04-03T08:56:00.000Z",
-  },
-  {
-    id: "document-link-2",
-    tenantId: EMPLOYER_TENANT_ID,
-    documentId: "document-3001",
-    linkTargetType: "ktg_case",
-    linkTargetId: "case-2001",
-    isPrimary: false,
-    linkedAt: "2026-04-03T10:05:00.000Z",
-  },
-];
-
-const documentVersions: DocumentVersion[] = [
-  {
-    id: "document-version-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    documentId: "document-3001",
-    versionNumber: 1,
-    storageObjectKey: "docs/document-3001-v1.pdf",
-    checksumSha256: "checksum-3001",
-    createdAt: "2026-04-03T08:55:00.000Z",
-  },
-];
-
-const documentExtractionJobs: DocumentExtractionJob[] = [
-  {
-    id: "document-job-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    documentId: "document-3001",
-    jobType: "medical_certificate_extraction",
-    status: "completed",
-    requestedAt: "2026-04-03T08:56:00.000Z",
-    startedAt: "2026-04-03T08:56:30.000Z",
-    completedAt: "2026-04-03T08:57:30.000Z",
-    provider: "ocr-demo",
-  },
-];
-
-const medicalCertificateFacts: MedicalCertificateFact[] = [
-  {
-    id: "certificate-fact-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    documentId: "document-3001",
-    absenceEpisodeId: "episode-1001",
-    certificateReferenceId: "certificate-3001",
-    firstDayOfIncapacity: "2026-04-02",
-    certificateStartDate: "2026-04-02",
-    certificateEndDate: "2026-04-18",
-    incapacityPercentage: 100,
-    issuedOn: "2026-04-03",
-    issuingProviderName: "Praxis Seefeld",
-    extractionStatus: "reviewed",
-    extractionConfidence: 0.97,
-    reviewRequiredFlag: false,
-    reviewedBy: "claims-handler-1",
-    reviewedAt: "2026-04-03T09:10:00.000Z",
-  },
-];
-
-const certificateCoverageWindows: CertificateCoverageWindow[] = [
-  {
-    id: "coverage-window-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    absenceEpisodeId: "episode-1001",
-    medicalCertificateFactId: "certificate-fact-1",
-    coveredFrom: "2026-04-02",
-    coveredTo: "2026-04-18",
-    certificateStatus: "active",
-    expiryAlertAt: "2026-04-15",
-  },
-];
-
-const documentAccessEvents: DocumentAccessEvent[] = [
-  {
-    id: "document-access-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    documentId: "document-3001",
-    actorId: "claims-handler-1",
-    actorRole: "claims_handler",
-    accessType: "view_metadata",
-    purposeOfUse: "claims_assessment",
-    accessedAt: "2026-04-18T08:32:00.000Z",
-    result: "allowed",
-  },
-];
-
-const documentConsentReferences: DocumentConsentReference[] = [
-  {
-    id: "document-consent-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    documentId: "document-3001",
-    employeeId: "employee-0001",
-    consentRecordId: "consent-1",
-    processingPurpose: "claims_assessment",
-    recordedAt: "2026-04-03T09:00:00.000Z",
-  },
-];
-
-const intakeWorkspaces: IntakeCaseWorkspace[] = [
-  {
-    id: "workspace-6001",
-    tenantId: INTERNAL_TENANT_ID,
-    ktgCaseId: "case-2001",
-    employeeId: "employee-0001",
-    policyId: "policy-001",
-    workspaceStatus: "intake_in_progress",
-    assignedHandlerId: "claims-handler-1",
-    assignedTeam: "Claims Zurich",
-    submittedAt: "2026-04-04T12:00:00.000Z",
-    lastActivityAt: "2026-04-18T09:00:00.000Z",
-  },
-];
-
-const intakeChecklistItems: IntakeChecklistItem[] = [
-  {
-    id: "check-1",
-    tenantId: INTERNAL_TENANT_ID,
-    workspaceId: "workspace-6001",
-    checkType: "coverage_confirmed",
-    blockerCode: "coverage_required",
-    sourceService: "ktg_case_service",
-    blockingFlag: true,
-    status: "satisfied",
-    requiredFlag: true,
-    completedAt: "2026-04-18T08:00:00.000Z",
-    completedBy: "claims-handler-1",
-  },
-  {
-    id: "check-2",
-    tenantId: INTERNAL_TENANT_ID,
-    workspaceId: "workspace-6001",
-    checkType: "employer_statement_received",
-    blockerCode: "employer_statement_required",
-    sourceService: "manual",
-    blockingFlag: true,
-    status: "open",
-    requiredFlag: true,
-  },
-];
-
-const intakeMissingInformationRequests: MissingInformationRequest[] = [
-  {
-    id: "mir-1",
-    tenantId: INTERNAL_TENANT_ID,
-    workspaceId: "workspace-6001",
-    requestReasonCode: "employer_statement_missing",
-    requestDetails: "Need employer follow-up statement for incapacity progression.",
-    requestedFromPartyType: "hr_manager",
-    requestedFromUserId: "user-hr-01",
-    requestedFromRole: "hr_manager",
-    requestChannelPolicy: "portal_and_email",
-    status: "open",
-    requestedAt: "2026-04-18T08:15:00.000Z",
-    dueAt: "2026-04-22T00:00:00.000Z",
-  },
-];
-
-const intakeQueueEntries: HandlerWorkQueueEntry[] = [
-  {
-    id: "queue-1",
-    tenantId: INTERNAL_TENANT_ID,
-    workspaceId: "workspace-6001",
-    queueType: "new_submissions",
-    queueStatus: "in_progress",
-    slaDueAt: "2026-04-19T00:00:00.000Z",
-    sortScore: 0.98,
-    enteredAt: "2026-04-04T12:05:00.000Z",
-  },
-];
-
-const intakeNotes: WorkspaceNote[] = [
-  {
-    id: "intake-note-1",
-    tenantId: INTERNAL_TENANT_ID,
-    workspaceId: "workspace-6001",
-    authorId: "claims-handler-1",
-    authorRole: "claims_handler",
-    visibility: "internal_claims_team",
-    noteType: "triage_note",
-    message: "Waiting on employer follow-up statement.",
-    createdAt: "2026-04-18T08:20:00.000Z",
-  },
-];
-
-const intakeRecommendations: IntakeDecisionRecommendation[] = [
-  {
-    id: "recommendation-1",
-    tenantId: INTERNAL_TENANT_ID,
-    workspaceId: "workspace-6001",
-    recommendationType: "request_more_information",
-    confidence: 0.91,
-    reasonCodes: ["employer_statement_missing"],
-    summary: "Employer statement is still missing for decision readiness.",
-    generatedAt: "2026-04-18T08:21:00.000Z",
-  },
-];
-
-const intakeActivityEvents: WorkspaceActivityEvent[] = [
-  {
-    id: "activity-1",
-    tenantId: INTERNAL_TENANT_ID,
-    workspaceId: "workspace-6001",
-    eventType: "workspace_created",
-    actorId: "claims-handler-1",
-    actorRole: "claims_handler",
-    occurredAt: "2026-04-04T12:05:00.000Z",
-  },
-  {
-    id: "activity-2",
-    tenantId: INTERNAL_TENANT_ID,
-    workspaceId: "workspace-6001",
-    eventType: "missing_information_requested",
-    actorId: "claims-handler-1",
-    actorRole: "claims_handler",
-    occurredAt: "2026-04-18T08:15:00.000Z",
-  },
-];
-
-const intakeEvidenceReferences: WorkspaceEvidenceReference[] = [
-  {
-    id: "evidence-1",
-    tenantId: INTERNAL_TENANT_ID,
-    workspaceId: "workspace-6001",
-    documentRole: "primary_certificate",
-    documentId: "document-3001",
-    linkSource: "inferred_from_document_service",
-    linkConfidence: 0.99,
-    linkedAt: "2026-04-18T08:05:00.000Z",
-  },
-];
-
-const benefitCalculations: BenefitCaseCalculation[] = [
-  {
-    id: "calculation-7001",
-    tenantId: INTERNAL_TENANT_ID,
-    ktgCaseId: "case-2001",
-    calculationStatus: "calculated",
-    calculationReason: "initial",
-    referenceDate: "2026-04-18",
-    coverageSnapshotId: "coverage-1",
-    benefitDaysConsumed: 6,
-    benefitDaysRemaining: 724,
-    maxBenefitDays: 730,
-    waitingDaysConsumed: 2,
-    createdAt: "2026-04-18T08:10:00.000Z",
-    updatedAt: "2026-04-18T08:12:00.000Z",
-  },
-];
-
-const insuredSalarySnapshots: InsuredSalarySnapshot[] = [
-  {
-    id: "salary-1",
-    tenantId: INTERNAL_TENANT_ID,
-    benefitCaseCalculationId: "calculation-7001",
-    ktgCaseId: "case-2001",
-    salaryBasisDate: "2026-04-01",
-    salaryModel: "monthly",
-    annualBaseSalaryChf: 92000,
-    included13thMonthChf: 7666.67,
-    insuredBonusChf: 0,
-    insuredAllowancesChf: 0,
-    employmentPercentage: 100,
-    policyCapChf: 148200,
-    insuredSalaryChf: 99666.67,
-    formula: "base + 13th",
-    inputsJson: { annualBaseSalaryChf: 92000, included13thMonthChf: 7666.67 },
-    createdAt: "2026-04-18T08:10:00.000Z",
-  },
-];
-
-const coordinationWindows: CoordinationWindow[] = [];
-
-const entitlementPeriods: BenefitEntitlementPeriod[] = [
-  {
-    id: "period-1",
-    tenantId: INTERNAL_TENANT_ID,
-    benefitCaseCalculationId: "calculation-7001",
-    periodStart: "2026-04-05",
-    periodEnd: "2026-04-12",
-    periodType: "payable",
-    absenceEpisodeId: "episode-1001",
-    sourceReferenceJson: { episodeId: "episode-1001" },
-    incapacityPercentage: 100,
-    wartezeitApplicableFlag: false,
-    coordinationApplicableFlag: false,
-    benefitDays: 8,
-    dailyAllowanceRateChf: 102.51,
-    payableAmountChf: 820.1,
-    formula: "8 * 102.5125",
-    inputsJson: { benefitDays: 8, dailyAllowanceRateChf: 102.5125 },
-    createdAt: "2026-04-18T08:10:00.000Z",
-  },
-  {
-    id: "period-2",
-    tenantId: INTERNAL_TENANT_ID,
-    benefitCaseCalculationId: "calculation-7001",
-    periodStart: "2026-04-13",
-    periodEnd: "2026-04-18",
-    periodType: "payable",
-    absenceEpisodeId: "episode-1001",
-    sourceReferenceJson: { episodeId: "episode-1001" },
-    incapacityPercentage: 100,
-    wartezeitApplicableFlag: false,
-    coordinationApplicableFlag: false,
-    benefitDays: 6,
-    dailyAllowanceRateChf: 110.025,
-    payableAmountChf: 660.15,
-    formula: "6 * 110.025",
-    inputsJson: { benefitDays: 6, dailyAllowanceRateChf: 110.025 },
-    createdAt: "2026-04-18T08:10:00.000Z",
-  },
-];
-
-const benefitDayBreakdowns: BenefitDayBreakdown[] = [
-  {
-    id: "breakdown-1",
-    tenantId: INTERNAL_TENANT_ID,
-    benefitEntitlementPeriodId: "period-1",
-    benefitDate: "2026-04-05",
-    absenceEpisodeId: "episode-1001",
-    sourceReferenceJson: { episodeId: "episode-1001" },
-    incapacityPercentage: 100,
-    salaryBasisPerDayChf: 341.32,
-    coveragePercentage: 80,
-    grossDailyAllowanceChf: 273.06,
-    deductionAmountChf: 170.55,
-    netDailyAllowanceChf: 102.51,
-    payableFlag: true,
-    createdAt: "2026-04-18T08:10:00.000Z",
-  },
-];
-
-const benefitAdjustments: BenefitAdjustment[] = [];
-
-const paymentInstructions: PaymentInstruction[] = [
-  {
-    id: "payment-5001",
-    tenantId: INTERNAL_TENANT_ID,
-    ktgCaseId: "case-2001",
-    benefitCaseCalculationId: "calculation-7001",
-    payeeType: "employer",
-    payeeReference: "employer-demo",
-    paymentRouteReason: "salary_continuation_active",
-    salaryContinuationActiveFlag: true,
-    routingFormula: "salary_continuation_active -> employer",
-    routingInputsJson: { salaryContinuationActiveFlag: true },
-    paymentPeriodStart: "2026-04-05",
-    paymentPeriodEnd: "2026-04-18",
-    grossAmountChf: 1480.25,
-    netAmountChf: 1480.25,
-    currency: "CHF",
-    instructionStatus: "pending",
-    createdAt: "2026-04-18T08:12:00.000Z",
-  },
-];
-
-const taggelddispositive: TaggelddispositivSnapshot[] = [
-  {
-    id: "statement-1",
-    tenantId: INTERNAL_TENANT_ID,
-    ktgCaseId: "case-2001",
-    paymentInstructionId: "payment-5001",
-    statementPeriodStart: "2026-04-05",
-    statementPeriodEnd: "2026-04-18",
-    totalClaimedDays: 14,
-    totalPayableDays: 14,
-    totalAmountChf: 1480.25,
-    statementPayloadJson: { format: "summary" },
-    generatedAt: "2026-04-18T08:13:00.000Z",
-  },
-];
-
-const benefitAuditEvents: CalculationAuditEvent[] = [
-  {
-    id: "benefit-audit-1",
-    tenantId: INTERNAL_TENANT_ID,
-    ktgCaseId: "case-2001",
-    benefitCaseCalculationId: "calculation-7001",
-    eventType: "calculation_created",
-    occurredAt: "2026-04-18T08:10:00.000Z",
-    actorId: "claims-handler-1",
-    actorRole: "claims_handler",
-  },
-];
-
-const dashboardKpiSnapshots: DashboardKpiSnapshot[] = [
-  {
-    id: "dashboard-kpi-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    dashboardRole: "hr_manager",
-    kpiKey: "open_absences",
-    valueJson: { count: 2 },
-    windowStart: "2026-04-01",
-    windowEnd: "2026-04-18",
-    refreshedAt: "2026-04-18T08:50:00.000Z",
-  },
-  {
-    id: "dashboard-kpi-2",
-    tenantId: EMPLOYER_TENANT_ID,
-    dashboardRole: "hr_manager",
-    kpiKey: "open_cases",
-    valueJson: { count: 1 },
-    windowStart: "2026-04-01",
-    windowEnd: "2026-04-18",
-    refreshedAt: "2026-04-18T08:50:00.000Z",
-  },
-  {
-    id: "dashboard-kpi-3",
-    tenantId: EMPLOYER_TENANT_ID,
-    dashboardRole: "hr_manager",
-    kpiKey: "pending_certificates",
-    valueJson: { count: 1 },
-    windowStart: "2026-04-01",
-    windowEnd: "2026-04-18",
-    refreshedAt: "2026-04-18T08:50:00.000Z",
-  },
-  {
-    id: "dashboard-kpi-4",
-    tenantId: EMPLOYER_TENANT_ID,
-    dashboardRole: "hr_manager",
-    kpiKey: "tasks_deadlines",
-    valueJson: { count: 1 },
-    windowStart: "2026-04-01",
-    windowEnd: "2026-04-18",
-    refreshedAt: "2026-04-18T08:50:00.000Z",
-  },
-  {
-    id: "dashboard-kpi-5",
-    tenantId: INTERNAL_TENANT_ID,
-    dashboardRole: "claims_handler",
-    kpiKey: "intake_workload",
-    valueJson: { count: 1 },
-    windowStart: "2026-04-01",
-    windowEnd: "2026-04-18",
-    refreshedAt: "2026-04-18T08:55:00.000Z",
-  },
-  {
-    id: "dashboard-kpi-6",
-    tenantId: INTERNAL_TENANT_ID,
-    dashboardRole: "claims_handler",
-    kpiKey: "pending_review",
-    valueJson: { count: 1 },
-    windowStart: "2026-04-01",
-    windowEnd: "2026-04-18",
-    refreshedAt: "2026-04-18T08:55:00.000Z",
-  },
-  {
-    id: "dashboard-kpi-7",
-    tenantId: INTERNAL_TENANT_ID,
-    dashboardRole: "claims_handler",
-    kpiKey: "calculation_review",
-    valueJson: { count: 1 },
-    windowStart: "2026-04-01",
-    windowEnd: "2026-04-18",
-    refreshedAt: "2026-04-18T08:55:00.000Z",
-  },
-  {
-    id: "dashboard-kpi-8",
-    tenantId: INTERNAL_TENANT_ID,
-    dashboardRole: "claims_handler",
-    kpiKey: "compliance_alerts",
-    valueJson: { count: 0 },
-    windowStart: "2026-04-01",
-    windowEnd: "2026-04-18",
-    refreshedAt: "2026-04-18T08:55:00.000Z",
-  },
-];
-
-const dashboardWidgetSnapshots: DashboardWidgetSnapshot[] = [];
-const projectionJobs: ProjectionJob[] = [];
-const projectionWatermarks: ProjectionDependencyWatermark[] = [];
-const dashboardViewConfigs: DashboardViewConfig[] = [];
-const benchmarkSnapshots: BenchmarkSnapshot[] = [];
-
-const notificationEvents: NotificationEvent[] = [
-  {
-    id: "notification-event-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    eventType: "certificate_expiring",
-    sourceType: "document",
-    sourceId: "document-3001",
-    triggeredAt: "2026-04-18T08:10:00.000Z",
-    payload: { caseId: "case-2001" },
-  },
-];
-
-const inboxItems: InboxItem[] = [
-  {
-    id: "task-4001",
-    tenantId: EMPLOYER_TENANT_ID,
-    audienceType: "role",
-    audienceRole: "hr_manager",
-    sourceType: "document",
-    sourceId: "document-3001",
-    title: "Confirm follow-up certificate",
-    summary: "Certificate renewal is due for Anna Keller.",
-    priority: "high",
-    dueAt: "2026-04-22T00:00:00.000Z",
-    status: "open",
-    primaryActionLabel: "Open documents",
-    primaryActionUrl: "/de-CH/documents",
-    secondaryActionUrl: "/de-CH/cases/case-2001",
-    notificationEventId: "notification-event-1",
-    createdAt: "2026-04-18T08:10:00.000Z",
-  },
-];
-
-const inboxAssignments: InboxItemAssignment[] = [
-  {
-    id: "assignment-1",
-    tenantId: EMPLOYER_TENANT_ID,
-    inboxItemId: "task-4001",
-    assignedRole: "hr_manager",
-    assignedAt: "2026-04-18T08:10:00.000Z",
-    assignmentStatus: "assigned",
-  },
-];
-
-const notificationPreferences: NotificationPreference[] = [];
-const notificationTemplates: NotificationTemplate[] = [];
-const notificationDeliveries: NotificationDelivery[] = [];
-const deliverySuppressions: DeliverySuppression[] = [];
 
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 

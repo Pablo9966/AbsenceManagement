@@ -1,8 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src"
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "../../dist/services/premium-reconciliation-service",
+    "tsBuildInfoFile": "../../dist/services/premium-reconciliation-service.tsbuildinfo"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*.ts"]
 }

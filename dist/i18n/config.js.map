@@ -1,1 +1,0 @@
-{"version":3,"file":"config.js","sourceRoot":"","sources":["../../packages/frontend-platform/src/i18n/config.ts"],"names":[],"mappings":"AAEA,MAAM,CAAC,MAAM,eAAe,GAAoB;IAC9C,gBAAgB,EAAE,CAAC,OAAO,EAAE,OAAO,EAAE,OAAO,EAAE,OAAO,CAAC;IACtD,kBAAkB,EAAE,CAAC,OAAO,EAAE,OAAO,CAAC;IACtC,aAAa,EAAE,OAAO;IACtB,cAAc,EAAE,OAAO;CACxB,CAAC"}

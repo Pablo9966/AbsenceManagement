@@ -2,7 +2,9 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "rootDir": "src"
+    "rootDir": "src",
+    "outDir": "../../dist/services/ktg-case-service",
+    "tsBuildInfoFile": "../../dist/services/ktg-case-service.tsbuildinfo"
   },
   "include": [
     "src/**/*.ts"

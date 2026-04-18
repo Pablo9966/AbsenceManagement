@@ -45,6 +45,18 @@
     },
     {
       "path": "./apps/internal-portal"
+    },
+    {
+      "path": "./apps/employee-portal"
+    },
+    {
+      "path": "./services/payment-operations-service"
+    },
+    {
+      "path": "./services/uvg-case-service"
+    },
+    {
+      "path": "./services/premium-reconciliation-service"
     }
   ]
 }
