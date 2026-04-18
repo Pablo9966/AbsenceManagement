@@ -125,6 +125,13 @@ interface RepositoryConstraintErrorLike {
 const generateId = (): string => crypto.randomUUID();
 const PLATFORM_TENANT_ID = "00000000-0000-0000-0000-000000000000";
 
+const withOptional = <T extends object, K extends string, V>(
+  target: T,
+  key: K,
+  value: V | undefined,
+): T & Partial<Record<K, V>> =>
+  value === undefined ? target : { ...target, [key]: value };
+
 const isRepositoryConstraintError = (error: unknown): error is RepositoryConstraintErrorLike =>
   typeof error === "object" &&
   error !== null &&
@@ -143,6 +150,8 @@ const mapRepositoryErrorToIssue = (error: unknown): ValidationIssue | null => {
       return { field: "userEmployeeLink", message: "Es existiert bereits eine aktive Benutzer-Mitarbeiter-Verknuepfung.", severity: "error" };
     case "uq_permission_policy_set_code_version":
       return { field: "policyVersion", message: "Diese Policy-Version existiert bereits.", severity: "error" };
+    case "uq_permission_policy_set_active_version":
+      return { field: "activeFlag", message: "Pro Tenant und Policy-Code darf nur eine aktive Policy-Version existieren.", severity: "error" };
     case "uq_onboarding_workspace_tenant":
       return { field: "onboardingWorkspace", message: "Fuer diesen Tenant existiert bereits ein Onboarding-Workspace.", severity: "error" };
     case "platform_user_email_key":
@@ -184,21 +193,28 @@ export class IdentityAccessService {
           });
         }
         if (actor) {
-          await this.appendAccessAuditEvent(transaction, {
-            tenantId: PLATFORM_TENANT_ID,
-            userId: createdUser.id,
-            actorId: actor.actorId,
-            actorRole: actor.actorRole,
-            resourceType: "platform_user",
-            resourceReference: createdUser.id,
-            action: "create",
-            result: "success",
-            correlationId: actor.correlationId,
-            occurredAt: actor.effectiveAt,
-            payload: {
-              preferredLanguage: createdUser.preferredLanguage,
-            },
-          });
+          const event = withOptional(
+            withOptional(
+              {
+                tenantId: PLATFORM_TENANT_ID,
+                userId: createdUser.id,
+                actorRole: actor.actorRole,
+                resourceType: "platform_user",
+                resourceReference: createdUser.id,
+                action: "create",
+                result: "success",
+                occurredAt: actor.effectiveAt,
+                payload: {
+                  preferredLanguage: createdUser.preferredLanguage,
+                },
+              },
+              "actorId",
+              actor.actorId,
+            ),
+            "correlationId",
+            actor.correlationId,
+          );
+          await this.appendAccessAuditEvent(transaction, event);
         }
         return { data: createdUser, issues };
       });
@@ -231,21 +247,28 @@ export class IdentityAccessService {
         ...params.patch,
         updatedAt: params.patch.updatedAt ?? actor.effectiveAt,
       });
-      await this.appendAccessAuditEvent(transaction, {
-        tenantId: PLATFORM_TENANT_ID,
-        userId: updated.id,
-        actorId: actor.actorId,
-        actorRole: actor.actorRole,
-        resourceType: "platform_user",
-        resourceReference: updated.id,
-        action: "update",
-        result: "success",
-        correlationId: actor.correlationId,
-        occurredAt: actor.effectiveAt,
-        payload: {
-          patch: params.patch,
-        },
-      });
+      const event = withOptional(
+        withOptional(
+          {
+            tenantId: PLATFORM_TENANT_ID,
+            userId: updated.id,
+            actorRole: actor.actorRole,
+            resourceType: "platform_user",
+            resourceReference: updated.id,
+            action: "update",
+            result: "success",
+            occurredAt: actor.effectiveAt,
+            payload: {
+              patch: params.patch,
+            },
+          },
+          "actorId",
+          actor.actorId,
+        ),
+        "correlationId",
+        actor.correlationId,
+      );
+      await this.appendAccessAuditEvent(transaction, event);
       return { data: updated, issues };
     });
   }
@@ -259,21 +282,28 @@ export class IdentityAccessService {
     try {
       return await this.repository.withTransaction(async (transaction) => {
         const created = await transaction.createTenantMembership(membership);
-        await this.appendAccessAuditEvent(transaction, {
-          tenantId: created.tenantId,
-          userId: created.userId,
-          actorId: actor.actorId,
-          actorRole: actor.actorRole,
-          resourceType: "tenant_membership",
-          resourceReference: created.id,
-          action: "create",
-          result: "success",
-          correlationId: actor.correlationId,
-          occurredAt: actor.effectiveAt,
-          payload: {
-            membershipStatus: created.membershipStatus,
-          },
-        });
+        const event = withOptional(
+          withOptional(
+            {
+              tenantId: created.tenantId,
+              userId: created.userId,
+              actorRole: actor.actorRole,
+              resourceType: "tenant_membership",
+              resourceReference: created.id,
+              action: "create",
+              result: "success",
+              occurredAt: actor.effectiveAt,
+              payload: {
+                membershipStatus: created.membershipStatus,
+              },
+            },
+            "actorId",
+            actor.actorId,
+          ),
+          "correlationId",
+          actor.correlationId,
+        );
+        await this.appendAccessAuditEvent(transaction, event);
         return { data: created, issues };
       });
     } catch (error) {
@@ -306,21 +336,28 @@ export class IdentityAccessService {
         ...params.patch,
         updatedAt: params.patch.updatedAt ?? actor.effectiveAt,
       });
-      await this.appendAccessAuditEvent(transaction, {
-        tenantId: updated.tenantId,
-        userId: updated.userId,
-        actorId: actor.actorId,
-        actorRole: actor.actorRole,
-        resourceType: "tenant_membership",
-        resourceReference: updated.id,
-        action: "update",
-        result: "success",
-        correlationId: actor.correlationId,
-        occurredAt: actor.effectiveAt,
-        payload: {
-          patch: params.patch,
-        },
-      });
+      const event = withOptional(
+        withOptional(
+          {
+            tenantId: updated.tenantId,
+            userId: updated.userId,
+            actorRole: actor.actorRole,
+            resourceType: "tenant_membership",
+            resourceReference: updated.id,
+            action: "update",
+            result: "success",
+            occurredAt: actor.effectiveAt,
+            payload: {
+              patch: params.patch,
+            },
+          },
+          "actorId",
+          actor.actorId,
+        ),
+        "correlationId",
+        actor.correlationId,
+      );
+      await this.appendAccessAuditEvent(transaction, event);
       return { data: updated, issues };
     });
   }
@@ -334,22 +371,29 @@ export class IdentityAccessService {
     try {
       return await this.repository.withTransaction(async (transaction) => {
         const created = await transaction.createUserEmployeeLink(link);
-        await this.appendAccessAuditEvent(transaction, {
-          tenantId: created.tenantId,
-          userId: created.userId,
-          actorId: actor.actorId,
-          actorRole: actor.actorRole,
-          resourceType: "user_employee_link",
-          resourceReference: created.id,
-          action: "create",
-          result: "success",
-          correlationId: actor.correlationId,
-          occurredAt: actor.effectiveAt,
-          payload: {
-            employeeId: created.employeeId,
-            linkType: created.linkType,
-          },
-        });
+        const event = withOptional(
+          withOptional(
+            {
+              tenantId: created.tenantId,
+              userId: created.userId,
+              actorRole: actor.actorRole,
+              resourceType: "user_employee_link",
+              resourceReference: created.id,
+              action: "create",
+              result: "success",
+              occurredAt: actor.effectiveAt,
+              payload: {
+                employeeId: created.employeeId,
+                linkType: created.linkType,
+              },
+            },
+            "actorId",
+            actor.actorId,
+          ),
+          "correlationId",
+          actor.correlationId,
+        );
+        await this.appendAccessAuditEvent(transaction, event);
         return { data: created, issues };
       });
     } catch (error) {
@@ -369,23 +413,34 @@ export class IdentityAccessService {
 
     return this.repository.withTransaction(async (transaction) => {
       const created = await transaction.createRoleAssignment(roleAssignment);
-      await this.appendAccessAuditEvent(transaction, {
-        tenantId: created.tenantId,
-        userId: created.userId,
-        actorId: actor.actorId,
-        actorRole: actor.actorRole,
-        resourceType: "role_assignment",
-        resourceReference: created.id,
-        action: "create",
-        result: "success",
-        correlationId: actor.correlationId,
-        occurredAt: actor.effectiveAt,
-        payload: {
-          roleCode: created.roleCode,
-          scopeType: created.scopeType,
-          scopeReference: created.scopeReference,
-        },
-      });
+      const event = withOptional(
+        withOptional(
+          withOptional(
+            {
+              tenantId: created.tenantId,
+              userId: created.userId,
+              actorRole: actor.actorRole,
+              resourceType: "role_assignment",
+              resourceReference: created.id,
+              action: "create",
+              result: "success",
+              occurredAt: actor.effectiveAt,
+              payload: {
+                roleCode: created.roleCode,
+                scopeType: created.scopeType,
+                scopeReference: created.scopeReference,
+              },
+            },
+            "actorId",
+            actor.actorId,
+          ),
+          "correlationId",
+          actor.correlationId,
+        ),
+        "userId",
+        created.userId,
+      );
+      await this.appendAccessAuditEvent(transaction, event);
       return { data: created, issues };
     });
   }
@@ -399,22 +454,29 @@ export class IdentityAccessService {
     try {
       return await this.repository.withTransaction(async (transaction) => {
         const created = await transaction.createPermissionPolicySet(policySet);
-        await this.appendAccessAuditEvent(transaction, {
-          tenantId: created.tenantId ?? PLATFORM_TENANT_ID,
-          actorId: actor.actorId,
-          actorRole: actor.actorRole,
-          resourceType: "permission_policy_set",
-          resourceReference: created.id,
-          action: "create",
-          result: "success",
-          correlationId: actor.correlationId,
-          occurredAt: actor.effectiveAt,
-          payload: {
-            policyCode: created.policyCode,
-            policyVersion: created.policyVersion,
-            activeFlag: created.activeFlag,
-          },
-        });
+        const event = withOptional(
+          withOptional(
+            {
+              tenantId: created.tenantId ?? PLATFORM_TENANT_ID,
+              actorRole: actor.actorRole,
+              resourceType: "permission_policy_set",
+              resourceReference: created.id,
+              action: "create",
+              result: "success",
+              occurredAt: actor.effectiveAt,
+              payload: {
+                policyCode: created.policyCode,
+                policyVersion: created.policyVersion,
+                activeFlag: created.activeFlag,
+              },
+            },
+            "actorId",
+            actor.actorId,
+          ),
+          "correlationId",
+          actor.correlationId,
+        );
+        await this.appendAccessAuditEvent(transaction, event);
         return { data: created, issues };
       });
     } catch (error) {
@@ -434,23 +496,30 @@ export class IdentityAccessService {
 
     return this.repository.withTransaction(async (transaction) => {
       const created = await transaction.createPermissionGrant(permissionGrant);
-      await this.appendAccessAuditEvent(transaction, {
-        tenantId: created.tenantId ?? PLATFORM_TENANT_ID,
-        actorId: actor.actorId,
-        actorRole: actor.actorRole,
-        resourceType: "permission_grant",
-        resourceReference: created.id,
-        action: "create",
-        result: "success",
-        correlationId: actor.correlationId,
-        occurredAt: actor.effectiveAt,
-        payload: {
-          roleCode: created.roleCode,
-          resourceType: created.resourceType,
-          actionName: created.action,
-          effect: created.effect,
-        },
-      });
+      const event = withOptional(
+        withOptional(
+          {
+            tenantId: created.tenantId ?? PLATFORM_TENANT_ID,
+            actorRole: actor.actorRole,
+            resourceType: "permission_grant",
+            resourceReference: created.id,
+            action: "create",
+            result: "success",
+            occurredAt: actor.effectiveAt,
+            payload: {
+              roleCode: created.roleCode,
+              resourceType: created.resourceType,
+              actionName: created.action,
+              effect: created.effect,
+            },
+          },
+          "actorId",
+          actor.actorId,
+        ),
+        "correlationId",
+        actor.correlationId,
+      );
+      await this.appendAccessAuditEvent(transaction, event);
       return { data: created, issues };
     });
   }
@@ -572,12 +641,20 @@ export class IdentityAccessService {
     effectiveAt: string;
   }) {
     const user = await this.repository.getPlatformUserById(params.userId);
-    return calculateResolvedLocale({
-      routeLocale: params.routeLocale,
-      userPreferredLanguage: user?.preferredLanguage,
-      tenantDefaultLanguage: params.tenantDefaultLanguage,
-      effectiveAt: params.effectiveAt,
-    });
+    const localeInput = withOptional(
+      withOptional(
+        withOptional(
+          { effectiveAt: params.effectiveAt },
+          "routeLocale",
+          params.routeLocale,
+        ),
+        "userPreferredLanguage",
+        user?.preferredLanguage,
+      ),
+      "tenantDefaultLanguage",
+      params.tenantDefaultLanguage,
+    );
+    return calculateResolvedLocale(localeInput);
   }
 
   async getOnboardingReadiness(tenantId: string) {

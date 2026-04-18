@@ -84,6 +84,10 @@ create table permission_policy_set (
     constraint ck_permission_policy_set_version check (policy_version > 0)
 );
 
+create unique index uq_permission_policy_set_active_version
+    on permission_policy_set (tenant_id, policy_code)
+    where active_flag = true;
+
 create table permission_grant (
     id uuid primary key default gen_random_uuid(),
     tenant_id uuid,
