@@ -1,10 +1,17 @@
-import { PortalPage } from "../../../../src/portal-page";
+import { GuardedPortalPage } from "@elipslife/frontend-platform";
+import { getEmployerPortalRuntime } from "../../../../src/runtime";
 
 export default function EmployerCaseDetailPage(props: {
-  params: { caseId: string };
+  params: { locale: "de-CH" | "en-CH" | "fr-CH" | "it-CH"; caseId: string };
 }) {
+  const runtime = getEmployerPortalRuntime(props.params.locale);
+
   return (
-    <PortalPage
+    <GuardedPortalPage
+      routePattern="/[locale]/cases/[caseId]"
+      rules={runtime.routeRules}
+      userContext={runtime.userContext}
+      messages={runtime.messages}
       eyebrow="Employer Portal"
       title="Case Detail"
       description="Placeholder detail surface for employer-visible KTG case data, deadlines, and notes."
