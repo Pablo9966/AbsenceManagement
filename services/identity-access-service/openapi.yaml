@@ -251,6 +251,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/AccessPurposeRecord'
   /v1/tenants/{tenantId}/audit-access-policy:
+    get:
+      tags: [AuditAccess]
+      operationId: getAuditAccessPolicy
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - in: query
+          name: roleCode
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Audit access policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditAccessPolicy'
     put:
       tags: [AuditAccess]
       operationId: upsertAuditAccessPolicy
@@ -269,7 +286,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuditAccessPolicy'
-  /v1/tenants/{tenantId}/onboarding-workspace:
+  /v1/tenants/{tenantId}/onboarding-workspaces:
     post:
       tags: [Onboarding]
       operationId: createOnboardingWorkspace
@@ -288,11 +305,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OnboardingWorkspace'
+  /v1/tenants/{tenantId}/onboarding-workspaces/{workspaceId}:
     patch:
       tags: [Onboarding]
       operationId: updateOnboardingWorkspace
       parameters:
         - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/WorkspaceId'
       requestBody:
         required: true
         content:
@@ -413,6 +432,13 @@ components:
     ConfigurationId:
       in: path
       name: configurationId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    WorkspaceId:
+      in: path
+      name: workspaceId
       required: true
       schema:
         type: string
