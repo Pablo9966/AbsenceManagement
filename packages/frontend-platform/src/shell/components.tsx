@@ -76,6 +76,18 @@ export const PermissionDeniedState = (props: {
   </section>
 );
 
+export const RedirectDashboardState = (props: {
+  title: string;
+  message?: string;
+  dashboardHref?: string;
+}) => (
+  <section>
+    <h1>{props.title}</h1>
+    <p>{props.message ?? "This route redirects to the dashboard for your role."}</p>
+    {props.dashboardHref ? <p>Dashboard: {props.dashboardHref}</p> : null}
+  </section>
+);
+
 export const PlaceholderPageState = (props: {
   eyebrow: string;
   title: string;
@@ -103,11 +115,21 @@ export const GuardedPortalPage = (props: {
   const rule = props.rules.find((candidate) => candidate.routePattern === props.routePattern);
   const access = resolveRouteAccess(rule, props.userContext);
 
-  if (access !== "allow") {
+  if (access === "permission_denied") {
     return (
       <PermissionDeniedState
         title={props.messages["common.permissionDenied"] ?? "Access denied"}
         message={props.messages["common.permissionDenied"] ?? "Access denied"}
+      />
+    );
+  }
+
+  if (access === "redirect_dashboard") {
+    return (
+      <RedirectDashboardState
+        title={props.messages["common.permissionDenied"] ?? "Access denied"}
+        message="This route is configured to redirect to the dashboard."
+        dashboardHref={`/${props.userContext.locale}/dashboard`}
       />
     );
   }
