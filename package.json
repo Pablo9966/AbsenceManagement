@@ -3,7 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "workspaces": [
-    "services/*"
+    "services/*",
+    "packages/*",
+    "apps/*"
   ],
   "scripts": {
     "typecheck": "tsc -b",
