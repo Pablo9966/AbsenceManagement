@@ -10,11 +10,11 @@ export interface PortalLayoutProps {
 }
 
 export const PortalLayout = (props: PortalLayoutProps) => (
-  <div>
+  <div className="portal-layout">
     <TopBar shell={props.shell} messages={props.messages} />
-    <div>
+    <div className="portal-body">
       <SidebarNav shell={props.shell} />
-      <main>{props.children}</main>
+      <main className="portal-main">{props.children}</main>
     </div>
   </div>
 );
@@ -23,10 +23,12 @@ export const TopBar = (props: {
   shell: PortalShellModel;
   messages: MessageCatalog;
 }) => (
-  <header>
-    <strong>{props.shell.appName}</strong>
-    <span> | {props.shell.portalTitle} | {props.shell.locale}</span>
-    <div>
+  <header className="portal-header">
+    <div className="portal-header-brand">
+      <strong className="portal-header-title">{props.shell.appName}</strong>
+      <span className="portal-header-subtitle">{props.shell.portalTitle}</span>
+    </div>
+    <div className="portal-header-actions">
       <LanguageSwitcher locale={props.shell.locale} label={props.messages["shell.language"] ?? "Language"} />
       <TenantSwitcher tenantName={props.shell.tenantName} label={props.messages["shell.tenant"] ?? "Tenant"} />
     </div>
@@ -36,33 +38,35 @@ export const TopBar = (props: {
 export const SidebarNav = (props: {
   shell: PortalShellModel;
 }) => (
-  <nav aria-label={`${props.shell.portalTitle} navigation`}>
-    <ul>
-      {props.shell.navigation.map((item) => (
-        <li key={item.key}>
-          <a href={item.href}>{item.label}</a>
-        </li>
-      ))}
-    </ul>
-  </nav>
+  <aside className="portal-sidebar">
+    <nav aria-label={`${props.shell.portalTitle} navigation`}>
+      <ul>
+        {props.shell.navigation.map((item) => (
+          <li key={item.key}>
+            <a href={item.href}>{item.label}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </aside>
 );
 
 export const LanguageSwitcher = (props: {
   locale: string;
   label: string;
 }) => (
-  <p>
-    {props.label}: {props.locale}
-  </p>
+  <div className="header-action-item">
+    {props.label}: <strong>{props.locale}</strong>
+  </div>
 );
 
 export const TenantSwitcher = (props: {
   tenantName: string;
   label: string;
 }) => (
-  <p>
-    {props.label}: {props.tenantName}
-  </p>
+  <div className="header-action-item">
+    {props.label}: <strong>{props.tenantName}</strong>
+  </div>
 );
 
 export const PermissionDeniedState = (props: {
@@ -93,11 +97,11 @@ export const PlaceholderPageState = (props: {
   description: string;
   identifier?: string;
 }) => (
-  <section>
-    <p>{props.eyebrow}</p>
-    <h1>{props.title}</h1>
-    <p>{props.description}</p>
-    {props.identifier ? <p>Reference: {props.identifier}</p> : null}
+  <section className="surface-card">
+    <p className="page-eyebrow">{props.eyebrow}</p>
+    <h1 className="page-title">{props.title}</h1>
+    <p className="page-description">{props.description}</p>
+    {props.identifier ? <p>Reference: <code>{props.identifier}</code></p> : null}
   </section>
 );
 
