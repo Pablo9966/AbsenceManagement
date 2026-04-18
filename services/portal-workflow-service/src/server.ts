@@ -1,3 +1,9 @@
+import { WorkflowForbiddenError, WorkflowNotFoundError } from "./errors.js";
+import { initializeWorkflowContext } from "./service-context.js";
+import { createServices } from "./bootstrap/demo-wiring.js";
+
+initializeWorkflowContext(createServices());
+
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { URL } from "node:url";
 
@@ -83,10 +89,6 @@ const handleEmployerRoutes = async (pathname: string, requestUrl: URL, response:
   }
   if (pathname.startsWith("/v1/employer/absences/")) {
     const detail = await getEmployerAbsenceDetail(tenantId, locale, pathname.split("/").at(-1) ?? "");
-    if (!detail) {
-      notFound(response);
-      return true;
-    }
     writeJson(response, 200, detail);
     return true;
   }
@@ -101,10 +103,6 @@ const handleEmployerRoutes = async (pathname: string, requestUrl: URL, response:
   }
   if (pathname.startsWith("/v1/employer/cases/")) {
     const detail = await getEmployerCaseDetail(tenantId, locale, pathname.split("/").at(-1) ?? "");
-    if (!detail) {
-      notFound(response);
-      return true;
-    }
     writeJson(response, 200, detail);
     return true;
   }
@@ -158,10 +156,6 @@ const handleInternalRoutes = async (pathname: string, requestUrl: URL, response:
   }
   if (pathname.startsWith("/v1/internal/intake/")) {
     const detail = await getInternalIntakeDetail(tenantId, locale, pathname.split("/").at(-1) ?? "");
-    if (!detail) {
-      notFound(response);
-      return true;
-    }
     writeJson(response, 200, detail);
     return true;
   }
@@ -176,10 +170,6 @@ const handleInternalRoutes = async (pathname: string, requestUrl: URL, response:
   }
   if (pathname.startsWith("/v1/internal/ktg-cases/")) {
     const detail = await getInternalCaseDetail(tenantId, locale, pathname.split("/").at(-1) ?? "");
-    if (!detail) {
-      notFound(response);
-      return true;
-    }
     writeJson(response, 200, detail);
     return true;
   }
@@ -194,10 +184,6 @@ const handleInternalRoutes = async (pathname: string, requestUrl: URL, response:
   }
   if (pathname.startsWith("/v1/internal/benefits/")) {
     const detail = await getInternalBenefitDetail(tenantId, locale, pathname.split("/").at(-1) ?? "");
-    if (!detail) {
-      notFound(response);
-      return true;
-    }
     writeJson(response, 200, detail);
     return true;
   }
@@ -225,6 +211,14 @@ const requestHandler = async (request: IncomingMessage, response: ServerResponse
 
     notFound(response);
   } catch (error) {
+    if (error instanceof WorkflowNotFoundError) {
+      writeJson(response, 404, { error: error.message });
+      return;
+    }
+    if (error instanceof WorkflowForbiddenError) {
+      writeJson(response, 403, { error: error.message });
+      return;
+    }
     writeJson(response, 500, {
       error: error instanceof Error ? error.message : "Unhandled portal workflow error.",
     });
