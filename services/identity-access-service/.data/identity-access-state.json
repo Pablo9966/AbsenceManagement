@@ -1465,22 +1465,22 @@
   },
   "sessions": [
     {
-      "sessionToken": "b2e48c9a-9271-4c45-8567-ccc6b6f3fc5d",
-      "tenantId": "tenant-employer-demo",
-      "userId": "user-super-admin",
-      "createdAt": "2026-04-19T07:58:46.739Z"
-    },
-    {
       "sessionToken": "d2aa6f4a-a146-4c73-989a-0860ddaff8f2",
       "tenantId": "tenant-employer-demo",
       "userId": "user-employee-self",
       "createdAt": "2026-04-19T07:59:00.091Z"
     },
     {
-      "sessionToken": "a572ed6d-d14b-4d10-955c-379f67916edc",
+      "sessionToken": "b3ca6a54-0e69-4f62-8604-60aad675fb47",
       "tenantId": "tenant-employer-demo",
       "userId": "user-employer-admin",
-      "createdAt": "2026-04-19T09:57:53.338Z"
+      "createdAt": "2026-04-19T17:50:39.465Z"
+    },
+    {
+      "sessionToken": "138f27de-7383-4437-8b74-94833c0ae664",
+      "tenantId": "tenant-employer-demo",
+      "userId": "user-super-admin",
+      "createdAt": "2026-04-19T17:50:42.035Z"
     }
   ]
 }
