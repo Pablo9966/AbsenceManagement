@@ -18,6 +18,11 @@ import type {
   EmployerDocumentListItem,
   EmployerPaymentSummary,
   EmployerTaskListItem,
+  EmployerPremiumAdjustmentResult,
+  EmployerPremiumDashboard,
+  EmployerPremiumInstallmentPlanSummary,
+  EmployerPremiumSettlementResult,
+  EmployerSalaryMassReportResult,
   EmployerUvgAccidentReportResult,
   EmployerUvgCaseDetail,
   EmployerUvgCaseListItem,
@@ -78,6 +83,10 @@ import {
   type UvgCaseStatus,
   type UvgCaseType,
 } from "../../uvg-case-service/src/index.js";
+import {
+  PremiumReconciliationService,
+  type PremiumRepository,
+} from "../../premium-reconciliation-service/src/index.js";
 
 import { WorkflowForbiddenError, WorkflowNotFoundError } from "./errors.js";
 import type {
@@ -113,6 +122,7 @@ export interface PortalWorkflowContext {
     inboxRepository: InboxNotificationRepository;
     paymentOperationsRepository: PaymentOperationsRepository;
     uvgCaseRepository: UvgCaseRepository;
+    premiumRepository: PremiumRepository;
   };
   services: {
     absenceService: AbsenceRecordingService;
@@ -124,6 +134,7 @@ export interface PortalWorkflowContext {
     inboxService: InboxNotificationService;
     paymentOperationsService: PaymentOperationsService;
     uvgCaseService: UvgCaseService;
+    premiumService: PremiumReconciliationService;
   };
 }
 
@@ -150,6 +161,8 @@ const employerPermissions: WorkflowPermission[] = [
   { resourceType: "payment_run", action: "read", allowed: true },
   { resourceType: "uvg_case", action: "read", allowed: true },
   { resourceType: "uvg_case", action: "write", allowed: true },
+  { resourceType: "premium", action: "read", allowed: true },
+  { resourceType: "premium", action: "write", allowed: true },
 ];
 
 const internalPermissions: WorkflowPermission[] = [
@@ -1371,6 +1384,160 @@ export const listEmployerPaymentRunSummaries = async (
     pageSize: paginated.pageSize,
     totalPages: paginated.totalPages,
   });
+};
+
+// Phase 2F: Premium Reconciliation handlers
+
+const getOrCreatePremiumPeriod = async (
+  tenantId: string,
+  userId = "system",
+): Promise<string> => {
+  const { services } = getPortalWorkflowServices();
+  const existing = await services.premiumService.listReportingPeriods(tenantId);
+  if (existing[0]) return existing[0].id;
+  const period = await services.premiumService.createReportingPeriod({
+    tenantId,
+    periodStart: "2026-01-01",
+    periodEnd: "2026-12-31",
+    reportingYear: 2026,
+    periodType: "annual",
+  }, {
+    actorId: userId,
+    actorRole: "employer_finance",
+    effectiveAt: REFERENCE_AT,
+    correlationId: "portal-workflow-premium-period",
+  });
+  return period.id;
+};
+
+const toPremiumDashboard = async (tenantId: string): Promise<EmployerPremiumDashboard> => {
+  const { services } = getPortalWorkflowServices();
+  const periodId = await getOrCreatePremiumPeriod(tenantId);
+  const detail = await services.premiumService.getEmployerPremiumDashboard(tenantId, periodId);
+  if (!detail) throw new WorkflowNotFoundError();
+  const latestReport = detail.reports.at(-1);
+  const latestCalculation = detail.calculations.at(-1);
+  const latestExposure = detail.exposures.at(-1);
+  return {
+    periodId: detail.period.id,
+    periodLabel: `${detail.period.periodStart} - ${detail.period.periodEnd}`,
+    reportingStatus: detail.period.reportingStatus,
+    salaryMassStatus: latestReport?.reportStatus ?? "draft",
+    insuredSalaryMassChf: latestReport?.insuredSalaryMassChf ?? 0,
+    claimsRatio: detail.snapshot?.claimsRatio ?? latestExposure?.claimsRatio ?? 0,
+    expectedPremiumChf: detail.snapshot?.expectedPremiumChf ?? latestExposure?.expectedPremiumChf ?? 0,
+    adjustmentDeltaChf: detail.snapshot?.adjustmentDeltaChf ?? latestCalculation?.deltaAmountChf ?? 0,
+    adjustmentType: latestCalculation?.adjustmentType,
+    openInstallmentAmountChf: detail.snapshot?.openInstallmentAmountChf ?? 0,
+    latestReportId: latestReport?.id,
+    latestCalculationId: latestCalculation?.id,
+    installmentPlanIds: detail.plans.map((plan) => plan.id),
+  };
+};
+
+export const getEmployerPremiumDashboard = async (
+  tenantId: string,
+  locale: PortalLocale,
+): Promise<WorkflowResponse<EmployerPremiumDashboard>> => {
+  if (tenantId !== EMPLOYER_TENANT_ID) throw new WorkflowForbiddenError("Employer premium routes are only accessible to employer tenants.");
+  return makeResponse(await toPremiumDashboard(tenantId), tenantId, locale, employerPermissions);
+};
+
+export const submitEmployerSalaryMassReport = async (input: {
+  tenantId: string; locale: PortalLocale; userId: string; annualSalaryMassChf: number; insuredSalaryMassChf: number; employeeCount: number; notes?: string;
+}): Promise<WorkflowResponse<EmployerSalaryMassReportResult>> => {
+  if (input.tenantId !== EMPLOYER_TENANT_ID) throw new WorkflowForbiddenError("Employer premium routes are only accessible to employer tenants.");
+  const { services } = getPortalWorkflowServices();
+  const periodId = await getOrCreatePremiumPeriod(input.tenantId, input.userId);
+  const actor = { actorId: input.userId, actorRole: "employer_finance" as const, effectiveAt: REFERENCE_AT, correlationId: "portal-workflow-premium-salary-mass" };
+  const draft = await services.premiumService.createDraftSalaryMassReport({
+    tenantId: input.tenantId,
+    premiumReportingPeriodId: periodId,
+    annualSalaryMassChf: input.annualSalaryMassChf,
+    insuredSalaryMassChf: input.insuredSalaryMassChf,
+    employeeCount: input.employeeCount,
+    submissionSource: "employer_portal",
+    submittedBy: input.userId,
+    notes: input.notes,
+  }, actor);
+  const submitted = await services.premiumService.submitSalaryMassReport(input.tenantId, draft.id, actor);
+  return makeResponse({
+    reportId: submitted.id,
+    periodId: submitted.premiumReportingPeriodId,
+    reportStatus: submitted.reportStatus,
+    insuredSalaryMassChf: submitted.insuredSalaryMassChf,
+    employeeCount: submitted.employeeCount,
+  }, input.tenantId, input.locale, employerPermissions);
+};
+
+export const calculateEmployerPremiumAdjustment = async (input: {
+  tenantId: string; locale: PortalLocale; userId: string; reportId: string; priorPremiumChf: number; premiumRate: number; claimsPaidChf: number; claimsReservedChf?: number;
+}): Promise<WorkflowResponse<EmployerPremiumAdjustmentResult>> => {
+  if (input.tenantId !== EMPLOYER_TENANT_ID) throw new WorkflowForbiddenError("Employer premium routes are only accessible to employer tenants.");
+  const { services } = getPortalWorkflowServices();
+  const report = await services.premiumService.getSalaryMassReportDetail(input.tenantId, input.reportId);
+  if (!report) throw new WorkflowNotFoundError();
+  const calculation = await services.premiumService.calculatePremiumAdjustment({
+    tenantId: input.tenantId,
+    premiumReportingPeriodId: report.premiumReportingPeriodId,
+    salaryMassReportId: input.reportId,
+    priorPremiumChf: input.priorPremiumChf,
+    premiumRate: input.premiumRate,
+    claimsPaidChf: input.claimsPaidChf,
+    claimsReservedChf: input.claimsReservedChf,
+    exposureBasis: "benefit-engine-payment-instructions",
+  }, { actorId: input.userId, actorRole: "employer_finance", effectiveAt: REFERENCE_AT, correlationId: "portal-workflow-premium-adjustment" });
+  return makeResponse({
+    calculationId: calculation.id,
+    periodId: calculation.premiumReportingPeriodId,
+    reportId: calculation.salaryMassReportId,
+    priorPremiumChf: calculation.priorPremiumChf,
+    recalculatedPremiumChf: calculation.recalculatedPremiumChf,
+    deltaAmountChf: calculation.deltaAmountChf,
+    adjustmentType: calculation.adjustmentType,
+    formula: calculation.formula,
+    inputs: calculation.inputsJson,
+  }, input.tenantId, input.locale, employerPermissions);
+};
+
+export const generateEmployerPremiumSettlement = async (input: {
+  tenantId: string; locale: PortalLocale; userId: string; calculationId: string;
+}): Promise<WorkflowResponse<EmployerPremiumSettlementResult>> => {
+  if (input.tenantId !== EMPLOYER_TENANT_ID) throw new WorkflowForbiddenError("Employer premium routes are only accessible to employer tenants.");
+  const { services } = getPortalWorkflowServices();
+  const recommendation = await services.premiumService.generateSettlementRecommendation(input.tenantId, input.calculationId, { actorId: input.userId, actorRole: "employer_finance", effectiveAt: REFERENCE_AT, correlationId: "portal-workflow-premium-settlement" });
+  return makeResponse({
+    recommendationId: recommendation.id,
+    calculationId: recommendation.premiumAdjustmentCalculationId,
+    recommendationType: recommendation.recommendationType,
+    grossAmountChf: recommendation.grossAmountChf,
+    netAmountChf: recommendation.netAmountChf,
+    settlementReason: recommendation.settlementReason,
+    installmentEligibleFlag: recommendation.installmentEligibleFlag,
+  }, input.tenantId, input.locale, employerPermissions);
+};
+
+export const createEmployerPremiumInstallmentPlan = async (input: {
+  tenantId: string; locale: PortalLocale; userId: string; periodId: string; totalAmountChf: number; installmentCount: number; startDate: string;
+}): Promise<WorkflowResponse<EmployerPremiumInstallmentPlanSummary>> => {
+  if (input.tenantId !== EMPLOYER_TENANT_ID) throw new WorkflowForbiddenError("Employer premium routes are only accessible to employer tenants.");
+  const { services } = getPortalWorkflowServices();
+  const plan = await services.premiumService.createInstallmentPlan({
+    tenantId: input.tenantId,
+    premiumReportingPeriodId: input.periodId,
+    totalAmountChf: input.totalAmountChf,
+    installmentCount: input.installmentCount,
+    startDate: input.startDate,
+  }, { actorId: input.userId, actorRole: "employer_finance", effectiveAt: REFERENCE_AT, correlationId: "portal-workflow-premium-installment" });
+  return makeResponse({
+    planId: plan.id,
+    periodId: plan.premiumReportingPeriodId,
+    planStatus: plan.planStatus,
+    installmentCount: plan.installmentCount,
+    totalAmountChf: plan.totalAmountChf,
+    openAmountChf: plan.items.filter((item) => item.installmentStatus !== "paid").reduce((sum, item) => sum + item.amountChf, 0),
+    items: plan.items.map((item) => ({ itemId: item.id, dueDate: item.dueDate, amountChf: item.amountChf, installmentStatus: item.installmentStatus, reference: item.reference })),
+  }, input.tenantId, input.locale, employerPermissions);
 };
 
 export const listInternalPaymentRuns = async (

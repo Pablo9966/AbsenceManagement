@@ -101,6 +101,8 @@ import {
   PaymentOperationsService,
   UvgCaseMemoryRepository,
   UvgCaseService,
+  PremiumReconciliationMemoryRepository,
+  PremiumReconciliationService,
 } from "../adapters/memory-repositories.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type F<T> = T[];
@@ -364,6 +366,7 @@ export const createServices = () => {
     clone(uvgReportArtifacts),
     clone(uvgAuditEvents),
   );
+  const premiumRepository = new PremiumReconciliationMemoryRepository();
 
   return {
     repositories: {
@@ -376,6 +379,7 @@ export const createServices = () => {
       inboxRepository,
       paymentOperationsRepository,
       uvgCaseRepository,
+      premiumRepository,
     },
     services: {
       absenceService: new AbsenceRecordingService(absenceRepository),
@@ -387,6 +391,7 @@ export const createServices = () => {
       inboxService: new InboxNotificationService(inboxRepository),
       paymentOperationsService: new PaymentOperationsService(paymentOperationsRepository),
       uvgCaseService: new UvgCaseService(uvgCaseRepository),
+      premiumService: new PremiumReconciliationService(premiumRepository),
     },
   };
 };

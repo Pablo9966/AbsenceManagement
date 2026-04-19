@@ -59,6 +59,9 @@
       ],
       "@elipslife/uvg-case-service": [
         "services/uvg-case-service/src/index.ts"
+      ],
+      "@elipslife/premium-reconciliation-service": [
+        "services/premium-reconciliation-service/src/index.ts"
       ]
     },
     "declaration": true,

@@ -38,6 +38,9 @@
       "path": "../../services/uvg-case-service"
     },
     {
+      "path": "../../services/premium-reconciliation-service"
+    },
+    {
       "path": "../../packages/portal-workflow-client"
     }
   ]

@@ -570,3 +570,67 @@ export interface InternalUvgCaseDetail extends InternalUvgCaseListItem {
     payload?: Record<string, unknown>;
   }>;
 }
+
+// Phase 2F: Premium Reconciliation
+
+export interface EmployerPremiumDashboard {
+  periodId: string;
+  periodLabel: string;
+  reportingStatus: string;
+  salaryMassStatus: string;
+  insuredSalaryMassChf: number;
+  claimsRatio: number;
+  expectedPremiumChf: number;
+  adjustmentDeltaChf: number;
+  adjustmentType?: string;
+  openInstallmentAmountChf: number;
+  latestReportId?: string;
+  latestCalculationId?: string;
+  installmentPlanIds: string[];
+}
+
+export interface EmployerSalaryMassReportResult {
+  reportId: string;
+  periodId: string;
+  reportStatus: string;
+  insuredSalaryMassChf: number;
+  employeeCount: number;
+}
+
+export interface EmployerPremiumAdjustmentResult {
+  calculationId: string;
+  periodId: string;
+  reportId: string;
+  priorPremiumChf: number;
+  recalculatedPremiumChf: number;
+  deltaAmountChf: number;
+  adjustmentType: string;
+  formula: string;
+  inputs: Record<string, unknown>;
+}
+
+export interface EmployerPremiumSettlementResult {
+  recommendationId: string;
+  calculationId: string;
+  recommendationType: string;
+  grossAmountChf: number;
+  netAmountChf: number;
+  settlementReason: string;
+  installmentEligibleFlag: boolean;
+}
+
+export interface EmployerPremiumInstallmentPlanSummary {
+  planId: string;
+  periodId: string;
+  planStatus: string;
+  installmentCount: number;
+  totalAmountChf: number;
+  openAmountChf: number;
+  items: Array<{
+    itemId: string;
+    dueDate: string;
+    amountChf: number;
+    installmentStatus: string;
+    reference?: string;
+  }>;
+}

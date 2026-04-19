@@ -18,6 +18,11 @@ import type {
   EmployerPaymentSummary,
   EmployerPaymentRunSummary,
   EmployerTaskListItem,
+  EmployerPremiumAdjustmentResult,
+  EmployerPremiumDashboard,
+  EmployerPremiumInstallmentPlanSummary,
+  EmployerPremiumSettlementResult,
+  EmployerSalaryMassReportResult,
   EmployerUvgAccidentReportResult,
   EmployerUvgCaseDetail,
   EmployerUvgCaseListItem,
@@ -111,6 +116,45 @@ export interface PortalWorkflowClient {
     episodeId: string;
     actualReturnDate: string;
   }): Promise<WorkflowResponse<EmployeeReturnToWorkResult>>;
+  getEmployerPremiumDashboard(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    periodId?: string;
+  }): Promise<WorkflowResponse<EmployerPremiumDashboard>>;
+  submitEmployerSalaryMassReport(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    userId: string;
+    annualSalaryMassChf: number;
+    insuredSalaryMassChf: number;
+    employeeCount: number;
+    notes?: string;
+  }): Promise<WorkflowResponse<EmployerSalaryMassReportResult>>;
+  calculateEmployerPremiumAdjustment(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    userId: string;
+    reportId: string;
+    priorPremiumChf: number;
+    premiumRate: number;
+    claimsPaidChf: number;
+    claimsReservedChf?: number;
+  }): Promise<WorkflowResponse<EmployerPremiumAdjustmentResult>>;
+  generateEmployerPremiumSettlement(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    userId: string;
+    calculationId: string;
+  }): Promise<WorkflowResponse<EmployerPremiumSettlementResult>>;
+  createEmployerPremiumInstallmentPlan(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    userId: string;
+    periodId: string;
+    totalAmountChf: number;
+    installmentCount: number;
+    startDate: string;
+  }): Promise<WorkflowResponse<EmployerPremiumInstallmentPlanSummary>>;
 
   // Phase 2C: Payment Operations — Employer (read-only)
   listEmployerPaymentRunSummaries(input: WorkflowListQuery & {
@@ -399,6 +443,37 @@ export const createPortalWorkflowClient = (input: {
     },
     async confirmEmployeeReturnToWork(params) {
       return readJson(await fetchFn(withBaseUrl("/v1/employee/return-to-work"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      }));
+    },
+    async getEmployerPremiumDashboard(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/employer/premium/dashboard${toQueryString(params)}`)));
+    },
+    async submitEmployerSalaryMassReport(params) {
+      return readJson(await fetchFn(withBaseUrl("/v1/employer/premium/salary-mass-report"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      }));
+    },
+    async calculateEmployerPremiumAdjustment(params) {
+      return readJson(await fetchFn(withBaseUrl("/v1/employer/premium/adjustment"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      }));
+    },
+    async generateEmployerPremiumSettlement(params) {
+      return readJson(await fetchFn(withBaseUrl("/v1/employer/premium/settlement"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      }));
+    },
+    async createEmployerPremiumInstallmentPlan(params) {
+      return readJson(await fetchFn(withBaseUrl("/v1/employer/premium/installment-plan"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(params),

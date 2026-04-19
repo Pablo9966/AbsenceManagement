@@ -31,6 +31,7 @@ This repository currently contains:
 - Phase 2 employer and internal core workflow package
 - Phase 2 payment operations package
 - Phase 2 UVG native flow package
+- Phase 2 premium reconciliation package
 - Module 1 design package for Employee Master Data Management
 - Module 2 design package for Absence Recording and Tracking
 - Module 3 design package for KTG Case Registration and Deadline Management
@@ -50,6 +51,7 @@ This repository currently contains:
 - `identity-access-service` schema, API contract, and TypeScript service skeleton
 - `payment-operations-service` schema, API contract, service runtime, and TypeScript service implementation
 - `uvg-case-service` schema, API contract, service runtime, and TypeScript service implementation
+- `premium-reconciliation-service` schema, API contract, service runtime, and TypeScript service implementation
 - `frontend-platform` shared frontend package for locale, navigation, and shell modeling
 - `portal-workflow-client` shared route-family workflow client contract
 - `portal-workflow-service` route-oriented workflow aggregation service
@@ -59,6 +61,7 @@ This repository currently contains:
 - `tests/phase-2c.smoke.test.mjs` payment operations smoke coverage for service runtime and workflow routes
 - `tests/phase-2d.smoke.test.mjs` employee self-service smoke coverage
 - `tests/phase-2e.smoke.test.mjs` UVG native-flow smoke coverage for direct service runtime and portal workflow routes
+- `tests/phase-2f.smoke.test.mjs` premium reconciliation smoke coverage for direct service runtime and employer finance workflow routes
 
 ## Repository Layout
 
@@ -68,6 +71,7 @@ This repository currently contains:
 - [docs/phase-2/module-2b-core-product.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-2/module-2b-core-product.md)
 - [docs/phase-2/module-2c-payment-operations.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-2/module-2c-payment-operations.md)
 - [docs/phase-2/module-2e-uvg-native-flow.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-2/module-2e-uvg-native-flow.md)
+- [docs/phase-2/module-2f-premium-reconciliation.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-2/module-2f-premium-reconciliation.md)
 - [docs/phase-1/module-01-employee-master-data.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-1/module-01-employee-master-data.md)
 - [docs/phase-1/module-02-absence-recording.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-1/module-02-absence-recording.md)
 - [docs/phase-1/module-03-ktg-case-management.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-1/module-03-ktg-case-management.md)
@@ -141,10 +145,12 @@ The repository currently validates:
 - root `npm run typecheck`
 - employer portal `npm run build`
 - internal portal `npm run build`
-- `npm run test:smoke` for key 2B workflow, 2C payment-operation, 2D employee self-service, and 2E UVG native-flow scenarios
+- `npm run test:smoke` for key 2B workflow, 2C payment-operation, 2D employee self-service, 2E UVG native-flow, and 2F premium reconciliation scenarios
 
 `portal-workflow-service` is currently a route-oriented aggregation layer built by composing the real Phase 1 application service modules over seeded in-memory repository adapters. That keeps the workflow routes aligned with backend service logic, but it is still not the same as live distributed service integration or persistence-backed runtime wiring.
 
 `payment-operations-service` now includes its own file-backed runtime/API layer for payment runs, exports, statements, reconciliation, settlement summaries, payroll booking confirmations, and audit-event queries. The portals continue to consume payment visibility through `portal-workflow-service` read models while the dedicated payment service owns operational write paths and payment-run state.
 
 `uvg-case-service` now includes the Phase 2E native UVG accident case domain and runtime/API layer. It supports BU/NBU accident reports, UVG case lifecycle progression, injury and circumstance capture, document-service references, explicit UVG/KTG coordination, decisions, accident report artifact generation, and audit-event queries. Employer and internal portal UVG routes consume UVG workflow read/write contracts through `portal-workflow-service`.
+
+`premium-reconciliation-service` now includes the Phase 2F employer finance reconciliation domain and runtime/API layer. It supports premium reporting periods, salary mass submission, premium exposure snapshots, claims ratio views, premium adjustment calculations, refund/additional invoice/carry-forward recommendations, installment plan visibility, employer dashboard read models, and audit-event queries. The employer portal premium route consumes these workflows through `portal-workflow-service`.

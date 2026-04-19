@@ -18,6 +18,7 @@ import {
   getEmployerAbsenceDetail,
   getEmployerCaseDetail,
   getEmployerDashboard,
+  getEmployerPremiumDashboard,
   getEmployerUvgCaseDetail,
   getInternalBenefitDetail,
   getInternalCaseDetail,
@@ -44,6 +45,10 @@ import {
   getInternalSettlementSummary,
   listInternalPaymentAuditEvents,
   createEmployerUvgAccidentReport,
+  submitEmployerSalaryMassReport,
+  calculateEmployerPremiumAdjustment,
+  generateEmployerPremiumSettlement,
+  createEmployerPremiumInstallmentPlan,
   generateEmployerUvgAccidentReportArtifact,
   updateInternalUvgCaseStatus,
   recordInternalUvgInjury,
@@ -268,6 +273,30 @@ const handleEmployerRoutes = async (pathname: string, requestUrl: URL, request: 
       page: getPage(requestUrl),
       pageSize: getPageSize(requestUrl),
     }));
+    return true;
+  }
+  if (pathname === "/v1/employer/premium/dashboard") {
+    writeJson(response, 200, await getEmployerPremiumDashboard(tenantId, locale));
+    return true;
+  }
+  if (request.method === "POST" && pathname === "/v1/employer/premium/salary-mass-report") {
+    const payload = await readRequestBody<Parameters<typeof submitEmployerSalaryMassReport>[0]>(request);
+    writeJson(response, 200, await submitEmployerSalaryMassReport(payload));
+    return true;
+  }
+  if (request.method === "POST" && pathname === "/v1/employer/premium/adjustment") {
+    const payload = await readRequestBody<Parameters<typeof calculateEmployerPremiumAdjustment>[0]>(request);
+    writeJson(response, 200, await calculateEmployerPremiumAdjustment(payload));
+    return true;
+  }
+  if (request.method === "POST" && pathname === "/v1/employer/premium/settlement") {
+    const payload = await readRequestBody<Parameters<typeof generateEmployerPremiumSettlement>[0]>(request);
+    writeJson(response, 200, await generateEmployerPremiumSettlement(payload));
+    return true;
+  }
+  if (request.method === "POST" && pathname === "/v1/employer/premium/installment-plan") {
+    const payload = await readRequestBody<Parameters<typeof createEmployerPremiumInstallmentPlan>[0]>(request);
+    writeJson(response, 200, await createEmployerPremiumInstallmentPlan(payload));
     return true;
   }
   if (pathname === "/v1/employer/uvg-cases") {

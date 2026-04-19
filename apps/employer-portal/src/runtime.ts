@@ -39,6 +39,7 @@ const employerPortalPermissions: PermissionCheck[] = [
   { resourceType: "document", action: "read" },
   { resourceType: "payment_instruction", action: "read" },
   { resourceType: "premium", action: "read" },
+  { resourceType: "premium", action: "write" },
   { resourceType: "task", action: "read" },
   { resourceType: "tenant_admin", action: "manage" },
 ];

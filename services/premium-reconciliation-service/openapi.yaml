@@ -1,0 +1,34 @@
+openapi: 3.1.0
+info:
+  title: Premium Reconciliation Service
+  version: 0.1.0
+paths:
+  /v1/premium/periods:
+    get: { summary: List reporting periods, responses: { "200": { description: Reporting periods } } }
+    post: { summary: Create reporting period, responses: { "200": { description: Reporting period } } }
+  /v1/premium/salary-mass-reports:
+    get: { summary: List salary mass reports, responses: { "200": { description: Salary mass reports } } }
+    post: { summary: Create draft salary mass report, responses: { "200": { description: Salary mass report } } }
+  /v1/premium/salary-mass-reports/{reportId}:
+    get: { summary: Get salary mass report detail, responses: { "200": { description: Report detail } } }
+  /v1/premium/salary-mass-reports/{reportId}/submit:
+    post: { summary: Submit salary mass report, responses: { "200": { description: Submitted report } } }
+  /v1/premium/adjustments/calculate:
+    post: { summary: Calculate premium adjustment from salary mass and exposure inputs, responses: { "200": { description: Adjustment calculation } } }
+  /v1/premium/adjustments:
+    get: { summary: List premium adjustment calculations, responses: { "200": { description: Adjustment calculations } } }
+  /v1/premium/adjustments/{calculationId}:
+    get: { summary: Get premium adjustment calculation detail, responses: { "200": { description: Adjustment calculation } } }
+  /v1/premium/adjustments/{calculationId}/recommendation:
+    post: { summary: Generate refund/additional invoice/carry-forward recommendation, responses: { "200": { description: Settlement recommendation } } }
+  /v1/premium/recommendations/{recommendationId}:
+    get: { summary: Get settlement recommendation detail, responses: { "200": { description: Settlement recommendation } } }
+  /v1/premium/installment-plans:
+    get: { summary: List installment plans, responses: { "200": { description: Installment plans } } }
+    post: { summary: Create installment plan, responses: { "200": { description: Installment plan and items } } }
+  /v1/premium/installment-plans/{planId}:
+    get: { summary: Get installment plan detail, responses: { "200": { description: Installment plan detail } } }
+  /v1/premium/dashboard:
+    get: { summary: Get employer premium dashboard snapshot, responses: { "200": { description: Premium dashboard read model } } }
+  /v1/premium/audit-events:
+    get: { summary: List premium reconciliation audit events, responses: { "200": { description: Audit events } } }
