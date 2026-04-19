@@ -357,6 +357,7 @@ paths:
     get:
       tags: [Employer Analytics]
       operationId: getEmployerAnalyticsDashboard
+      description: Projection-owner contract for reading the latest employer analytics dashboard for a tenant, role scope, dashboard key, and period window.
       parameters:
         - $ref: '#/components/parameters/TenantId'
         - name: dashboardKey
@@ -414,6 +415,32 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/EmployerAnalyticsSnapshot'
+  /v1/tenants/{tenantId}/employer-analytics/refresh-jobs/latest:
+    get:
+      tags: [Employer Analytics]
+      operationId: getLatestEmployerAnalyticsRefreshJob
+      description: Observability contract for reading the latest refresh job for a given employer analytics dashboard window.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: dashboardKey
+          in: query
+          required: true
+          schema: { type: string }
+        - name: periodStart
+          in: query
+          required: true
+          schema: { type: string, format: date }
+        - name: periodEnd
+          in: query
+          required: true
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Latest refresh job for the requested dashboard window
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployerAnalyticsRefreshJob'
 components:
   securitySchemes:
     bearerAuth:

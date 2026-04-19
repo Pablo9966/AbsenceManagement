@@ -1449,7 +1449,7 @@ const analyticsPayloadObject = (value: unknown): Record<string, unknown> =>
 const analyticsNumber = (value: unknown): number => typeof value === "number" ? value : 0;
 const mapEmployerAnalyticsDashboard = (
   dashboard: Awaited<ReturnType<DashboardProjectionService["getEmployerAnalyticsDashboard"]>>,
-  refreshJobId?: string,
+  latestRefresh?: Awaited<ReturnType<DashboardProjectionService["getLatestEmployerAnalyticsRefreshJob"]>>,
 ): EmployerAnalyticsDashboard => {
   if (!dashboard) throw new WorkflowNotFoundError();
   const payload = analyticsPayloadObject(dashboard.snapshotPayloadJson);
@@ -1463,7 +1463,14 @@ const mapEmployerAnalyticsDashboard = (
     periodEnd: dashboard.periodEnd,
     granularity: analyticsPayloadObject(payload.filters).granularity === "weekly" ? "weekly" : "monthly",
     refreshedAt: dashboard.refreshedAt,
-    refreshJobId,
+    refreshJobId: latestRefresh?.id,
+    latestRefresh: {
+      jobId: latestRefresh?.id,
+      jobStatus: latestRefresh?.jobStatus ?? "unknown",
+      triggeredAt: latestRefresh?.triggeredAt,
+      completedAt: latestRefresh?.completedAt,
+      triggeredBy: latestRefresh?.triggeredBy,
+    },
     metricDefinitions: analyticsPayloadObject(payload.metricDefinitions) as Record<string, string>,
     summary: {
       absenceVolume: analyticsPayloadArray<Record<string, unknown>>(payload.trend).reduce((sum, item) => sum + analyticsNumber(analyticsPayloadObject(item).absenceVolume), 0),
@@ -1543,7 +1550,7 @@ export const refreshEmployerAnalyticsDashboard = async (input: {
     sourceRecords: await buildEmployerAnalyticsSourceRecords(input.tenantId, input),
   });
   if (!result.data) throw new Error(result.issues.map((issue) => issue.message).join(", "));
-  const dashboard = mapEmployerAnalyticsDashboard(result.data.dashboard, result.data.job.id);
+  const dashboard = mapEmployerAnalyticsDashboard(result.data.dashboard, result.data.job);
   return makeResponse({
     refreshJobId: result.data.job.id,
     jobStatus: result.data.job.jobStatus,
@@ -1577,8 +1584,14 @@ export const getEmployerAnalyticsDashboard = async (
     periodStart,
     periodEnd,
   });
+  const latestRefresh = await services.dashboardService.getLatestEmployerAnalyticsRefreshJob({
+    tenantId,
+    dashboardKey,
+    periodStart,
+    periodEnd,
+  });
   if (existing) {
-    return makeResponse(mapEmployerAnalyticsDashboard(existing), tenantId, locale, employerPermissions, {
+    return makeResponse(mapEmployerAnalyticsDashboard(existing, latestRefresh), tenantId, locale, employerPermissions, {
       appliedFilters: {
         periodStart,
         periodEnd,

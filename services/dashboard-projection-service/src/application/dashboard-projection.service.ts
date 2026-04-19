@@ -88,6 +88,11 @@ export interface DashboardProjectionRepositoryContext {
   createEmployerAnalyticsRefreshJob(job: EmployerAnalyticsRefreshJob): Promise<EmployerAnalyticsRefreshJob>;
   updateEmployerAnalyticsRefreshJob(job: EmployerAnalyticsRefreshJob): Promise<EmployerAnalyticsRefreshJob>;
   getEmployerAnalyticsRefreshJob(tenantId: string, jobId: string): Promise<EmployerAnalyticsRefreshJob | null>;
+  getLatestEmployerAnalyticsRefreshJob(tenantId: string, filters: {
+    dashboardKey: string;
+    periodStart: string;
+    periodEnd: string;
+  }): Promise<EmployerAnalyticsRefreshJob | null>;
 }
 
 export interface DashboardProjectionRepository extends DashboardProjectionRepositoryContext {
@@ -691,6 +696,19 @@ export class DashboardProjectionService {
 
   async getEmployerAnalyticsRefreshJob(tenantId: string, jobId: string): Promise<EmployerAnalyticsRefreshJob | null> {
     return this.repository.getEmployerAnalyticsRefreshJob(tenantId, jobId);
+  }
+
+  async getLatestEmployerAnalyticsRefreshJob(params: {
+    tenantId: string;
+    dashboardKey: string;
+    periodStart: string;
+    periodEnd: string;
+  }): Promise<EmployerAnalyticsRefreshJob | null> {
+    return this.repository.getLatestEmployerAnalyticsRefreshJob(params.tenantId, {
+      dashboardKey: params.dashboardKey,
+      periodStart: params.periodStart,
+      periodEnd: params.periodEnd,
+    });
   }
 }
 

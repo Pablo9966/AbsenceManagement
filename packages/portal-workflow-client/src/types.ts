@@ -667,6 +667,13 @@ export interface EmployerAnalyticsDashboard {
   granularity: EmployerAnalyticsGranularity;
   refreshedAt: string;
   refreshJobId?: string;
+  latestRefresh: {
+    jobId?: string;
+    jobStatus: string;
+    triggeredAt?: string;
+    completedAt?: string;
+    triggeredBy?: string;
+  };
   metricDefinitions: Record<string, string>;
   summary: {
     absenceVolume: number;

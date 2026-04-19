@@ -22,6 +22,8 @@ test("employer analytics dashboard returns trend, cause, cost, duration, RTW, an
   assert.ok(response.body.data.causes.some((cause) => cause.causeCategory === "illness"));
   assert.ok(response.body.data.heatmap.some((cell) => cell.bucket === "2026-04"));
   assert.ok(response.body.data.metricDefinitions.totalCostChf.includes("cost"));
+  assert.equal(response.body.data.latestRefresh.jobStatus, "completed");
+  assert.ok(response.body.data.latestRefresh.triggeredAt);
 });
 
 test("employer analytics period filters change returned projection data", { concurrency: false }, async () => {
@@ -54,6 +56,10 @@ test("employer analytics refresh stores completed projection output", { concurre
   const read = await executeWorkflow("/v1/employer/analytics?tenantId=tenant-employer-demo&locale=de-CH&periodStart=2026-04-01&periodEnd=2026-04-30&granularity=weekly");
   assert.equal(read.statusCode, 200);
   assert.equal(read.body.data.refreshedAt, refreshed.body.data.refreshedAt);
+  assert.equal(read.body.data.refreshJobId, refreshed.body.data.refreshJobId);
+  assert.equal(read.body.data.latestRefresh.jobStatus, "completed");
+  assert.equal(read.body.data.latestRefresh.jobId, refreshed.body.data.refreshJobId);
+  assert.equal(read.body.data.latestRefresh.triggeredBy, "user-employer-admin");
 });
 
 test("analytics access remains employer-management scoped", async () => {

@@ -905,6 +905,20 @@ export class DashboardProjectionMemoryRepository implements DashboardProjectionR
   async getEmployerAnalyticsRefreshJob(tenantId: string, jobId: string): Promise<EmployerAnalyticsRefreshJob | null> {
     return this.employerAnalyticsRefreshJobs.find((job) => job.tenantId === tenantId && job.id === jobId) ?? null;
   }
+
+  async getLatestEmployerAnalyticsRefreshJob(tenantId: string, filters: {
+    dashboardKey: string;
+    periodStart: string;
+    periodEnd: string;
+  }): Promise<EmployerAnalyticsRefreshJob | null> {
+    return this.employerAnalyticsRefreshJobs
+      .filter((job) =>
+        job.tenantId === tenantId &&
+        job.dashboardKey === filters.dashboardKey &&
+        job.periodStart === filters.periodStart &&
+        job.periodEnd === filters.periodEnd)
+      .sort((left, right) => right.triggeredAt.localeCompare(left.triggeredAt))[0] ?? null;
+  }
 }
 
 export class InboxNotificationMemoryRepository implements InboxNotificationRepository {

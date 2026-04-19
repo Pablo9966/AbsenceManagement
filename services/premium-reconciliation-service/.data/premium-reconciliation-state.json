@@ -1,0 +1,442 @@
+{
+  "periods": [
+    {
+      "id": "02fa3259-7c5b-46bb-8de8-49f3306c3826",
+      "tenantId": "tenant-premium-runtime",
+      "periodStart": "2026-01-01",
+      "periodEnd": "2026-12-31",
+      "reportingYear": 2026,
+      "periodType": "annual",
+      "reportingStatus": "submitted",
+      "createdAt": "2026-04-19T09:30:49.181Z",
+      "updatedAt": "2026-04-19T09:30:49.196Z",
+      "submittedAt": "2026-04-19T09:30:49.196Z",
+      "submittedBy": "finance-user"
+    },
+    {
+      "id": "508613fa-636b-4c0f-9151-d97a483b3eca",
+      "tenantId": "tenant-premium-logic",
+      "periodStart": "2026-01-01",
+      "periodEnd": "2026-12-31",
+      "reportingYear": 2026,
+      "periodType": "annual",
+      "reportingStatus": "draft",
+      "createdAt": "2026-04-19T09:30:49.223Z",
+      "updatedAt": "2026-04-19T09:30:49.223Z"
+    }
+  ],
+  "reports": [
+    {
+      "id": "ac0dd1da-90ff-491f-a77f-c5d88bb0329c",
+      "tenantId": "tenant-premium-runtime",
+      "premiumReportingPeriodId": "02fa3259-7c5b-46bb-8de8-49f3306c3826",
+      "reportStatus": "validated",
+      "currency": "CHF",
+      "annualSalaryMassChf": 12000000,
+      "insuredSalaryMassChf": 10500000,
+      "employeeCount": 120,
+      "submissionSource": "employer_portal",
+      "submittedAt": "2026-04-19T09:30:49.196Z",
+      "submittedBy": "finance-user"
+    },
+    {
+      "id": "e3c4addf-7d25-4d4a-8172-080a39e73b49",
+      "tenantId": "tenant-premium-logic",
+      "premiumReportingPeriodId": "508613fa-636b-4c0f-9151-d97a483b3eca",
+      "reportStatus": "validated",
+      "currency": "CHF",
+      "annualSalaryMassChf": 10000000,
+      "insuredSalaryMassChf": 9000000,
+      "employeeCount": 90,
+      "submissionSource": "test",
+      "submittedAt": "2026-04-19T09:30:49.224Z",
+      "submittedBy": "finance-user"
+    }
+  ],
+  "reportLines": [],
+  "exposureSnapshots": [
+    {
+      "id": "46c4bb18-d2c6-407d-b1be-4174e4fdb1a3",
+      "tenantId": "tenant-premium-runtime",
+      "premiumReportingPeriodId": "02fa3259-7c5b-46bb-8de8-49f3306c3826",
+      "exposureBasis": "benefit-engine-payment-instructions",
+      "insuredSalaryMassChf": 10500000,
+      "claimsPaidChf": 82000,
+      "claimsReservedChf": 18000,
+      "claimsRatio": 0.53,
+      "premiumRateApplied": 0.018,
+      "expectedPremiumChf": 189000,
+      "snapshotStatus": "calculated",
+      "createdAt": "2026-04-19T09:30:49.197Z"
+    },
+    {
+      "id": "a8b57eff-1c63-49b8-9f04-6957550ea9a0",
+      "tenantId": "tenant-premium-logic",
+      "premiumReportingPeriodId": "508613fa-636b-4c0f-9151-d97a483b3eca",
+      "exposureBasis": "test",
+      "insuredSalaryMassChf": 9000000,
+      "claimsPaidChf": 1,
+      "claimsRatio": 0,
+      "premiumRateApplied": 0.018,
+      "expectedPremiumChf": 162000,
+      "snapshotStatus": "calculated",
+      "createdAt": "2026-04-19T09:30:49.226Z"
+    },
+    {
+      "id": "31c8338c-b3f5-414e-b5f8-ae772bdb62df",
+      "tenantId": "tenant-premium-logic",
+      "premiumReportingPeriodId": "508613fa-636b-4c0f-9151-d97a483b3eca",
+      "exposureBasis": "test",
+      "insuredSalaryMassChf": 9000000,
+      "claimsPaidChf": 1,
+      "claimsRatio": 0,
+      "premiumRateApplied": 0.018,
+      "expectedPremiumChf": 162000,
+      "snapshotStatus": "calculated",
+      "createdAt": "2026-04-19T09:30:49.228Z"
+    }
+  ],
+  "calculations": [
+    {
+      "id": "d08cf1e3-610c-4402-947c-58fcdeabb10b",
+      "tenantId": "tenant-premium-runtime",
+      "premiumReportingPeriodId": "02fa3259-7c5b-46bb-8de8-49f3306c3826",
+      "salaryMassReportId": "ac0dd1da-90ff-491f-a77f-c5d88bb0329c",
+      "adjustmentStatus": "calculated",
+      "priorPremiumChf": 185000,
+      "recalculatedPremiumChf": 189000,
+      "deltaAmountChf": 4000,
+      "adjustmentType": "additional_invoice",
+      "formula": "delta_amount_chf = insured_salary_mass_chf * premium_rate - prior_premium_chf",
+      "inputsJson": {
+        "insuredSalaryMassChf": 10500000,
+        "premiumRate": 0.018,
+        "priorPremiumChf": 185000,
+        "claimsPaidChf": 82000,
+        "claimsReservedChf": 18000
+      },
+      "calculatedAt": "2026-04-19T09:30:49.197Z"
+    },
+    {
+      "id": "68c7eb97-cb92-434c-8a17-0fc511c37304",
+      "tenantId": "tenant-premium-logic",
+      "premiumReportingPeriodId": "508613fa-636b-4c0f-9151-d97a483b3eca",
+      "salaryMassReportId": "e3c4addf-7d25-4d4a-8172-080a39e73b49",
+      "adjustmentStatus": "calculated",
+      "priorPremiumChf": 170000,
+      "recalculatedPremiumChf": 162000,
+      "deltaAmountChf": -8000,
+      "adjustmentType": "refund",
+      "formula": "delta_amount_chf = insured_salary_mass_chf * premium_rate - prior_premium_chf",
+      "inputsJson": {
+        "insuredSalaryMassChf": 9000000,
+        "premiumRate": 0.018,
+        "priorPremiumChf": 170000,
+        "claimsPaidChf": 1,
+        "claimsReservedChf": 0
+      },
+      "calculatedAt": "2026-04-19T09:30:49.226Z"
+    },
+    {
+      "id": "cae98e2b-8400-44b3-b1ec-c98edc4b9d16",
+      "tenantId": "tenant-premium-logic",
+      "premiumReportingPeriodId": "508613fa-636b-4c0f-9151-d97a483b3eca",
+      "salaryMassReportId": "e3c4addf-7d25-4d4a-8172-080a39e73b49",
+      "adjustmentStatus": "calculated",
+      "priorPremiumChf": 162000,
+      "recalculatedPremiumChf": 162000,
+      "deltaAmountChf": 0,
+      "adjustmentType": "no_adjustment",
+      "formula": "delta_amount_chf = insured_salary_mass_chf * premium_rate - prior_premium_chf",
+      "inputsJson": {
+        "insuredSalaryMassChf": 9000000,
+        "premiumRate": 0.018,
+        "priorPremiumChf": 162000,
+        "claimsPaidChf": 1,
+        "claimsReservedChf": 0
+      },
+      "calculatedAt": "2026-04-19T09:30:49.228Z"
+    }
+  ],
+  "recommendations": [
+    {
+      "id": "88f0fb12-9a50-4db7-9a29-358ecefac8b8",
+      "tenantId": "tenant-premium-runtime",
+      "premiumAdjustmentCalculationId": "d08cf1e3-610c-4402-947c-58fcdeabb10b",
+      "recommendationType": "invoice",
+      "grossAmountChf": 4000,
+      "netAmountChf": 4000,
+      "settlementReason": "Premium adjustment additional_invoice.",
+      "installmentEligibleFlag": false,
+      "createdAt": "2026-04-19T09:30:49.200Z"
+    }
+  ],
+  "plans": [
+    {
+      "id": "70886f3f-cd33-432d-b61b-ddc70c36bca9",
+      "tenantId": "tenant-premium-runtime",
+      "premiumReportingPeriodId": "02fa3259-7c5b-46bb-8de8-49f3306c3826",
+      "planStatus": "active",
+      "installmentCount": 3,
+      "totalAmountChf": 12000,
+      "startDate": "2026-05-01",
+      "endDate": "2026-07-01",
+      "createdAt": "2026-04-19T09:30:49.202Z"
+    }
+  ],
+  "planItems": [
+    {
+      "id": "a612827e-952e-4b35-ba4d-948fe0319092",
+      "tenantId": "tenant-premium-runtime",
+      "premiumInstallmentPlanId": "70886f3f-cd33-432d-b61b-ddc70c36bca9",
+      "dueDate": "2026-05-01",
+      "amountChf": 4000,
+      "installmentStatus": "scheduled",
+      "reference": "PREM-70886f3f-1"
+    },
+    {
+      "id": "c3e3db6f-217a-487c-8b2f-f263224206e9",
+      "tenantId": "tenant-premium-runtime",
+      "premiumInstallmentPlanId": "70886f3f-cd33-432d-b61b-ddc70c36bca9",
+      "dueDate": "2026-06-01",
+      "amountChf": 4000,
+      "installmentStatus": "scheduled",
+      "reference": "PREM-70886f3f-2"
+    },
+    {
+      "id": "3246b71d-4a70-481a-8e01-1cd1db9780f2",
+      "tenantId": "tenant-premium-runtime",
+      "premiumInstallmentPlanId": "70886f3f-cd33-432d-b61b-ddc70c36bca9",
+      "dueDate": "2026-07-01",
+      "amountChf": 4000,
+      "installmentStatus": "scheduled",
+      "reference": "PREM-70886f3f-3"
+    }
+  ],
+  "dashboardSnapshots": [
+    {
+      "id": "488ee4aa-e89e-416b-b0d9-e00df697e9c5",
+      "tenantId": "tenant-premium-runtime",
+      "premiumReportingPeriodId": "02fa3259-7c5b-46bb-8de8-49f3306c3826",
+      "exposureStatus": "calculated",
+      "claimsRatio": 0.53,
+      "expectedPremiumChf": 189000,
+      "adjustmentDeltaChf": 4000,
+      "openInstallmentAmountChf": 0,
+      "snapshotPayloadJson": {
+        "latestExposureId": "46c4bb18-d2c6-407d-b1be-4174e4fdb1a3",
+        "latestCalculationId": "d08cf1e3-610c-4402-947c-58fcdeabb10b",
+        "planCount": 0
+      },
+      "createdAt": "2026-04-19T09:30:49.197Z"
+    },
+    {
+      "id": "e2f81441-0c0d-4cc9-b668-b48bf2813554",
+      "tenantId": "tenant-premium-runtime",
+      "premiumReportingPeriodId": "02fa3259-7c5b-46bb-8de8-49f3306c3826",
+      "exposureStatus": "calculated",
+      "claimsRatio": 0.53,
+      "expectedPremiumChf": 189000,
+      "adjustmentDeltaChf": 4000,
+      "openInstallmentAmountChf": 0,
+      "snapshotPayloadJson": {
+        "latestExposureId": "46c4bb18-d2c6-407d-b1be-4174e4fdb1a3",
+        "latestCalculationId": "d08cf1e3-610c-4402-947c-58fcdeabb10b",
+        "planCount": 0
+      },
+      "createdAt": "2026-04-19T09:30:49.200Z"
+    },
+    {
+      "id": "4c984c3c-b68c-432b-80c4-8da9403b948f",
+      "tenantId": "tenant-premium-runtime",
+      "premiumReportingPeriodId": "02fa3259-7c5b-46bb-8de8-49f3306c3826",
+      "exposureStatus": "calculated",
+      "claimsRatio": 0.53,
+      "expectedPremiumChf": 189000,
+      "adjustmentDeltaChf": 4000,
+      "openInstallmentAmountChf": 12000,
+      "snapshotPayloadJson": {
+        "latestExposureId": "46c4bb18-d2c6-407d-b1be-4174e4fdb1a3",
+        "latestCalculationId": "d08cf1e3-610c-4402-947c-58fcdeabb10b",
+        "planCount": 1
+      },
+      "createdAt": "2026-04-19T09:30:49.202Z"
+    },
+    {
+      "id": "18ce1686-db14-4922-b930-12266b3711dd",
+      "tenantId": "tenant-premium-logic",
+      "premiumReportingPeriodId": "508613fa-636b-4c0f-9151-d97a483b3eca",
+      "exposureStatus": "calculated",
+      "claimsRatio": 0,
+      "expectedPremiumChf": 162000,
+      "adjustmentDeltaChf": -8000,
+      "openInstallmentAmountChf": 0,
+      "snapshotPayloadJson": {
+        "latestExposureId": "a8b57eff-1c63-49b8-9f04-6957550ea9a0",
+        "latestCalculationId": "68c7eb97-cb92-434c-8a17-0fc511c37304",
+        "planCount": 0
+      },
+      "createdAt": "2026-04-19T09:30:49.226Z"
+    },
+    {
+      "id": "bbf2043e-892c-4a9e-bd02-83184609f194",
+      "tenantId": "tenant-premium-logic",
+      "premiumReportingPeriodId": "508613fa-636b-4c0f-9151-d97a483b3eca",
+      "exposureStatus": "calculated",
+      "claimsRatio": 0,
+      "expectedPremiumChf": 162000,
+      "adjustmentDeltaChf": 0,
+      "openInstallmentAmountChf": 0,
+      "snapshotPayloadJson": {
+        "latestExposureId": "31c8338c-b3f5-414e-b5f8-ae772bdb62df",
+        "latestCalculationId": "cae98e2b-8400-44b3-b1ec-c98edc4b9d16",
+        "planCount": 0
+      },
+      "createdAt": "2026-04-19T09:30:49.228Z"
+    }
+  ],
+  "auditEvents": [
+    {
+      "id": "fce5ec66-9248-42d5-9f87-f8b053ad94e4",
+      "tenantId": "tenant-premium-runtime",
+      "premiumReportingPeriodId": "02fa3259-7c5b-46bb-8de8-49f3306c3826",
+      "eventType": "premium_period_created",
+      "occurredAt": "2026-04-19T09:30:49.181Z",
+      "actorId": "finance-user",
+      "actorRole": "employer_finance",
+      "correlationId": "premium-local-request",
+      "payload": {
+        "periodType": "annual"
+      }
+    },
+    {
+      "id": "1262a5df-ae6d-429e-97dc-c15e60b1903d",
+      "tenantId": "tenant-premium-runtime",
+      "premiumReportingPeriodId": "02fa3259-7c5b-46bb-8de8-49f3306c3826",
+      "salaryMassReportId": "ac0dd1da-90ff-491f-a77f-c5d88bb0329c",
+      "eventType": "salary_mass_report_draft_created",
+      "occurredAt": "2026-04-19T09:30:49.193Z",
+      "actorId": "finance-user",
+      "actorRole": "employer_finance",
+      "correlationId": "premium-local-request",
+      "payload": {
+        "employeeCount": 120
+      }
+    },
+    {
+      "id": "1a12e00f-f8a3-42eb-8617-896d4b7be35a",
+      "tenantId": "tenant-premium-runtime",
+      "premiumReportingPeriodId": "02fa3259-7c5b-46bb-8de8-49f3306c3826",
+      "salaryMassReportId": "ac0dd1da-90ff-491f-a77f-c5d88bb0329c",
+      "eventType": "salary_mass_report_submitted",
+      "occurredAt": "2026-04-19T09:30:49.196Z",
+      "actorId": "finance-user",
+      "actorRole": "employer_finance",
+      "correlationId": "premium-local-request",
+      "payload": {
+        "insuredSalaryMassChf": 10500000
+      }
+    },
+    {
+      "id": "41d92df2-ee8a-4fd9-a418-184b551b06da",
+      "tenantId": "tenant-premium-runtime",
+      "premiumReportingPeriodId": "02fa3259-7c5b-46bb-8de8-49f3306c3826",
+      "salaryMassReportId": "ac0dd1da-90ff-491f-a77f-c5d88bb0329c",
+      "eventType": "premium_adjustment_calculated",
+      "occurredAt": "2026-04-19T09:30:49.197Z",
+      "actorId": "finance-user",
+      "actorRole": "employer_finance",
+      "correlationId": "premium-local-request",
+      "payload": {
+        "adjustmentType": "additional_invoice",
+        "deltaAmountChf": 4000
+      }
+    },
+    {
+      "id": "f5325150-fc02-4db8-83f1-433523d643aa",
+      "tenantId": "tenant-premium-runtime",
+      "premiumReportingPeriodId": "02fa3259-7c5b-46bb-8de8-49f3306c3826",
+      "salaryMassReportId": "ac0dd1da-90ff-491f-a77f-c5d88bb0329c",
+      "eventType": "premium_settlement_recommendation_generated",
+      "occurredAt": "2026-04-19T09:30:49.200Z",
+      "actorId": "finance-user",
+      "actorRole": "employer_finance",
+      "correlationId": "premium-local-request",
+      "payload": {
+        "recommendationType": "invoice",
+        "grossAmountChf": 4000
+      }
+    },
+    {
+      "id": "04bd94bb-4835-46c1-88e9-b0d6aa9072e4",
+      "tenantId": "tenant-premium-runtime",
+      "premiumReportingPeriodId": "02fa3259-7c5b-46bb-8de8-49f3306c3826",
+      "eventType": "premium_installment_plan_created",
+      "occurredAt": "2026-04-19T09:30:49.202Z",
+      "actorId": "finance-user",
+      "actorRole": "employer_finance",
+      "correlationId": "premium-local-request",
+      "payload": {
+        "installmentCount": 3,
+        "totalAmountChf": 12000
+      }
+    },
+    {
+      "id": "9e2ed9b2-8712-4236-8d6b-26e7b217d5d1",
+      "tenantId": "tenant-premium-logic",
+      "premiumReportingPeriodId": "508613fa-636b-4c0f-9151-d97a483b3eca",
+      "eventType": "premium_period_created",
+      "occurredAt": "2026-04-19T09:30:49.223Z",
+      "actorId": "finance-user",
+      "actorRole": "employer_finance",
+      "correlationId": "premium-local-request",
+      "payload": {
+        "periodType": "annual"
+      }
+    },
+    {
+      "id": "2ccb0565-6e3a-4089-b0cd-5d68e0556e4b",
+      "tenantId": "tenant-premium-logic",
+      "premiumReportingPeriodId": "508613fa-636b-4c0f-9151-d97a483b3eca",
+      "salaryMassReportId": "e3c4addf-7d25-4d4a-8172-080a39e73b49",
+      "eventType": "salary_mass_report_draft_created",
+      "occurredAt": "2026-04-19T09:30:49.224Z",
+      "actorId": "finance-user",
+      "actorRole": "employer_finance",
+      "correlationId": "premium-local-request",
+      "payload": {
+        "employeeCount": 90
+      }
+    },
+    {
+      "id": "17dba792-aba0-45aa-9c27-a31a83fd1985",
+      "tenantId": "tenant-premium-logic",
+      "premiumReportingPeriodId": "508613fa-636b-4c0f-9151-d97a483b3eca",
+      "salaryMassReportId": "e3c4addf-7d25-4d4a-8172-080a39e73b49",
+      "eventType": "premium_adjustment_calculated",
+      "occurredAt": "2026-04-19T09:30:49.226Z",
+      "actorId": "finance-user",
+      "actorRole": "employer_finance",
+      "correlationId": "premium-local-request",
+      "payload": {
+        "adjustmentType": "refund",
+        "deltaAmountChf": -8000
+      }
+    },
+    {
+      "id": "ce7073d1-796a-4e07-bc90-d59e5c0ed627",
+      "tenantId": "tenant-premium-logic",
+      "premiumReportingPeriodId": "508613fa-636b-4c0f-9151-d97a483b3eca",
+      "salaryMassReportId": "e3c4addf-7d25-4d4a-8172-080a39e73b49",
+      "eventType": "premium_adjustment_calculated",
+      "occurredAt": "2026-04-19T09:30:49.228Z",
+      "actorId": "finance-user",
+      "actorRole": "employer_finance",
+      "correlationId": "premium-local-request",
+      "payload": {
+        "adjustmentType": "no_adjustment",
+        "deltaAmountChf": 0
+      }
+    }
+  ]
+}
