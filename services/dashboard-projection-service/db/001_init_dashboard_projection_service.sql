@@ -5,6 +5,9 @@ create type projection_type as enum ('kpi_snapshot', 'widget_snapshot', 'full_da
 create type projection_job_status as enum ('pending', 'running', 'completed', 'failed', 'cancelled');
 create type source_service as enum ('people_service', 'absence_service', 'ktg_case_service', 'document_service', 'inbox_notification_service', 'integration_gateway');
 create type benchmark_scope as enum ('industry', 'portfolio', 'market_reference');
+create type employer_analytics_scope as enum ('client_absence_analytics');
+create type employer_analytics_granularity as enum ('monthly', 'weekly');
+create type employer_analytics_refresh_job_status as enum ('pending', 'running', 'completed', 'failed');
 
 create table dashboard_kpi_snapshot (
     id uuid primary key default gen_random_uuid(),
@@ -100,10 +103,60 @@ create table benchmark_snapshot (
     constraint ck_benchmark_snapshot_industry_code check (industry_code is null or length(trim(industry_code)) > 0)
 );
 
+create table employer_analytics_snapshot (
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid not null,
+    analytics_scope employer_analytics_scope not null,
+    time_granularity employer_analytics_granularity not null,
+    period_start date not null,
+    period_end date not null,
+    metric_key text not null,
+    metric_value numeric not null,
+    dimension_key text,
+    dimension_value text,
+    payload_json jsonb not null,
+    refreshed_at timestamptz not null,
+    created_at timestamptz not null default now(),
+    constraint ck_employer_analytics_snapshot_window check (period_end >= period_start),
+    constraint ck_employer_analytics_snapshot_metric_key check (length(trim(metric_key)) > 0)
+);
+
+create table employer_analytics_dashboard (
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid not null,
+    dashboard_key text not null,
+    role_scope dashboard_role not null,
+    period_start date not null,
+    period_end date not null,
+    snapshot_payload_json jsonb not null,
+    refreshed_at timestamptz not null,
+    created_at timestamptz not null default now(),
+    constraint ck_employer_analytics_dashboard_window check (period_end >= period_start),
+    constraint ck_employer_analytics_dashboard_key check (length(trim(dashboard_key)) > 0)
+);
+
+create table employer_analytics_refresh_job (
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid not null,
+    job_status employer_analytics_refresh_job_status not null,
+    dashboard_key text not null,
+    period_start date not null,
+    period_end date not null,
+    triggered_by text not null,
+    triggered_at timestamptz not null,
+    completed_at timestamptz,
+    error_message text,
+    created_at timestamptz not null default now(),
+    constraint ck_employer_analytics_refresh_job_window check (period_end >= period_start),
+    constraint ck_employer_analytics_refresh_job_key check (length(trim(dashboard_key)) > 0)
+);
+
 create index ix_dashboard_kpi_snapshot_active on dashboard_kpi_snapshot (tenant_id, dashboard_role, kpi_key, refreshed_at desc);
 create index ix_dashboard_widget_snapshot_active on dashboard_widget_snapshot (tenant_id, dashboard_role, widget_key, refreshed_at desc);
 create index ix_projection_job_status on projection_job (tenant_id, job_status, requested_at desc);
 create index ix_projection_dependency_watermark_source on projection_dependency_watermark (tenant_id, source_service, source_stream);
 create index ix_dashboard_view_config_role on dashboard_view_config (tenant_id, dashboard_role, display_order);
 create index ix_benchmark_snapshot_scope on benchmark_snapshot (benchmark_scope, metric_key, refreshed_at desc);
-
+create index ix_employer_analytics_snapshot_metric on employer_analytics_snapshot (tenant_id, metric_key, period_start, period_end, refreshed_at desc);
+create index ix_employer_analytics_dashboard_active on employer_analytics_dashboard (tenant_id, dashboard_key, role_scope, period_start, period_end, refreshed_at desc);
+create index ix_employer_analytics_refresh_job_status on employer_analytics_refresh_job (tenant_id, job_status, triggered_at desc);

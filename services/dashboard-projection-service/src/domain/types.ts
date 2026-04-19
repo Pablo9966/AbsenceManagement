@@ -17,6 +17,17 @@ export type SourceService =
   | "inbox_notification_service"
   | "integration_gateway";
 export type BenchmarkScope = "industry" | "portfolio" | "market_reference";
+export type EmployerAnalyticsScope = "client_absence_analytics";
+export type EmployerAnalyticsGranularity = "monthly" | "weekly";
+export type EmployerAnalyticsMetricKey =
+  | "absence_volume"
+  | "case_volume"
+  | "average_duration_days"
+  | "total_cost_chf"
+  | "return_to_work_success_rate"
+  | "cause_share"
+  | "heatmap_absence_count";
+export type EmployerAnalyticsRefreshJobStatus = "pending" | "running" | "completed" | "failed";
 
 export interface TransparentValue<T> {
   value: T;
@@ -95,6 +106,68 @@ export interface BenchmarkSnapshot {
   refreshedAt: string;
 }
 
+export interface EmployerAnalyticsSnapshot {
+  id: string;
+  tenantId: string;
+  analyticsScope: EmployerAnalyticsScope;
+  timeGranularity: EmployerAnalyticsGranularity;
+  periodStart: string;
+  periodEnd: string;
+  metricKey: EmployerAnalyticsMetricKey;
+  metricValue: number;
+  dimensionKey?: string;
+  dimensionValue?: string;
+  payloadJson: Record<string, unknown>;
+  refreshedAt: string;
+}
+
+export interface EmployerAnalyticsDashboard {
+  id: string;
+  tenantId: string;
+  dashboardKey: string;
+  roleScope: DashboardRole;
+  periodStart: string;
+  periodEnd: string;
+  snapshotPayloadJson: Record<string, unknown>;
+  refreshedAt: string;
+}
+
+export interface EmployerAnalyticsRefreshJob {
+  id: string;
+  tenantId: string;
+  jobStatus: EmployerAnalyticsRefreshJobStatus;
+  dashboardKey: string;
+  periodStart: string;
+  periodEnd: string;
+  triggeredBy: string;
+  triggeredAt: string;
+  completedAt?: string;
+  errorMessage?: string;
+}
+
+export interface EmployerAnalyticsSourceRecord {
+  eventDate: string;
+  causeCategory: string;
+  status: string;
+  caseType: string;
+  durationDays: number;
+  costChf: number;
+  returnToWorkCompleted: boolean;
+  department?: string;
+}
+
+export interface EmployerAnalyticsRefreshInput {
+  tenantId: string;
+  dashboardKey: string;
+  roleScope: DashboardRole;
+  periodStart: string;
+  periodEnd: string;
+  timeGranularity: EmployerAnalyticsGranularity;
+  triggeredBy: string;
+  triggeredAt: string;
+  sourceRecords: EmployerAnalyticsSourceRecord[];
+}
+
 export interface UpdateProjectionJobPatch {
   jobStatus?: ProjectionJobStatus;
   startedAt?: string;
@@ -113,4 +186,3 @@ export interface UpdateDashboardViewConfigPatch {
   enabledFlag?: boolean;
   defaultFiltersJson?: Record<string, unknown>;
 }
-

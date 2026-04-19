@@ -12,6 +12,9 @@ import type {
   EmployeeStatusSummary,
   EmployerAbsenceDetail,
   EmployerAbsenceListItem,
+  EmployerAnalyticsDashboard,
+  EmployerAnalyticsGranularity,
+  EmployerAnalyticsRefreshResult,
   EmployerCaseDetail,
   EmployerCaseListItem,
   EmployerDashboardSummary,
@@ -56,6 +59,7 @@ import {
 } from "../../claims-intake-workspace-service/src/index.js";
 import {
   DashboardProjectionService,
+  type EmployerAnalyticsSourceRecord,
   type DashboardProjectionRepository,
 } from "../../dashboard-projection-service/src/index.js";
 import {
@@ -1383,6 +1387,228 @@ export const listEmployerPaymentRunSummaries = async (
     page: paginated.page,
     pageSize: paginated.pageSize,
     totalPages: paginated.totalPages,
+  });
+};
+
+const daysBetween = (startDate: string, endDate?: string): number => {
+  const start = new Date(`${startDate}T00:00:00.000Z`).getTime();
+  const end = new Date(`${endDate ?? REFERENCE_AT.slice(0, 10)}T00:00:00.000Z`).getTime();
+  return Math.max(1, Math.round((end - start) / 86400000) + 1);
+};
+
+const buildEmployerAnalyticsSourceRecords = async (
+  tenantId: string,
+  filters?: { cause?: string; status?: string; caseType?: string },
+): Promise<EmployerAnalyticsSourceRecord[]> => {
+  const { repositories, services } = getPortalWorkflowServices();
+  const [episodes, cases, uvgCases, paymentRuns, premiumDashboard] = await Promise.all([
+    listTenantEpisodes(repositories.absenceRepository, tenantId),
+    listTenantCases(repositories.ktgCaseRepository, tenantId),
+    services.uvgCaseService.listCases(tenantId),
+    services.paymentOperationsService.listPaymentRuns(INTERNAL_TENANT_ID),
+    services.premiumService.getEmployerPremiumDashboard(tenantId),
+  ]);
+  const calculationByEpisode = new Map<string, number>();
+  for (const calculation of await services.benefitService.listCalculations(INTERNAL_TENANT_ID)) {
+    const detail = await services.benefitService.getCalculationDetail(INTERNAL_TENANT_ID, calculation.id);
+    for (const period of detail?.entitlementPeriods ?? []) {
+      if (period.absenceEpisodeId) {
+        calculationByEpisode.set(period.absenceEpisodeId, (calculationByEpisode.get(period.absenceEpisodeId) ?? 0) + period.payableAmountChf);
+      }
+    }
+  }
+  const paymentCost = paymentRuns.reduce((sum, run) => sum + run.totalNetAmountChf, 0);
+  const premiumExposure = premiumDashboard?.snapshot?.expectedPremiumChf ?? 0;
+  const costFallback = Math.round((paymentCost + premiumExposure) / Math.max(1, episodes.length));
+  const caseByEmployee = new Map(cases.map((ktgCase) => [ktgCase.employeeId, ktgCase]));
+  const uvgByEmployee = new Map(uvgCases.map((uvgCase) => [uvgCase.employeeId, uvgCase]));
+  const records = episodes.map((episode): EmployerAnalyticsSourceRecord => {
+    const linkedUvg = uvgByEmployee.get(episode.employeeId);
+    const linkedKtg = caseByEmployee.get(episode.employeeId);
+    const caseType = linkedUvg ? `uvg_${linkedUvg.uvgCaseType}` : linkedKtg ? "ktg" : episode.primaryAbsenceType;
+    return {
+      eventDate: episode.startDate,
+      causeCategory: episode.reasonCategory ?? linkedUvg?.uvgCaseType ?? episode.primaryAbsenceType,
+      status: episode.status,
+      caseType,
+      durationDays: daysBetween(episode.startDate, episode.actualEndDate ?? episode.expectedEndDate),
+      costChf: calculationByEpisode.get(episode.id) ?? costFallback,
+      returnToWorkCompleted: Boolean(episode.actualEndDate) || episode.status === "closed",
+      department: episode.employeeId === "employee-0001" ? "Operations" : "Sales",
+    };
+  });
+  return records.filter((record) =>
+    (!filters?.cause || record.causeCategory === filters.cause) &&
+    (!filters?.status || record.status === filters.status) &&
+    (!filters?.caseType || record.caseType === filters.caseType));
+};
+
+const analyticsPayloadArray = <T>(value: unknown): T[] => Array.isArray(value) ? value as T[] : [];
+const analyticsPayloadObject = (value: unknown): Record<string, unknown> =>
+  typeof value === "object" && value !== null ? value as Record<string, unknown> : {};
+const analyticsNumber = (value: unknown): number => typeof value === "number" ? value : 0;
+const mapEmployerAnalyticsDashboard = (
+  dashboard: Awaited<ReturnType<DashboardProjectionService["getEmployerAnalyticsDashboard"]>>,
+  refreshJobId?: string,
+): EmployerAnalyticsDashboard => {
+  if (!dashboard) throw new WorkflowNotFoundError();
+  const payload = analyticsPayloadObject(dashboard.snapshotPayloadJson);
+  const duration = analyticsPayloadObject(payload.duration);
+  const returnToWork = analyticsPayloadObject(payload.returnToWork);
+  const cost = analyticsPayloadObject(payload.cost);
+  return {
+    dashboardKey: dashboard.dashboardKey,
+    roleScope: dashboard.roleScope,
+    periodStart: dashboard.periodStart,
+    periodEnd: dashboard.periodEnd,
+    granularity: analyticsPayloadObject(payload.filters).granularity === "weekly" ? "weekly" : "monthly",
+    refreshedAt: dashboard.refreshedAt,
+    refreshJobId,
+    metricDefinitions: analyticsPayloadObject(payload.metricDefinitions) as Record<string, string>,
+    summary: {
+      absenceVolume: analyticsPayloadArray<Record<string, unknown>>(payload.trend).reduce((sum, item) => sum + analyticsNumber(analyticsPayloadObject(item).absenceVolume), 0),
+      totalCostChf: analyticsNumber(cost.totalCostChf),
+      averageDurationDays: analyticsNumber(duration.averageDurationDays),
+      medianDurationDays: analyticsNumber(duration.medianDurationDays),
+      returnToWorkSuccessRate: analyticsNumber(returnToWork.completionRate),
+      longDurationCaseCount: analyticsNumber(duration.longDurationCaseCount),
+    },
+    trends: analyticsPayloadArray<Record<string, unknown>>(payload.trend).map((item) => ({
+      bucket: String(item.bucket),
+      absenceVolume: analyticsNumber(item.absenceVolume),
+      caseVolume: analyticsNumber(item.caseVolume),
+      averageDurationDays: analyticsNumber(item.averageDurationDays),
+      totalCostChf: analyticsNumber(item.totalCostChf),
+    })),
+    causes: analyticsPayloadArray<Record<string, unknown>>(payload.causeDistribution).map((item) => ({
+      causeCategory: String(item.key),
+      count: analyticsNumber(item.count),
+      share: analyticsNumber(item.share),
+    })),
+    heatmap: analyticsPayloadArray<Record<string, unknown>>(payload.heatmap).map((item) => ({
+      bucket: String(item.bucket),
+      causeCategory: String(item.causeCategory),
+      count: analyticsNumber(item.count),
+    })),
+    costByCaseType: analyticsPayloadArray<Record<string, unknown>>(cost.costByCaseType).map((item) => ({
+      caseType: String(item.key),
+      amountChf: analyticsNumber(item.value),
+    })),
+    duration: {
+      averageDurationDays: analyticsNumber(duration.averageDurationDays),
+      medianDurationDays: analyticsNumber(duration.medianDurationDays),
+      totalDurationDays: analyticsNumber(duration.totalDurationDays),
+      longDurationCaseCount: analyticsNumber(duration.longDurationCaseCount),
+      openCaseCount: analyticsNumber(duration.openCaseCount),
+      closedCaseCount: analyticsNumber(duration.closedCaseCount),
+    },
+    returnToWork: {
+      completionRate: analyticsNumber(returnToWork.completionRate),
+      completed: analyticsNumber(returnToWork.completed),
+      total: analyticsNumber(returnToWork.total),
+      withinThirtyDays: analyticsNumber(returnToWork.withinThirtyDays),
+    },
+  };
+};
+
+const analyticsDashboardKey = (filters?: { cause?: string; status?: string; caseType?: string }): string =>
+  ["client-analytics", filters?.cause ?? "all-causes", filters?.status ?? "all-statuses", filters?.caseType ?? "all-case-types"].join(":");
+
+export const refreshEmployerAnalyticsDashboard = async (input: {
+  tenantId: string;
+  locale: PortalLocale;
+  userId: string;
+  periodStart?: string;
+  periodEnd?: string;
+  granularity?: EmployerAnalyticsGranularity;
+  cause?: string;
+  status?: string;
+  caseType?: string;
+}): Promise<WorkflowResponse<EmployerAnalyticsRefreshResult>> => {
+  if (input.tenantId !== EMPLOYER_TENANT_ID) throw new WorkflowForbiddenError("Employer analytics routes are only accessible to employer tenants.");
+  const { services } = getPortalWorkflowServices();
+  const periodStart = input.periodStart ?? "2026-01-01";
+  const periodEnd = input.periodEnd ?? "2026-12-31";
+  const granularity = input.granularity ?? "monthly";
+  const roleScope = "hr_manager";
+  const result = await services.dashboardService.refreshEmployerAnalyticsProjection({
+    tenantId: input.tenantId,
+    dashboardKey: analyticsDashboardKey(input),
+    roleScope,
+    periodStart,
+    periodEnd,
+    timeGranularity: granularity,
+    triggeredBy: input.userId,
+    triggeredAt: REFERENCE_AT,
+    sourceRecords: await buildEmployerAnalyticsSourceRecords(input.tenantId, input),
+  });
+  if (!result.data) throw new Error(result.issues.map((issue) => issue.message).join(", "));
+  const dashboard = mapEmployerAnalyticsDashboard(result.data.dashboard, result.data.job.id);
+  return makeResponse({
+    refreshJobId: result.data.job.id,
+    jobStatus: result.data.job.jobStatus,
+    refreshedAt: result.data.dashboard.refreshedAt,
+    dashboard,
+  }, input.tenantId, input.locale, employerPermissions);
+};
+
+export const getEmployerAnalyticsDashboard = async (
+  tenantId: string,
+  locale: PortalLocale,
+  filters?: {
+    periodStart?: string;
+    periodEnd?: string;
+    granularity?: EmployerAnalyticsGranularity;
+    cause?: string;
+    status?: string;
+    caseType?: string;
+  },
+): Promise<WorkflowResponse<EmployerAnalyticsDashboard>> => {
+  if (tenantId !== EMPLOYER_TENANT_ID) throw new WorkflowForbiddenError("Employer analytics routes are only accessible to employer tenants.");
+  const { services } = getPortalWorkflowServices();
+  const periodStart = filters?.periodStart ?? "2026-01-01";
+  const periodEnd = filters?.periodEnd ?? "2026-12-31";
+  const granularity = filters?.granularity ?? "monthly";
+  const dashboardKey = analyticsDashboardKey(filters);
+  const existing = await services.dashboardService.getEmployerAnalyticsDashboard({
+    tenantId,
+    dashboardKey,
+    roleScope: "hr_manager",
+    periodStart,
+    periodEnd,
+  });
+  if (existing) {
+    return makeResponse(mapEmployerAnalyticsDashboard(existing), tenantId, locale, employerPermissions, {
+      appliedFilters: {
+        periodStart,
+        periodEnd,
+        granularity,
+        ...(filters?.cause ? { cause: filters.cause } : {}),
+        ...(filters?.status ? { status: filters.status } : {}),
+        ...(filters?.caseType ? { caseType: filters.caseType } : {}),
+      },
+    });
+  }
+  const refreshed = await refreshEmployerAnalyticsDashboard({
+    tenantId,
+    locale,
+    userId: "portal-analytics-auto-refresh",
+    periodStart,
+    periodEnd,
+    granularity,
+    cause: filters?.cause,
+    status: filters?.status,
+    caseType: filters?.caseType,
+  });
+  return makeResponse(refreshed.data.dashboard, tenantId, locale, employerPermissions, {
+    appliedFilters: {
+      periodStart,
+      periodEnd,
+      granularity,
+      ...(filters?.cause ? { cause: filters.cause } : {}),
+      ...(filters?.status ? { status: filters.status } : {}),
+      ...(filters?.caseType ? { caseType: filters.caseType } : {}),
+    },
   });
 };
 

@@ -11,6 +11,9 @@ import type {
   EmployeeStatusSummary,
   EmployerAbsenceDetail,
   EmployerAbsenceListItem,
+  EmployerAnalyticsDashboard,
+  EmployerAnalyticsGranularity,
+  EmployerAnalyticsRefreshResult,
   EmployerCaseDetail,
   EmployerCaseListItem,
   EmployerDashboardSummary,
@@ -155,6 +158,24 @@ export interface PortalWorkflowClient {
     installmentCount: number;
     startDate: string;
   }): Promise<WorkflowResponse<EmployerPremiumInstallmentPlanSummary>>;
+  getEmployerAnalyticsDashboard(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    periodStart?: string;
+    periodEnd?: string;
+    granularity?: EmployerAnalyticsGranularity;
+    cause?: string;
+    status?: string;
+    caseType?: string;
+  }): Promise<WorkflowResponse<EmployerAnalyticsDashboard>>;
+  refreshEmployerAnalytics(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    userId: string;
+    periodStart?: string;
+    periodEnd?: string;
+    granularity?: EmployerAnalyticsGranularity;
+  }): Promise<WorkflowResponse<EmployerAnalyticsRefreshResult>>;
 
   // Phase 2C: Payment Operations — Employer (read-only)
   listEmployerPaymentRunSummaries(input: WorkflowListQuery & {
@@ -474,6 +495,16 @@ export const createPortalWorkflowClient = (input: {
     },
     async createEmployerPremiumInstallmentPlan(params) {
       return readJson(await fetchFn(withBaseUrl("/v1/employer/premium/installment-plan"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      }));
+    },
+    async getEmployerAnalyticsDashboard(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/employer/analytics${toQueryString(params)}`)));
+    },
+    async refreshEmployerAnalytics(params) {
+      return readJson(await fetchFn(withBaseUrl("/v1/employer/analytics/refresh"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(params),

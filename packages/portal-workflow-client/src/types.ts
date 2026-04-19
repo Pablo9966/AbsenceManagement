@@ -634,3 +634,71 @@ export interface EmployerPremiumInstallmentPlanSummary {
     reference?: string;
   }>;
 }
+
+// Phase 2G: Employer Client Analytics
+
+export type EmployerAnalyticsGranularity = "monthly" | "weekly";
+
+export interface EmployerAnalyticsTrendPoint {
+  bucket: string;
+  absenceVolume: number;
+  caseVolume: number;
+  averageDurationDays: number;
+  totalCostChf: number;
+}
+
+export interface EmployerAnalyticsCausePoint {
+  causeCategory: string;
+  count: number;
+  share: number;
+}
+
+export interface EmployerAnalyticsHeatmapCell {
+  bucket: string;
+  causeCategory: string;
+  count: number;
+}
+
+export interface EmployerAnalyticsDashboard {
+  dashboardKey: string;
+  roleScope: string;
+  periodStart: string;
+  periodEnd: string;
+  granularity: EmployerAnalyticsGranularity;
+  refreshedAt: string;
+  refreshJobId?: string;
+  metricDefinitions: Record<string, string>;
+  summary: {
+    absenceVolume: number;
+    totalCostChf: number;
+    averageDurationDays: number;
+    medianDurationDays: number;
+    returnToWorkSuccessRate: number;
+    longDurationCaseCount: number;
+  };
+  trends: EmployerAnalyticsTrendPoint[];
+  causes: EmployerAnalyticsCausePoint[];
+  heatmap: EmployerAnalyticsHeatmapCell[];
+  costByCaseType: Array<{ caseType: string; amountChf: number }>;
+  duration: {
+    averageDurationDays: number;
+    medianDurationDays: number;
+    totalDurationDays: number;
+    longDurationCaseCount: number;
+    openCaseCount: number;
+    closedCaseCount: number;
+  };
+  returnToWork: {
+    completionRate: number;
+    completed: number;
+    total: number;
+    withinThirtyDays: number;
+  };
+}
+
+export interface EmployerAnalyticsRefreshResult {
+  refreshJobId: string;
+  jobStatus: string;
+  refreshedAt: string;
+  dashboard: EmployerAnalyticsDashboard;
+}

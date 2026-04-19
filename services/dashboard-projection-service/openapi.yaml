@@ -325,6 +325,95 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BenchmarkSnapshot'
+  /v1/tenants/{tenantId}/employer-analytics/refresh:
+    post:
+      tags: [Employer Analytics]
+      operationId: refreshEmployerAnalyticsProjection
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshEmployerAnalyticsRequest'
+      responses:
+        '200':
+          description: Completed refresh job with dashboard and generated snapshots
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job:
+                    $ref: '#/components/schemas/EmployerAnalyticsRefreshJob'
+                  dashboard:
+                    $ref: '#/components/schemas/EmployerAnalyticsDashboard'
+                  snapshots:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EmployerAnalyticsSnapshot'
+  /v1/tenants/{tenantId}/employer-analytics/dashboard:
+    get:
+      tags: [Employer Analytics]
+      operationId: getEmployerAnalyticsDashboard
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: dashboardKey
+          in: query
+          required: true
+          schema: { type: string }
+        - name: roleScope
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/DashboardRole'
+        - name: periodStart
+          in: query
+          required: true
+          schema: { type: string, format: date }
+        - name: periodEnd
+          in: query
+          required: true
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Latest employer analytics dashboard for the requested tenant, role, key, and period
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployerAnalyticsDashboard'
+  /v1/tenants/{tenantId}/employer-analytics/snapshots:
+    get:
+      tags: [Employer Analytics]
+      operationId: listEmployerAnalyticsSnapshots
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: metricKey
+          in: query
+          schema: { type: string }
+        - name: periodStart
+          in: query
+          schema: { type: string, format: date }
+        - name: periodEnd
+          in: query
+          schema: { type: string, format: date }
+        - name: granularity
+          in: query
+          schema:
+            $ref: '#/components/schemas/EmployerAnalyticsGranularity'
+      responses:
+        '200':
+          description: Employer analytics snapshots
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EmployerAnalyticsSnapshot'
 components:
   securitySchemes:
     bearerAuth:
@@ -376,6 +465,72 @@ components:
     BenchmarkScope:
       type: string
       enum: [industry, portfolio, market_reference]
+    EmployerAnalyticsGranularity:
+      type: string
+      enum: [monthly, weekly]
+    EmployerAnalyticsSnapshot:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenantId: { type: string }
+        analyticsScope: { enum: [client_absence_analytics] }
+        timeGranularity:
+          $ref: '#/components/schemas/EmployerAnalyticsGranularity'
+        periodStart: { type: string, format: date }
+        periodEnd: { type: string, format: date }
+        metricKey: { type: string }
+        metricValue: { type: number }
+        dimensionKey: { type: string, nullable: true }
+        dimensionValue: { type: string, nullable: true }
+        payloadJson:
+          type: object
+          additionalProperties: true
+        refreshedAt: { type: string, format: date-time }
+    EmployerAnalyticsDashboard:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenantId: { type: string }
+        dashboardKey: { type: string }
+        roleScope:
+          $ref: '#/components/schemas/DashboardRole'
+        periodStart: { type: string, format: date }
+        periodEnd: { type: string, format: date }
+        snapshotPayloadJson:
+          type: object
+          additionalProperties: true
+        refreshedAt: { type: string, format: date-time }
+    EmployerAnalyticsRefreshJob:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenantId: { type: string }
+        jobStatus: { enum: [pending, running, completed, failed] }
+        dashboardKey: { type: string }
+        periodStart: { type: string, format: date }
+        periodEnd: { type: string, format: date }
+        triggeredBy: { type: string }
+        triggeredAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time, nullable: true }
+        errorMessage: { type: string, nullable: true }
+    RefreshEmployerAnalyticsRequest:
+      type: object
+      required: [dashboardKey, roleScope, periodStart, periodEnd, timeGranularity, triggeredBy, triggeredAt, sourceRecords]
+      properties:
+        dashboardKey: { type: string }
+        roleScope:
+          $ref: '#/components/schemas/DashboardRole'
+        periodStart: { type: string, format: date }
+        periodEnd: { type: string, format: date }
+        timeGranularity:
+          $ref: '#/components/schemas/EmployerAnalyticsGranularity'
+        triggeredBy: { type: string }
+        triggeredAt: { type: string, format: date-time }
+        sourceRecords:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
     DashboardKpiSnapshot:
       type: object
       properties:

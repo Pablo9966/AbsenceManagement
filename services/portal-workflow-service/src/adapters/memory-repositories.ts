@@ -93,6 +93,9 @@ export type ProjectionJob = NonNullable<AwaitedReturn<DashboardProjectionReposit
 export type ProjectionDependencyWatermark = NonNullable<AwaitedReturn<DashboardProjectionRepository["getProjectionDependencyWatermarkById"]>>;
 export type DashboardViewConfig = NonNullable<AwaitedReturn<DashboardProjectionRepository["getDashboardViewConfigById"]>>;
 export type BenchmarkSnapshot = ArrayItem<AwaitedReturn<DashboardProjectionRepository["listBenchmarkSnapshots"]>>;
+export type EmployerAnalyticsSnapshot = ArrayItem<AwaitedReturn<DashboardProjectionRepository["listEmployerAnalyticsSnapshots"]>>;
+export type EmployerAnalyticsDashboard = NonNullable<AwaitedReturn<DashboardProjectionRepository["getLatestEmployerAnalyticsDashboard"]>>;
+export type EmployerAnalyticsRefreshJob = NonNullable<AwaitedReturn<DashboardProjectionRepository["getEmployerAnalyticsRefreshJob"]>>;
 
 export type DocumentRecord = NonNullable<AwaitedReturn<DocumentRepository["getDocumentById"]>>;
 export type DocumentLink = ArrayItem<AwaitedReturn<DocumentRepository["listDocumentLinksByDocument"]>>;
@@ -725,6 +728,9 @@ export class DashboardProjectionMemoryRepository implements DashboardProjectionR
     private readonly watermarks: ProjectionDependencyWatermark[],
     private readonly viewConfigs: DashboardViewConfig[],
     private readonly benchmarkSnapshots: BenchmarkSnapshot[],
+    private readonly employerAnalyticsSnapshots: EmployerAnalyticsSnapshot[] = [],
+    private readonly employerAnalyticsDashboards: EmployerAnalyticsDashboard[] = [],
+    private readonly employerAnalyticsRefreshJobs: EmployerAnalyticsRefreshJob[] = [],
   ) {}
 
   async withTransaction<T>(operation: (repository: DashboardProjectionRepository) => Promise<T>): Promise<T> {
@@ -841,6 +847,63 @@ export class DashboardProjectionMemoryRepository implements DashboardProjectionR
     return this.benchmarkSnapshots.filter((snapshot) =>
       (!filters?.benchmarkScope || snapshot.benchmarkScope === filters.benchmarkScope) &&
       (!filters?.metricKey || snapshot.metricKey === filters.metricKey));
+  }
+
+  async createEmployerAnalyticsSnapshot(snapshot: EmployerAnalyticsSnapshot): Promise<EmployerAnalyticsSnapshot> {
+    return append(this.employerAnalyticsSnapshots, snapshot);
+  }
+
+  async listEmployerAnalyticsSnapshots(tenantId: string, filters?: {
+    dashboardKey?: string;
+    metricKey?: EmployerAnalyticsSnapshot["metricKey"];
+    periodStart?: string;
+    periodEnd?: string;
+    timeGranularity?: EmployerAnalyticsSnapshot["timeGranularity"];
+    dimensionKey?: string;
+    dimensionValue?: string;
+  }): Promise<EmployerAnalyticsSnapshot[]> {
+    return this.employerAnalyticsSnapshots.filter((snapshot) =>
+      snapshot.tenantId === tenantId &&
+      (!filters?.metricKey || snapshot.metricKey === filters.metricKey) &&
+      (!filters?.periodStart || snapshot.periodStart === filters.periodStart) &&
+      (!filters?.periodEnd || snapshot.periodEnd === filters.periodEnd) &&
+      (!filters?.timeGranularity || snapshot.timeGranularity === filters.timeGranularity) &&
+      (!filters?.dimensionKey || snapshot.dimensionKey === filters.dimensionKey) &&
+      (!filters?.dimensionValue || snapshot.dimensionValue === filters.dimensionValue));
+  }
+
+  async upsertEmployerAnalyticsDashboard(dashboard: EmployerAnalyticsDashboard): Promise<EmployerAnalyticsDashboard> {
+    replaceById(this.employerAnalyticsDashboards, dashboard);
+    return dashboard;
+  }
+
+  async getLatestEmployerAnalyticsDashboard(tenantId: string, filters: {
+    dashboardKey: string;
+    roleScope: EmployerAnalyticsDashboard["roleScope"];
+    periodStart: string;
+    periodEnd: string;
+  }): Promise<EmployerAnalyticsDashboard | null> {
+    return this.employerAnalyticsDashboards
+      .filter((dashboard) =>
+        dashboard.tenantId === tenantId &&
+        dashboard.dashboardKey === filters.dashboardKey &&
+        dashboard.roleScope === filters.roleScope &&
+        dashboard.periodStart === filters.periodStart &&
+        dashboard.periodEnd === filters.periodEnd)
+      .sort((left, right) => right.refreshedAt.localeCompare(left.refreshedAt))[0] ?? null;
+  }
+
+  async createEmployerAnalyticsRefreshJob(job: EmployerAnalyticsRefreshJob): Promise<EmployerAnalyticsRefreshJob> {
+    return append(this.employerAnalyticsRefreshJobs, job);
+  }
+
+  async updateEmployerAnalyticsRefreshJob(job: EmployerAnalyticsRefreshJob): Promise<EmployerAnalyticsRefreshJob> {
+    replaceById(this.employerAnalyticsRefreshJobs, job);
+    return job;
+  }
+
+  async getEmployerAnalyticsRefreshJob(tenantId: string, jobId: string): Promise<EmployerAnalyticsRefreshJob | null> {
+    return this.employerAnalyticsRefreshJobs.find((job) => job.tenantId === tenantId && job.id === jobId) ?? null;
   }
 }
 

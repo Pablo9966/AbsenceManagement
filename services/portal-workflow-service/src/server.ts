@@ -18,6 +18,7 @@ import {
   getEmployerAbsenceDetail,
   getEmployerCaseDetail,
   getEmployerDashboard,
+  getEmployerAnalyticsDashboard,
   getEmployerPremiumDashboard,
   getEmployerUvgCaseDetail,
   getInternalBenefitDetail,
@@ -49,6 +50,7 @@ import {
   calculateEmployerPremiumAdjustment,
   generateEmployerPremiumSettlement,
   createEmployerPremiumInstallmentPlan,
+  refreshEmployerAnalyticsDashboard,
   generateEmployerUvgAccidentReportArtifact,
   updateInternalUvgCaseStatus,
   recordInternalUvgInjury,
@@ -277,6 +279,23 @@ const handleEmployerRoutes = async (pathname: string, requestUrl: URL, request: 
   }
   if (pathname === "/v1/employer/premium/dashboard") {
     writeJson(response, 200, await getEmployerPremiumDashboard(tenantId, locale));
+    return true;
+  }
+  if (pathname === "/v1/employer/analytics") {
+    const granularity = requestUrl.searchParams.get("granularity") === "weekly" ? "weekly" : "monthly";
+    writeJson(response, 200, await getEmployerAnalyticsDashboard(tenantId, locale, {
+      periodStart: requestUrl.searchParams.get("periodStart") ?? undefined,
+      periodEnd: requestUrl.searchParams.get("periodEnd") ?? undefined,
+      granularity,
+      cause: requestUrl.searchParams.get("cause") ?? undefined,
+      status: requestUrl.searchParams.get("status") ?? undefined,
+      caseType: requestUrl.searchParams.get("caseType") ?? undefined,
+    }));
+    return true;
+  }
+  if (request.method === "POST" && pathname === "/v1/employer/analytics/refresh") {
+    const payload = await readRequestBody<Parameters<typeof refreshEmployerAnalyticsDashboard>[0]>(request);
+    writeJson(response, 200, await refreshEmployerAnalyticsDashboard(payload));
     return true;
   }
   if (request.method === "POST" && pathname === "/v1/employer/premium/salary-mass-report") {
