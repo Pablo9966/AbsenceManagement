@@ -1,6 +1,6 @@
-# elipsLife Absence Management Platform
+# Absence Management Platform
 
-Production-grade, Swiss-hosted Absence Management Platform for elipsLife AG.
+Absence Management Platform
 
 This workspace is being built module-by-module across Phase 1 and Phase 2:
 
