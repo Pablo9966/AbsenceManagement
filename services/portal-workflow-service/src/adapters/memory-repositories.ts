@@ -32,6 +32,11 @@ import {
   type PaymentOperationsRepository,
   type PaymentOperationsRepositoryContext,
 } from "../../../payment-operations-service/src/index.js";
+import {
+  UvgCaseMemoryRepository,
+  UvgCaseService,
+  type UvgCaseRepository,
+} from "../../../uvg-case-service/src/index.js";
 import type {
   CaseSettlementSummary,
   PaymentExportPackage,
@@ -43,7 +48,9 @@ import type {
   PayrollBookingConfirmation,
 } from "../../../payment-operations-service/src/index.js";
 export { PaymentOperationsService };
+export { UvgCaseMemoryRepository, UvgCaseService };
 export type { PaymentOperationsRepository, PaymentOperationsRepositoryContext };
+export type { UvgCaseRepository };
 export type ArrayItem<T> = T extends readonly (infer U)[] ? U : T extends (infer U)[] ? U : never;
 export type AwaitedReturn<T extends (...args: never[]) => Promise<unknown>> = Awaited<ReturnType<T>>;
 

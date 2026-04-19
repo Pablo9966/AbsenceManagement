@@ -183,6 +183,174 @@ export const absenceComments: FixtureArray = [
 
 export const absenceRecurrenceGroups: FixtureArray = [];
 
+export const uvgCases: FixtureArray = [
+  {
+    id: "uvg-case-5001",
+    tenantId: EMPLOYER_TENANT_ID,
+    employeeId: "employee-0001",
+    policyId: "policy-uvg-001",
+    caseNumber: "UVG-2026-001",
+    uvgCaseType: "bu",
+    caseStatus: "under_review",
+    accidentDate: "2026-04-12",
+    reportedAt: "2026-04-12T10:15:00.000Z",
+    reportedBy: "user-hr-01",
+    incidentLocation: "Zurich office warehouse",
+    incidentSummary: "Slip while lifting equipment during scheduled work.",
+    createdAt: "2026-04-12T10:15:00.000Z",
+    updatedAt: "2026-04-13T08:30:00.000Z",
+    ktgCaseId: "case-2001",
+    coordinationStatus: "open",
+    coordinationNotes: "Potential overlap with KTG sickness case requires complementary UVG review.",
+  },
+  {
+    id: "uvg-case-5002",
+    tenantId: EMPLOYER_TENANT_ID,
+    employeeId: "employee-0002",
+    policyId: "policy-uvg-001",
+    caseNumber: "UVG-2026-002",
+    uvgCaseType: "nbu",
+    caseStatus: "awaiting_documents",
+    accidentDate: "2026-04-14",
+    reportedAt: "2026-04-15T08:00:00.000Z",
+    reportedBy: "user-hr-01",
+    incidentLocation: "Weekend sports facility",
+    incidentSummary: "Knee injury during non-occupational sports activity.",
+    createdAt: "2026-04-15T08:00:00.000Z",
+    updatedAt: "2026-04-15T08:00:00.000Z",
+    coordinationStatus: "not_required",
+  },
+];
+
+export const uvgAccidentIntakes: FixtureArray = [
+  {
+    id: "uvg-intake-5001",
+    tenantId: EMPLOYER_TENANT_ID,
+    uvgCaseId: "uvg-case-5001",
+    reporterRole: "employer",
+    reporterUserId: "user-hr-01",
+    employerReference: "HR-ACC-2026-001",
+    accidentDate: "2026-04-12",
+    accidentTime: "09:40",
+    accidentPlace: "Zurich office warehouse",
+    occupationalContext: "occupational",
+    accidentDescription: "Employee slipped while lifting equipment during scheduled work.",
+    witnessDetails: "Line manager witnessed the incident.",
+    policeInvolvedFlag: false,
+    submittedAt: "2026-04-12T10:15:00.000Z",
+  },
+  {
+    id: "uvg-intake-5002",
+    tenantId: EMPLOYER_TENANT_ID,
+    uvgCaseId: "uvg-case-5002",
+    reporterRole: "employer",
+    reporterUserId: "user-hr-01",
+    employerReference: "HR-ACC-2026-002",
+    accidentDate: "2026-04-14",
+    accidentTime: "16:20",
+    accidentPlace: "Weekend sports facility",
+    occupationalContext: "non_occupational",
+    accidentDescription: "Employee injured knee during a private sports match.",
+    policeInvolvedFlag: false,
+    submittedAt: "2026-04-15T08:00:00.000Z",
+  },
+];
+
+export const uvgInjuryRecords: FixtureArray = [
+  {
+    id: "uvg-injury-5001",
+    tenantId: EMPLOYER_TENANT_ID,
+    uvgCaseId: "uvg-case-5001",
+    injuryType: "sprain",
+    bodyPart: "lower back",
+    severity: "moderate",
+    medicalTreatmentFlag: true,
+    hospitalizedFlag: false,
+    notes: "Initial medical certificate received.",
+  },
+];
+
+export const uvgCircumstanceRecords: FixtureArray = [
+  {
+    id: "uvg-circumstance-5001",
+    tenantId: EMPLOYER_TENANT_ID,
+    uvgCaseId: "uvg-case-5001",
+    causeCategory: "slip_trip_fall",
+    activityContext: "manual_handling",
+    thirdPartyInvolvedFlag: false,
+    vehicleInvolvedFlag: false,
+    narrative: "Wet floor in the warehouse area contributed to the slip.",
+    createdAt: "2026-04-12T10:20:00.000Z",
+  },
+];
+
+export const uvgDocumentReferences: FixtureArray = [
+  {
+    id: "uvg-document-5001",
+    tenantId: EMPLOYER_TENANT_ID,
+    uvgCaseId: "uvg-case-5001",
+    documentId: "document-3001",
+    documentRole: "medical_certificate",
+    linkedAt: "2026-04-12T10:30:00.000Z",
+  },
+];
+
+export const uvgDecisions: FixtureArray = [
+  {
+    id: "uvg-decision-5001",
+    tenantId: EMPLOYER_TENANT_ID,
+    uvgCaseId: "uvg-case-5001",
+    decisionStatus: "pending",
+    decisionReason: "Medical and coordination review pending.",
+    effectiveFrom: "2026-04-12",
+    decidedAt: "2026-04-13T08:30:00.000Z",
+    decidedBy: "claims.handler@elipslife.ch",
+  },
+];
+
+export const uvgCoordinationRecords: FixtureArray = [
+  {
+    id: "uvg-coordination-5001",
+    tenantId: EMPLOYER_TENANT_ID,
+    uvgCaseId: "uvg-case-5001",
+    coordinationType: "ktg_overlap",
+    relatedKtgCaseId: "case-2001",
+    overlapStart: "2026-04-12",
+    overlapEnd: "2026-04-18",
+    coordinationStatus: "open",
+    benefitOverlapFlag: true,
+    notes: "Check whether UVG benefit replaces KTG daily allowance during overlap.",
+    updatedAt: "2026-04-13T08:30:00.000Z",
+  },
+];
+
+export const uvgReportArtifacts: FixtureArray = [
+  {
+    id: "uvg-report-5001",
+    tenantId: EMPLOYER_TENANT_ID,
+    uvgCaseId: "uvg-case-5001",
+    reportType: "accident_report_pdf",
+    fileName: "UVG-2026-001-accident-report.pdf",
+    storageReference: "uvg-reports/tenant-employer-demo/uvg-case-5001/UVG-2026-001.pdf",
+    generatedAt: "2026-04-12T10:35:00.000Z",
+    generatedBy: "user-hr-01",
+  },
+];
+
+export const uvgAuditEvents: FixtureArray = [
+  {
+    id: "uvg-audit-5001",
+    tenantId: EMPLOYER_TENANT_ID,
+    uvgCaseId: "uvg-case-5001",
+    eventType: "uvg_case_reported",
+    occurredAt: "2026-04-12T10:15:00.000Z",
+    actorId: "user-hr-01",
+    actorRole: "employer_user",
+    correlationId: "fixture-uvg-case-5001",
+    payload: { uvgCaseType: "bu", ktgCaseId: "case-2001" },
+  },
+];
+
 export const ktgCases: FixtureArray = [
   {
     id: "case-2001",

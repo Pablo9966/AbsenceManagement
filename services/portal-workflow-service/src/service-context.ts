@@ -18,6 +18,10 @@ import type {
   EmployerDocumentListItem,
   EmployerPaymentSummary,
   EmployerTaskListItem,
+  EmployerUvgAccidentReportResult,
+  EmployerUvgCaseDetail,
+  EmployerUvgCaseListItem,
+  EmployerUvgReportArtifactResult,
   InternalBenefitDetail,
   InternalBenefitListItem,
   InternalCaseDetail,
@@ -25,6 +29,8 @@ import type {
   InternalDashboardSummary,
   InternalIntakeDetail,
   InternalIntakeListItem,
+  InternalUvgCaseDetail,
+  InternalUvgCaseListItem,
   PortalLocale,
   WorkflowLink,
   WorkflowPermission,
@@ -64,6 +70,14 @@ import {
   PaymentOperationsService,
   type PaymentOperationsRepository,
 } from "../../payment-operations-service/src/index.js";
+import {
+  UvgCaseService,
+  type OccupationalContext,
+  type UvgCaseDetail,
+  type UvgCaseRepository,
+  type UvgCaseStatus,
+  type UvgCaseType,
+} from "../../uvg-case-service/src/index.js";
 
 import { WorkflowForbiddenError, WorkflowNotFoundError } from "./errors.js";
 import type {
@@ -98,6 +112,7 @@ export interface PortalWorkflowContext {
     dashboardRepository: DashboardProjectionRepository;
     inboxRepository: InboxNotificationRepository;
     paymentOperationsRepository: PaymentOperationsRepository;
+    uvgCaseRepository: UvgCaseRepository;
   };
   services: {
     absenceService: AbsenceRecordingService;
@@ -108,6 +123,7 @@ export interface PortalWorkflowContext {
     dashboardService: DashboardProjectionService;
     inboxService: InboxNotificationService;
     paymentOperationsService: PaymentOperationsService;
+    uvgCaseService: UvgCaseService;
   };
 }
 
@@ -132,6 +148,8 @@ const employerPermissions: WorkflowPermission[] = [
   { resourceType: "task", action: "read", allowed: true },
   { resourceType: "payment_summary", action: "read", allowed: true },
   { resourceType: "payment_run", action: "read", allowed: true },
+  { resourceType: "uvg_case", action: "read", allowed: true },
+  { resourceType: "uvg_case", action: "write", allowed: true },
 ];
 
 const internalPermissions: WorkflowPermission[] = [
@@ -143,6 +161,8 @@ const internalPermissions: WorkflowPermission[] = [
   { resourceType: "payment_run", action: "write_internal", allowed: true },
   { resourceType: "reconciliation", action: "read_internal", allowed: true },
   { resourceType: "reconciliation", action: "write_internal", allowed: true },
+  { resourceType: "uvg_case", action: "read_internal", allowed: true },
+  { resourceType: "uvg_case", action: "write_internal", allowed: true },
 ];
 
 const employeePermissions: WorkflowPermission[] = [
@@ -1573,4 +1593,498 @@ export const listInternalPaymentAuditEvents = async (
     payload: e.payload,
   }));
   return makeResponse(items, tenantId, locale, internalPermissions);
+};
+
+// Phase 2E: UVG Native Flow handlers
+// Internal UVG routes intentionally read employer-originated UVG case truth from
+// the employer tenant fixture/service context while keeping the caller tenant as
+// internal. Cross-tenant visibility is explicit here instead of implicit in the
+// repository adapter.
+
+const assertEmployerTenant = (tenantId: string): void => {
+  if (tenantId !== EMPLOYER_TENANT_ID) {
+    throw new WorkflowForbiddenError("Employer UVG routes are only accessible to employer tenants.");
+  }
+};
+
+const assertInternalTenant = (tenantId: string): void => {
+  if (tenantId !== INTERNAL_TENANT_ID) {
+    throw new WorkflowForbiddenError("Internal UVG routes are only accessible to internal tenants.");
+  }
+};
+
+const mapEmployerUvgListItem = (detail: UvgCaseDetail): EmployerUvgCaseListItem => ({
+  caseId: detail.id,
+  caseNumber: detail.caseNumber,
+  employeeId: detail.employeeId,
+  employeeName: getEmployeeName(detail.employeeId),
+  uvgCaseType: detail.uvgCaseType,
+  caseStatus: detail.caseStatus,
+  accidentDate: detail.accidentDate,
+  incidentLocation: detail.incidentLocation,
+  coordinationStatus: detail.coordinationStatus,
+  linkedKtgCaseId: detail.ktgCaseId,
+  reportArtifactCount: detail.reportArtifacts.length,
+});
+
+const mapEmployerUvgDetail = (detail: UvgCaseDetail): EmployerUvgCaseDetail => ({
+  ...mapEmployerUvgListItem(detail),
+  incidentSummary: detail.incidentSummary,
+  reportedAt: detail.reportedAt,
+  accidentDescription: detail.intake?.accidentDescription,
+  witnessDetails: detail.intake?.witnessDetails,
+  policeInvolvedFlag: detail.intake?.policeInvolvedFlag,
+  linkedDocumentIds: detail.documentReferences.map((reference) => reference.documentId),
+  reportArtifacts: detail.reportArtifacts.map((artifact) => ({
+    artifactId: artifact.id,
+    fileName: artifact.fileName,
+    reportType: artifact.reportType,
+    generatedAt: artifact.generatedAt,
+  })),
+});
+
+const mapInternalUvgListItem = (detail: UvgCaseDetail): InternalUvgCaseListItem => ({
+  caseId: detail.id,
+  caseNumber: detail.caseNumber,
+  employeeId: detail.employeeId,
+  employeeName: getEmployeeName(detail.employeeId),
+  uvgCaseType: detail.uvgCaseType,
+  caseStatus: detail.caseStatus,
+  accidentDate: detail.accidentDate,
+  coordinationStatus: detail.coordinationStatus,
+  linkedKtgCaseId: detail.ktgCaseId,
+  injuryCount: detail.injuries.length,
+  decisionStatus: detail.decisions.at(0)?.decisionStatus,
+});
+
+const mapInternalUvgDetail = (detail: UvgCaseDetail): InternalUvgCaseDetail => ({
+  ...mapInternalUvgListItem(detail),
+  policyId: detail.policyId,
+  incidentLocation: detail.incidentLocation,
+  incidentSummary: detail.incidentSummary,
+  intake: detail.intake ? {
+    reporterRole: detail.intake.reporterRole,
+    employerReference: detail.intake.employerReference,
+    accidentTime: detail.intake.accidentTime,
+    accidentPlace: detail.intake.accidentPlace,
+    occupationalContext: detail.intake.occupationalContext,
+    accidentDescription: detail.intake.accidentDescription,
+    witnessDetails: detail.intake.witnessDetails,
+    policeInvolvedFlag: detail.intake.policeInvolvedFlag,
+    submittedAt: detail.intake.submittedAt,
+  } : undefined,
+  injuries: detail.injuries.map((injury) => ({
+    id: injury.id,
+    injuryType: injury.injuryType,
+    bodyPart: injury.bodyPart,
+    severity: injury.severity,
+    medicalTreatmentFlag: injury.medicalTreatmentFlag,
+    hospitalizedFlag: injury.hospitalizedFlag,
+    notes: injury.notes,
+  })),
+  circumstances: detail.circumstances.map((circumstance) => ({
+    id: circumstance.id,
+    causeCategory: circumstance.causeCategory,
+    activityContext: circumstance.activityContext,
+    thirdPartyInvolvedFlag: circumstance.thirdPartyInvolvedFlag,
+    vehicleInvolvedFlag: circumstance.vehicleInvolvedFlag,
+    narrative: circumstance.narrative,
+    createdAt: circumstance.createdAt,
+  })),
+  documentReferences: detail.documentReferences.map((reference) => ({
+    id: reference.id,
+    documentId: reference.documentId,
+    documentRole: reference.documentRole,
+    linkedAt: reference.linkedAt,
+  })),
+  coordinationRecords: detail.coordinationRecords.map((record) => ({
+    id: record.id,
+    coordinationType: record.coordinationType,
+    relatedKtgCaseId: record.relatedKtgCaseId,
+    overlapStart: record.overlapStart,
+    overlapEnd: record.overlapEnd,
+    coordinationStatus: record.coordinationStatus,
+    benefitOverlapFlag: record.benefitOverlapFlag,
+    notes: record.notes,
+    updatedAt: record.updatedAt,
+  })),
+  decisions: detail.decisions.map((decision) => ({
+    id: decision.id,
+    decisionStatus: decision.decisionStatus,
+    decisionReason: decision.decisionReason,
+    effectiveFrom: decision.effectiveFrom,
+    effectiveTo: decision.effectiveTo,
+    decidedAt: decision.decidedAt,
+    decidedBy: decision.decidedBy,
+  })),
+  reportArtifacts: detail.reportArtifacts.map((artifact) => ({
+    artifactId: artifact.id,
+    fileName: artifact.fileName,
+    reportType: artifact.reportType,
+    generatedAt: artifact.generatedAt,
+    storageReference: artifact.storageReference,
+  })),
+  auditEvents: detail.auditEvents.map((event) => ({
+    eventId: event.id,
+    eventType: event.eventType,
+    occurredAt: event.occurredAt,
+    actorId: event.actorId,
+    actorRole: event.actorRole,
+    payload: event.payload,
+  })),
+});
+
+const getUvgCaseDetailOr404 = async (caseId: string): Promise<UvgCaseDetail> => {
+  const { services } = getPortalWorkflowServices();
+  const detail = await services.uvgCaseService.getCaseDetail(EMPLOYER_TENANT_ID, caseId);
+  if (!detail) {
+    throw new WorkflowNotFoundError();
+  }
+  return detail;
+};
+
+const issueMessage = (issues: Array<{ field: string; message: string }>): string =>
+  issues.map((issue) => `${issue.field}: ${issue.message}`).join("; ") || "UVG command failed.";
+
+export const listEmployerUvgCases = async (
+  tenantId: string,
+  locale: PortalLocale,
+  filters?: { status?: string; type?: string; employee?: string; page?: number; pageSize?: number },
+): Promise<WorkflowResponse<EmployerUvgCaseListItem[]>> => {
+  assertEmployerTenant(tenantId);
+  const { services } = getPortalWorkflowServices();
+  const cases = await services.uvgCaseService.listCases(tenantId, {
+    status: filters?.status,
+    type: filters?.type,
+    employeeId: filters?.employee,
+  });
+  const details = await Promise.all(cases.map((uvgCase) => services.uvgCaseService.getCaseDetail(tenantId, uvgCase.id)));
+  const items = details.filter((detail): detail is UvgCaseDetail => detail !== null).map(mapEmployerUvgListItem);
+  const paginated = paginateItems(items, filters);
+  return makeResponse(paginated.items, tenantId, locale, employerPermissions, {
+    totalCount: paginated.totalCount,
+    page: paginated.page,
+    pageSize: paginated.pageSize,
+    totalPages: paginated.totalPages,
+    appliedFilters: {
+      ...(filters?.status ? { status: filters.status } : {}),
+      ...(filters?.type ? { type: filters.type } : {}),
+      ...(filters?.employee ? { employee: filters.employee } : {}),
+    },
+  });
+};
+
+export const getEmployerUvgCaseDetail = async (
+  tenantId: string,
+  locale: PortalLocale,
+  caseId: string,
+): Promise<WorkflowResponse<EmployerUvgCaseDetail>> => {
+  assertEmployerTenant(tenantId);
+  const detail = await getUvgCaseDetailOr404(caseId);
+  return makeResponse(mapEmployerUvgDetail(detail), tenantId, locale, employerPermissions, undefined);
+};
+
+export const createEmployerUvgAccidentReport = async (input: {
+  tenantId: string;
+  locale: PortalLocale;
+  employeeId: string;
+  policyId: string;
+  userId: string;
+  uvgCaseType: string;
+  accidentDate: string;
+  accidentTime?: string;
+  accidentPlace: string;
+  occupationalContext: string;
+  accidentDescription: string;
+  witnessDetails?: string;
+  policeInvolvedFlag: boolean;
+  ktgCaseId?: string;
+}): Promise<WorkflowResponse<EmployerUvgAccidentReportResult>> => {
+  assertEmployerTenant(input.tenantId);
+  const { services } = getPortalWorkflowServices();
+  const result = await services.uvgCaseService.createAccidentReport({
+    tenantId: input.tenantId,
+    employeeId: input.employeeId,
+    policyId: input.policyId,
+    uvgCaseType: input.uvgCaseType as UvgCaseType,
+    reporterRole: "employer",
+    reporterUserId: input.userId,
+    employerReference: `EMP-${input.accidentDate}`,
+    accidentDate: input.accidentDate,
+    accidentTime: input.accidentTime,
+    accidentPlace: input.accidentPlace,
+    occupationalContext: input.occupationalContext as OccupationalContext,
+    accidentDescription: input.accidentDescription,
+    witnessDetails: input.witnessDetails,
+    policeInvolvedFlag: input.policeInvolvedFlag,
+    ktgCaseId: input.ktgCaseId || undefined,
+  }, {
+    actorId: input.userId,
+    actorRole: "employer_user",
+    effectiveAt: REFERENCE_AT,
+    correlationId: "portal-workflow-employer-uvg-report",
+  });
+  if (!result.data) {
+    throw new Error(issueMessage(result.issues));
+  }
+  return makeResponse({
+    caseId: result.data.id,
+    caseNumber: result.data.caseNumber,
+    caseStatus: result.data.caseStatus,
+    uvgCaseType: result.data.uvgCaseType,
+    reportedAt: result.data.reportedAt,
+  }, input.tenantId, input.locale, employerPermissions);
+};
+
+export const generateEmployerUvgAccidentReportArtifact = async (
+  input: { tenantId: string; locale: PortalLocale; caseId: string; userId: string },
+): Promise<WorkflowResponse<EmployerUvgReportArtifactResult>> => {
+  assertEmployerTenant(input.tenantId);
+  const { services } = getPortalWorkflowServices();
+  const result = await services.uvgCaseService.generateAccidentReport(input.tenantId, input.caseId, {
+    actorId: input.userId,
+    actorRole: "employer_user",
+    effectiveAt: REFERENCE_AT,
+    correlationId: "portal-workflow-employer-uvg-report-artifact",
+  });
+  if (!result.data) {
+    throw new WorkflowNotFoundError(issueMessage(result.issues));
+  }
+  return makeResponse({
+    artifactId: result.data.id,
+    caseId: result.data.uvgCaseId,
+    fileName: result.data.fileName,
+    storageReference: result.data.storageReference,
+    generatedAt: result.data.generatedAt,
+    pdfSizeBytes: result.data.pdfSizeBytes,
+  }, input.tenantId, input.locale, employerPermissions);
+};
+
+export const listInternalUvgCases = async (
+  tenantId: string,
+  locale: PortalLocale,
+  filters?: { status?: string; type?: string; employee?: string; page?: number; pageSize?: number },
+): Promise<WorkflowResponse<InternalUvgCaseListItem[]>> => {
+  assertInternalTenant(tenantId);
+  const { services } = getPortalWorkflowServices();
+  const cases = await services.uvgCaseService.listCases(EMPLOYER_TENANT_ID, {
+    status: filters?.status,
+    type: filters?.type,
+    employeeId: filters?.employee,
+  });
+  const details = await Promise.all(cases.map((uvgCase) => services.uvgCaseService.getCaseDetail(EMPLOYER_TENANT_ID, uvgCase.id)));
+  const items = details.filter((detail): detail is UvgCaseDetail => detail !== null).map(mapInternalUvgListItem);
+  const paginated = paginateItems(items, filters);
+  return makeResponse(paginated.items, tenantId, locale, internalPermissions, {
+    totalCount: paginated.totalCount,
+    page: paginated.page,
+    pageSize: paginated.pageSize,
+    totalPages: paginated.totalPages,
+    appliedFilters: {
+      ...(filters?.status ? { status: filters.status } : {}),
+      ...(filters?.type ? { type: filters.type } : {}),
+      ...(filters?.employee ? { employee: filters.employee } : {}),
+    },
+  });
+};
+
+export const getInternalUvgCaseDetail = async (
+  tenantId: string,
+  locale: PortalLocale,
+  caseId: string,
+): Promise<WorkflowResponse<InternalUvgCaseDetail>> => {
+  assertInternalTenant(tenantId);
+  const detail = await getUvgCaseDetailOr404(caseId);
+  return makeResponse(mapInternalUvgDetail(detail), tenantId, locale, internalPermissions);
+};
+
+const withUpdatedInternalUvgDetail = async (
+  tenantId: string,
+  locale: PortalLocale,
+  caseId: string,
+): Promise<WorkflowResponse<InternalUvgCaseDetail>> => getInternalUvgCaseDetail(tenantId, locale, caseId);
+
+export const updateInternalUvgCaseStatus = async (input: {
+  tenantId: string;
+  locale: PortalLocale;
+  caseId: string;
+  userId: string;
+  caseStatus: string;
+}): Promise<WorkflowResponse<InternalUvgCaseDetail>> => {
+  assertInternalTenant(input.tenantId);
+  const { services } = getPortalWorkflowServices();
+  const result = await services.uvgCaseService.updateCaseStatus(EMPLOYER_TENANT_ID, input.caseId, input.caseStatus as UvgCaseStatus, {
+    actorId: input.userId,
+    actorRole: "claims_handler",
+    effectiveAt: REFERENCE_AT,
+    correlationId: "portal-workflow-internal-uvg-status",
+  });
+  if (!result.data) {
+    throw new Error(issueMessage(result.issues));
+  }
+  return withUpdatedInternalUvgDetail(input.tenantId, input.locale, input.caseId);
+};
+
+export const recordInternalUvgInjury = async (input: {
+  tenantId: string;
+  locale: PortalLocale;
+  caseId: string;
+  userId: string;
+  injuryType: string;
+  bodyPart: string;
+  severity: string;
+  medicalTreatmentFlag: boolean;
+  hospitalizedFlag: boolean;
+  notes?: string;
+}): Promise<WorkflowResponse<InternalUvgCaseDetail>> => {
+  assertInternalTenant(input.tenantId);
+  const { services } = getPortalWorkflowServices();
+  const result = await services.uvgCaseService.recordInjury({
+    tenantId: EMPLOYER_TENANT_ID,
+    uvgCaseId: input.caseId,
+    injuryType: input.injuryType,
+    bodyPart: input.bodyPart,
+    severity: input.severity as "minor" | "moderate" | "severe" | "critical",
+    medicalTreatmentFlag: input.medicalTreatmentFlag,
+    hospitalizedFlag: input.hospitalizedFlag,
+    notes: input.notes,
+  }, {
+    actorId: input.userId,
+    actorRole: "claims_handler",
+    effectiveAt: REFERENCE_AT,
+    correlationId: "portal-workflow-internal-uvg-injury",
+  });
+  if (!result.data) {
+    throw new Error(issueMessage(result.issues));
+  }
+  return withUpdatedInternalUvgDetail(input.tenantId, input.locale, input.caseId);
+};
+
+export const recordInternalUvgCircumstance = async (input: {
+  tenantId: string;
+  locale: PortalLocale;
+  caseId: string;
+  userId: string;
+  causeCategory: string;
+  activityContext: string;
+  thirdPartyInvolvedFlag: boolean;
+  vehicleInvolvedFlag: boolean;
+  narrative: string;
+}): Promise<WorkflowResponse<InternalUvgCaseDetail>> => {
+  assertInternalTenant(input.tenantId);
+  const { services } = getPortalWorkflowServices();
+  const result = await services.uvgCaseService.recordCircumstance({
+    tenantId: EMPLOYER_TENANT_ID,
+    uvgCaseId: input.caseId,
+    causeCategory: input.causeCategory,
+    activityContext: input.activityContext,
+    thirdPartyInvolvedFlag: input.thirdPartyInvolvedFlag,
+    vehicleInvolvedFlag: input.vehicleInvolvedFlag,
+    narrative: input.narrative,
+  }, {
+    actorId: input.userId,
+    actorRole: "claims_handler",
+    effectiveAt: REFERENCE_AT,
+    correlationId: "portal-workflow-internal-uvg-circumstance",
+  });
+  if (!result.data) {
+    throw new Error(issueMessage(result.issues));
+  }
+  return withUpdatedInternalUvgDetail(input.tenantId, input.locale, input.caseId);
+};
+
+export const upsertInternalUvgCoordination = async (input: {
+  tenantId: string;
+  locale: PortalLocale;
+  caseId: string;
+  userId: string;
+  coordinationType: string;
+  relatedKtgCaseId?: string;
+  overlapStart?: string;
+  overlapEnd?: string;
+  coordinationStatus: string;
+  benefitOverlapFlag: boolean;
+  notes?: string;
+}): Promise<WorkflowResponse<InternalUvgCaseDetail>> => {
+  assertInternalTenant(input.tenantId);
+  const { services } = getPortalWorkflowServices();
+  const result = await services.uvgCaseService.upsertCoordination({
+    tenantId: EMPLOYER_TENANT_ID,
+    uvgCaseId: input.caseId,
+    coordinationType: input.coordinationType as "ktg_overlap" | "complementary_uvg" | "benefit_overlap_review",
+    relatedKtgCaseId: input.relatedKtgCaseId || undefined,
+    overlapStart: input.overlapStart || undefined,
+    overlapEnd: input.overlapEnd || undefined,
+    coordinationStatus: input.coordinationStatus as "not_required" | "open" | "in_review" | "resolved",
+    benefitOverlapFlag: input.benefitOverlapFlag,
+    notes: input.notes,
+  }, {
+    actorId: input.userId,
+    actorRole: "claims_handler",
+    effectiveAt: REFERENCE_AT,
+    correlationId: "portal-workflow-internal-uvg-coordination",
+  });
+  if (!result.data) {
+    throw new Error(issueMessage(result.issues));
+  }
+  return withUpdatedInternalUvgDetail(input.tenantId, input.locale, input.caseId);
+};
+
+export const linkInternalUvgDocument = async (input: {
+  tenantId: string;
+  locale: PortalLocale;
+  caseId: string;
+  userId: string;
+  documentId: string;
+  documentRole: string;
+}): Promise<WorkflowResponse<InternalUvgCaseDetail>> => {
+  assertInternalTenant(input.tenantId);
+  const { services } = getPortalWorkflowServices();
+  const result = await services.uvgCaseService.linkDocument({
+    tenantId: EMPLOYER_TENANT_ID,
+    uvgCaseId: input.caseId,
+    documentId: input.documentId,
+    documentRole: input.documentRole as "accident_report" | "medical_certificate" | "police_report" | "correspondence" | "other",
+  }, {
+    actorId: input.userId,
+    actorRole: "claims_handler",
+    effectiveAt: REFERENCE_AT,
+    correlationId: "portal-workflow-internal-uvg-document",
+  });
+  if (!result.data) {
+    throw new Error(issueMessage(result.issues));
+  }
+  return withUpdatedInternalUvgDetail(input.tenantId, input.locale, input.caseId);
+};
+
+export const upsertInternalUvgDecision = async (input: {
+  tenantId: string;
+  locale: PortalLocale;
+  caseId: string;
+  userId: string;
+  decisionStatus: string;
+  decisionReason: string;
+  effectiveFrom: string;
+  effectiveTo?: string;
+}): Promise<WorkflowResponse<InternalUvgCaseDetail>> => {
+  assertInternalTenant(input.tenantId);
+  const { services } = getPortalWorkflowServices();
+  const result = await services.uvgCaseService.upsertDecision({
+    tenantId: EMPLOYER_TENANT_ID,
+    uvgCaseId: input.caseId,
+    decisionStatus: input.decisionStatus as "pending" | "approved" | "rejected" | "partially_approved",
+    decisionReason: input.decisionReason,
+    effectiveFrom: input.effectiveFrom,
+    effectiveTo: input.effectiveTo || undefined,
+    decidedBy: input.userId,
+  }, {
+    actorId: input.userId,
+    actorRole: "claims_handler",
+    effectiveAt: REFERENCE_AT,
+    correlationId: "portal-workflow-internal-uvg-decision",
+  });
+  if (!result.data) {
+    throw new Error(issueMessage(result.issues));
+  }
+  return withUpdatedInternalUvgDetail(input.tenantId, input.locale, input.caseId);
 };

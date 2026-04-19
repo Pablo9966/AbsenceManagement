@@ -56,6 +56,9 @@
       ],
       "@elipslife/payment-operations-service": [
         "services/payment-operations-service/src/index.ts"
+      ],
+      "@elipslife/uvg-case-service": [
+        "services/uvg-case-service/src/index.ts"
       ]
     },
     "declaration": true,

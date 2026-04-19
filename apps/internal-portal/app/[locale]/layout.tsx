@@ -1,6 +1,5 @@
 import { PortalLayout } from "../../src/frontend.js";
 import { getInternalPortalRuntime } from "../../src/runtime.js";
-import "../../src/globals.css";
 export const dynamic = "force-dynamic";
 
 export default async function InternalPortalLayout(props: {
@@ -11,12 +10,8 @@ export default async function InternalPortalLayout(props: {
   const runtime = await getInternalPortalRuntime({ routeLocale: locale });
 
   return (
-    <html lang={runtime.locale}>
-      <body>
-        <PortalLayout shell={runtime.shell} messages={runtime.messages}>
-          {props.children}
-        </PortalLayout>
-      </body>
-    </html>
+    <PortalLayout shell={runtime.shell} messages={runtime.messages}>
+      {props.children}
+    </PortalLayout>
   );
 }

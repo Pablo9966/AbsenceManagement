@@ -35,6 +35,9 @@
       "path": "../../services/payment-operations-service"
     },
     {
+      "path": "../../services/uvg-case-service"
+    },
+    {
       "path": "../../packages/portal-workflow-client"
     }
   ]

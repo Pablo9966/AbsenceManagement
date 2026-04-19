@@ -18,20 +18,24 @@ import {
   getEmployerAbsenceDetail,
   getEmployerCaseDetail,
   getEmployerDashboard,
+  getEmployerUvgCaseDetail,
   getInternalBenefitDetail,
   getInternalCaseDetail,
   getInternalDashboard,
   getInternalIntakeDetail,
+  getInternalUvgCaseDetail,
   listEmployerAbsences,
   listEmployerCases,
   listEmployerDocuments,
   listEmployerPayments,
   listEmployerTasks,
+  listEmployerUvgCases,
   listEmployeeAbsences,
   listEmployeeDocuments,
   listInternalBenefits,
   listInternalCases,
   listInternalIntake,
+  listInternalUvgCases,
   listEmployerPaymentRunSummaries,
   listInternalPaymentRuns,
   getInternalPaymentRunDetail,
@@ -39,6 +43,14 @@ import {
   listInternalReconciliationRecords,
   getInternalSettlementSummary,
   listInternalPaymentAuditEvents,
+  createEmployerUvgAccidentReport,
+  generateEmployerUvgAccidentReportArtifact,
+  updateInternalUvgCaseStatus,
+  recordInternalUvgInjury,
+  recordInternalUvgCircumstance,
+  upsertInternalUvgCoordination,
+  linkInternalUvgDocument,
+  upsertInternalUvgDecision,
   submitEmployeeAbsence,
   uploadEmployeeCertificate,
 } from "./service-context.js";
@@ -190,7 +202,7 @@ const handleEmployeeRoutes = async (
   return false;
 };
 
-const handleEmployerRoutes = async (pathname: string, requestUrl: URL, response: ServerResponse): Promise<boolean> => {
+const handleEmployerRoutes = async (pathname: string, requestUrl: URL, request: IncomingMessage, response: ServerResponse): Promise<boolean> => {
   const tenantId = getTenantId(requestUrl);
   const locale = getLocale(requestUrl);
 
@@ -258,11 +270,38 @@ const handleEmployerRoutes = async (pathname: string, requestUrl: URL, response:
     }));
     return true;
   }
+  if (pathname === "/v1/employer/uvg-cases") {
+    writeJson(response, 200, await listEmployerUvgCases(tenantId, locale, {
+      status: requestUrl.searchParams.get("status") ?? undefined,
+      type: requestUrl.searchParams.get("type") ?? undefined,
+      employee: requestUrl.searchParams.get("employee") ?? undefined,
+      page: getPage(requestUrl),
+      pageSize: getPageSize(requestUrl),
+    }));
+    return true;
+  }
+  if (request.method === "POST" && pathname === "/v1/employer/uvg-cases/report") {
+    const payload = await readRequestBody<Parameters<typeof createEmployerUvgAccidentReport>[0]>(request);
+    writeJson(response, 200, await createEmployerUvgAccidentReport(payload));
+    return true;
+  }
+  if (request.method === "POST" && pathname.match(/^\/v1\/employer\/uvg-cases\/[^/]+\/report-artifact$/)) {
+    const payload = await readRequestBody<Omit<Parameters<typeof generateEmployerUvgAccidentReportArtifact>[0], "caseId">>(request);
+    writeJson(response, 200, await generateEmployerUvgAccidentReportArtifact({
+      ...payload,
+      caseId: pathname.split("/").at(-2) ?? "",
+    }));
+    return true;
+  }
+  if (pathname.startsWith("/v1/employer/uvg-cases/")) {
+    writeJson(response, 200, await getEmployerUvgCaseDetail(tenantId, locale, pathname.split("/").at(-1) ?? ""));
+    return true;
+  }
 
   return false;
 };
 
-const handleInternalRoutes = async (pathname: string, requestUrl: URL, response: ServerResponse): Promise<boolean> => {
+const handleInternalRoutes = async (pathname: string, requestUrl: URL, request: IncomingMessage, response: ServerResponse): Promise<boolean> => {
   const tenantId = getTenantId(requestUrl);
   const locale = getLocale(requestUrl);
 
@@ -349,6 +388,50 @@ const handleInternalRoutes = async (pathname: string, requestUrl: URL, response:
     }));
     return true;
   }
+  if (pathname === "/v1/internal/uvg-cases") {
+    writeJson(response, 200, await listInternalUvgCases(tenantId, locale, {
+      status: requestUrl.searchParams.get("status") ?? undefined,
+      type: requestUrl.searchParams.get("type") ?? undefined,
+      employee: requestUrl.searchParams.get("employee") ?? undefined,
+      page: getPage(requestUrl),
+      pageSize: getPageSize(requestUrl),
+    }));
+    return true;
+  }
+  if (request.method === "POST" && pathname.match(/^\/v1\/internal\/uvg-cases\/[^/]+\/status$/)) {
+    const payload = await readRequestBody<Omit<Parameters<typeof updateInternalUvgCaseStatus>[0], "caseId">>(request);
+    writeJson(response, 200, await updateInternalUvgCaseStatus({ ...payload, caseId: pathname.split("/").at(-2) ?? "" }));
+    return true;
+  }
+  if (request.method === "POST" && pathname.match(/^\/v1\/internal\/uvg-cases\/[^/]+\/injuries$/)) {
+    const payload = await readRequestBody<Omit<Parameters<typeof recordInternalUvgInjury>[0], "caseId">>(request);
+    writeJson(response, 200, await recordInternalUvgInjury({ ...payload, caseId: pathname.split("/").at(-2) ?? "" }));
+    return true;
+  }
+  if (request.method === "POST" && pathname.match(/^\/v1\/internal\/uvg-cases\/[^/]+\/circumstances$/)) {
+    const payload = await readRequestBody<Omit<Parameters<typeof recordInternalUvgCircumstance>[0], "caseId">>(request);
+    writeJson(response, 200, await recordInternalUvgCircumstance({ ...payload, caseId: pathname.split("/").at(-2) ?? "" }));
+    return true;
+  }
+  if (request.method === "POST" && pathname.match(/^\/v1\/internal\/uvg-cases\/[^/]+\/coordination$/)) {
+    const payload = await readRequestBody<Omit<Parameters<typeof upsertInternalUvgCoordination>[0], "caseId">>(request);
+    writeJson(response, 200, await upsertInternalUvgCoordination({ ...payload, caseId: pathname.split("/").at(-2) ?? "" }));
+    return true;
+  }
+  if (request.method === "POST" && pathname.match(/^\/v1\/internal\/uvg-cases\/[^/]+\/documents$/)) {
+    const payload = await readRequestBody<Omit<Parameters<typeof linkInternalUvgDocument>[0], "caseId">>(request);
+    writeJson(response, 200, await linkInternalUvgDocument({ ...payload, caseId: pathname.split("/").at(-2) ?? "" }));
+    return true;
+  }
+  if (request.method === "POST" && pathname.match(/^\/v1\/internal\/uvg-cases\/[^/]+\/decisions$/)) {
+    const payload = await readRequestBody<Omit<Parameters<typeof upsertInternalUvgDecision>[0], "caseId">>(request);
+    writeJson(response, 200, await upsertInternalUvgDecision({ ...payload, caseId: pathname.split("/").at(-2) ?? "" }));
+    return true;
+  }
+  if (pathname.startsWith("/v1/internal/uvg-cases/")) {
+    writeJson(response, 200, await getInternalUvgCaseDetail(tenantId, locale, pathname.split("/").at(-1) ?? ""));
+    return true;
+  }
 
   return false;
 };
@@ -367,11 +450,11 @@ const requestHandler = async (request: IncomingMessage, response: ServerResponse
       return;
     }
 
-    if (await handleEmployerRoutes(pathname, requestUrl, response)) {
+    if (await handleEmployerRoutes(pathname, requestUrl, request, response)) {
       return;
     }
 
-    if (await handleInternalRoutes(pathname, requestUrl, response)) {
+    if (await handleInternalRoutes(pathname, requestUrl, request, response)) {
       return;
     }
 

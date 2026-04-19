@@ -99,6 +99,8 @@ import {
   InboxNotificationMemoryRepository,
   PaymentOperationsMemoryRepository,
   PaymentOperationsService,
+  UvgCaseMemoryRepository,
+  UvgCaseService,
 } from "../adapters/memory-repositories.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type F<T> = T[];
@@ -111,6 +113,15 @@ import {
   reconciliationRecords as _reconciliationRecords,
   bookingConfirmations as _bookingConfirmations,
   paymentAuditEvents as _paymentAuditEvents,
+  uvgCases as _uvgCases,
+  uvgAccidentIntakes as _uvgAccidentIntakes,
+  uvgInjuryRecords as _uvgInjuryRecords,
+  uvgCircumstanceRecords as _uvgCircumstanceRecords,
+  uvgDocumentReferences as _uvgDocumentReferences,
+  uvgDecisions as _uvgDecisions,
+  uvgCoordinationRecords as _uvgCoordinationRecords,
+  uvgReportArtifacts as _uvgReportArtifacts,
+  uvgAuditEvents as _uvgAuditEvents,
   absenceEpisodes as _absenceEpisodes,
   absenceContractImpacts as _absenceContractImpacts,
   absenceDailyRecords as _absenceDailyRecords,
@@ -176,6 +187,17 @@ import type {
   PayrollBookingConfirmation,
   PaymentOperationsAuditEvent,
 } from "../../../payment-operations-service/src/index.js";
+import type {
+  UvgAccidentIntake,
+  UvgAccidentReportArtifact,
+  UvgCase,
+  UvgCaseAuditEvent,
+  UvgCaseDecision,
+  UvgCircumstanceRecord,
+  UvgCoordinationRecord,
+  UvgDocumentReference,
+  UvgInjuryRecord,
+} from "../../../uvg-case-service/src/index.js";
 
 // Cast fixture arrays from generic FixtureArray to the domain types derived from
 // the repository interfaces already imported above.
@@ -187,6 +209,15 @@ const settlementSummaries = _settlementSummaries as F<CaseSettlementSummary>;
 const reconciliationRecords = _reconciliationRecords as F<PaymentReconciliationRecord>;
 const bookingConfirmations = _bookingConfirmations as F<PayrollBookingConfirmation>;
 const paymentAuditEvents = _paymentAuditEvents as F<PaymentOperationsAuditEvent>;
+const uvgCases = _uvgCases as F<UvgCase>;
+const uvgAccidentIntakes = _uvgAccidentIntakes as F<UvgAccidentIntake>;
+const uvgInjuryRecords = _uvgInjuryRecords as F<UvgInjuryRecord>;
+const uvgCircumstanceRecords = _uvgCircumstanceRecords as F<UvgCircumstanceRecord>;
+const uvgDocumentReferences = _uvgDocumentReferences as F<UvgDocumentReference>;
+const uvgDecisions = _uvgDecisions as F<UvgCaseDecision>;
+const uvgCoordinationRecords = _uvgCoordinationRecords as F<UvgCoordinationRecord>;
+const uvgReportArtifacts = _uvgReportArtifacts as F<UvgAccidentReportArtifact>;
+const uvgAuditEvents = _uvgAuditEvents as F<UvgCaseAuditEvent>;
 
 const absenceEpisodes = _absenceEpisodes as F<AbsenceEpisode>;
 const absenceContractImpacts = _absenceContractImpacts as F<AbsenceContractImpact>;
@@ -322,6 +353,17 @@ export const createServices = () => {
     clone(bookingConfirmations),
     clone(paymentAuditEvents),
   );
+  const uvgCaseRepository = new UvgCaseMemoryRepository(
+    clone(uvgCases),
+    clone(uvgAccidentIntakes),
+    clone(uvgInjuryRecords),
+    clone(uvgCircumstanceRecords),
+    clone(uvgDocumentReferences),
+    clone(uvgDecisions),
+    clone(uvgCoordinationRecords),
+    clone(uvgReportArtifacts),
+    clone(uvgAuditEvents),
+  );
 
   return {
     repositories: {
@@ -333,6 +375,7 @@ export const createServices = () => {
       dashboardRepository,
       inboxRepository,
       paymentOperationsRepository,
+      uvgCaseRepository,
     },
     services: {
       absenceService: new AbsenceRecordingService(absenceRepository),
@@ -343,6 +386,7 @@ export const createServices = () => {
       dashboardService: new DashboardProjectionService(dashboardRepository),
       inboxService: new InboxNotificationService(inboxRepository),
       paymentOperationsService: new PaymentOperationsService(paymentOperationsRepository),
+      uvgCaseService: new UvgCaseService(uvgCaseRepository),
     },
   };
 };

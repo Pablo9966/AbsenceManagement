@@ -18,6 +18,10 @@ import type {
   EmployerPaymentSummary,
   EmployerPaymentRunSummary,
   EmployerTaskListItem,
+  EmployerUvgAccidentReportResult,
+  EmployerUvgCaseDetail,
+  EmployerUvgCaseListItem,
+  EmployerUvgReportArtifactResult,
   InternalBenefitDetail,
   InternalBenefitListItem,
   InternalCaseDetail,
@@ -31,6 +35,8 @@ import type {
   InternalPaymentRunListItem,
   InternalReconciliationRecord,
   InternalSettlementSummary,
+  InternalUvgCaseDetail,
+  InternalUvgCaseListItem,
   PortalLocale,
   WorkflowListQuery,
   WorkflowResponse,
@@ -111,6 +117,40 @@ export interface PortalWorkflowClient {
     tenantId: string;
     locale: PortalLocale;
   }): Promise<WorkflowResponse<EmployerPaymentRunSummary[]>>;
+  listEmployerUvgCases(input: WorkflowListQuery & {
+    tenantId: string;
+    locale: PortalLocale;
+    status?: string;
+    type?: string;
+    employee?: string;
+  }): Promise<WorkflowResponse<EmployerUvgCaseListItem[]>>;
+  getEmployerUvgCaseDetail(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    caseId: string;
+  }): Promise<WorkflowResponse<EmployerUvgCaseDetail>>;
+  createEmployerUvgAccidentReport(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    employeeId: string;
+    policyId: string;
+    userId: string;
+    uvgCaseType: string;
+    accidentDate: string;
+    accidentTime?: string;
+    accidentPlace: string;
+    occupationalContext: string;
+    accidentDescription: string;
+    witnessDetails?: string;
+    policeInvolvedFlag: boolean;
+    ktgCaseId?: string;
+  }): Promise<WorkflowResponse<EmployerUvgAccidentReportResult>>;
+  generateEmployerUvgAccidentReportArtifact(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    caseId: string;
+    userId: string;
+  }): Promise<WorkflowResponse<EmployerUvgReportArtifactResult>>;
 
   // Phase 2C: Payment Operations — Internal
   listInternalPaymentRuns(input: WorkflowListQuery & {
@@ -143,6 +183,79 @@ export interface PortalWorkflowClient {
     locale: PortalLocale;
     runId?: string;
   }): Promise<WorkflowResponse<InternalPaymentAuditEventItem[]>>;
+  listInternalUvgCases(input: WorkflowListQuery & {
+    tenantId: string;
+    locale: PortalLocale;
+    status?: string;
+    type?: string;
+    employee?: string;
+  }): Promise<WorkflowResponse<InternalUvgCaseListItem[]>>;
+  getInternalUvgCaseDetail(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    caseId: string;
+  }): Promise<WorkflowResponse<InternalUvgCaseDetail>>;
+  updateInternalUvgCaseStatus(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    caseId: string;
+    userId: string;
+    caseStatus: string;
+  }): Promise<WorkflowResponse<InternalUvgCaseDetail>>;
+  recordInternalUvgInjury(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    caseId: string;
+    userId: string;
+    injuryType: string;
+    bodyPart: string;
+    severity: string;
+    medicalTreatmentFlag: boolean;
+    hospitalizedFlag: boolean;
+    notes?: string;
+  }): Promise<WorkflowResponse<InternalUvgCaseDetail>>;
+  recordInternalUvgCircumstance(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    caseId: string;
+    userId: string;
+    causeCategory: string;
+    activityContext: string;
+    thirdPartyInvolvedFlag: boolean;
+    vehicleInvolvedFlag: boolean;
+    narrative: string;
+  }): Promise<WorkflowResponse<InternalUvgCaseDetail>>;
+  upsertInternalUvgCoordination(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    caseId: string;
+    userId: string;
+    coordinationType: string;
+    relatedKtgCaseId?: string;
+    overlapStart?: string;
+    overlapEnd?: string;
+    coordinationStatus: string;
+    benefitOverlapFlag: boolean;
+    notes?: string;
+  }): Promise<WorkflowResponse<InternalUvgCaseDetail>>;
+  linkInternalUvgDocument(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    caseId: string;
+    userId: string;
+    documentId: string;
+    documentRole: string;
+  }): Promise<WorkflowResponse<InternalUvgCaseDetail>>;
+  upsertInternalUvgDecision(input: {
+    tenantId: string;
+    locale: PortalLocale;
+    caseId: string;
+    userId: string;
+    decisionStatus: string;
+    decisionReason: string;
+    effectiveFrom: string;
+    effectiveTo?: string;
+  }): Promise<WorkflowResponse<InternalUvgCaseDetail>>;
 
   getEmployerDashboard(input: { tenantId: string; locale: PortalLocale }): Promise<WorkflowResponse<EmployerDashboardSummary>>;
   listEmployerAbsences(input: WorkflowListQuery & {
@@ -294,6 +407,29 @@ export const createPortalWorkflowClient = (input: {
     async listEmployerPaymentRunSummaries(params) {
       return readJson(await fetchFn(withBaseUrl(`/v1/employer/payment-runs${toQueryString(params)}`)));
     },
+    async listEmployerUvgCases(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/employer/uvg-cases${toQueryString(params)}`)));
+    },
+    async getEmployerUvgCaseDetail(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/employer/uvg-cases/${params.caseId}${toQueryString({
+        tenantId: params.tenantId,
+        locale: params.locale,
+      })}`)));
+    },
+    async createEmployerUvgAccidentReport(params) {
+      return readJson(await fetchFn(withBaseUrl("/v1/employer/uvg-cases/report"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      }));
+    },
+    async generateEmployerUvgAccidentReportArtifact(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/employer/uvg-cases/${params.caseId}/report-artifact`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      }));
+    },
     async listInternalPaymentRuns(params) {
       return readJson(await fetchFn(withBaseUrl(`/v1/internal/payment-runs${toQueryString(params)}`)));
     },
@@ -317,6 +453,57 @@ export const createPortalWorkflowClient = (input: {
     },
     async listInternalPaymentAuditEvents(params) {
       return readJson(await fetchFn(withBaseUrl(`/v1/internal/payment-audit-events${toQueryString(params)}`)));
+    },
+    async listInternalUvgCases(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/internal/uvg-cases${toQueryString(params)}`)));
+    },
+    async getInternalUvgCaseDetail(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/internal/uvg-cases/${params.caseId}${toQueryString({
+        tenantId: params.tenantId,
+        locale: params.locale,
+      })}`)));
+    },
+    async updateInternalUvgCaseStatus(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/internal/uvg-cases/${params.caseId}/status`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      }));
+    },
+    async recordInternalUvgInjury(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/internal/uvg-cases/${params.caseId}/injuries`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      }));
+    },
+    async recordInternalUvgCircumstance(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/internal/uvg-cases/${params.caseId}/circumstances`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      }));
+    },
+    async upsertInternalUvgCoordination(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/internal/uvg-cases/${params.caseId}/coordination`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      }));
+    },
+    async linkInternalUvgDocument(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/internal/uvg-cases/${params.caseId}/documents`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      }));
+    },
+    async upsertInternalUvgDecision(params) {
+      return readJson(await fetchFn(withBaseUrl(`/v1/internal/uvg-cases/${params.caseId}/decisions`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      }));
     },
     async getEmployerDashboard(params) {
       return readJson(await fetchFn(withBaseUrl(`/v1/employer/dashboard${toQueryString(params)}`)));

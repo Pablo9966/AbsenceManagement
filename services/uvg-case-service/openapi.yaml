@@ -1,0 +1,57 @@
+openapi: 3.1.0
+info:
+  title: UVG Case Service
+  version: 0.1.0
+paths:
+  /v1/uvg-cases:
+    get:
+      summary: List tenant-scoped UVG cases
+      parameters:
+        - name: tenantId
+          in: query
+          required: true
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: type
+          in: query
+          schema: { type: string, enum: [bu, nbu] }
+        - name: employeeId
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: UVG cases
+    post:
+      summary: Create employer-origin UVG accident report
+      responses:
+        "200":
+          description: Created UVG case detail or validation issues
+  /v1/uvg-cases/{caseId}:
+    get:
+      summary: Get UVG case detail
+      parameters:
+        - name: caseId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: tenantId
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: UVG case detail
+  /v1/uvg-cases/{caseId}/status:
+    post:
+      summary: Update UVG case status and create audit event
+      responses:
+        "200":
+          description: Updated status or validation issues
+  /v1/uvg-cases/{caseId}/report-artifact:
+    post:
+      summary: Generate a reproducible UVG accident report artifact
+      responses:
+        "200":
+          description: Accident report artifact metadata and generated PDF metadata

@@ -7,4 +7,10 @@ declare module "next/navigation" {
   export const redirect: (href: string) => never;
 }
 
+declare module "next/headers" {
+  export const cookies: () => Promise<{
+    get: (name: string) => { value: string } | undefined;
+  }>;
+}
+
 declare module "*.css" {}

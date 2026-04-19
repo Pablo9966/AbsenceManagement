@@ -4,12 +4,17 @@ import {
   employeeRouteAccessRules,
   type LocaleCode,
 } from "./frontend.js";
+import { cookies } from "next/headers";
 import type {
   PermissionCheck,
   UserEmployeeLinkDto,
 } from "../../../packages/identity-access-client/src/types.js";
 import { createIdentityAccessClient } from "../../../packages/identity-access-client/src/client.js";
 import { createPortalWorkflowClient } from "../../../packages/portal-workflow-client/src/client.js";
+import {
+  LOCAL_TEST_PERSONA_COOKIE,
+  resolveLocalTestPersona,
+} from "../../../packages/frontend-platform/src/local-testing.js";
 
 const identityAccessClient = createIdentityAccessClient({
   baseUrl: process.env.IDENTITY_ACCESS_SERVICE_BASE_URL ?? "http://127.0.0.1:4010",
@@ -35,15 +40,22 @@ const employeePortalPermissions: PermissionCheck[] = [
 ];
 
 export const getEmployeePortalRuntime = async (routeLocale?: string) => {
+  const cookieStore = await cookies();
+  const selectedPersona = resolveLocalTestPersona(cookieStore.get(LOCAL_TEST_PERSONA_COOKIE)?.value);
+  if (selectedPersona && !selectedPersona.portalSessions.employee) {
+    throw new Error(`${selectedPersona.label} does not support the employee portal.`);
+  }
+  const portalSession = selectedPersona?.portalSessions.employee;
+
   const runtime = await createPortalBootstrapRuntime({
     identityAccessClient,
     workflowClient: portalWorkflowClient,
     routeLocale,
     config: {
-      tenantId: employeePortalConfig.tenantId,
+      tenantId: portalSession?.tenantId ?? employeePortalConfig.tenantId,
       tenantName: employeePortalConfig.tenantName,
       defaultLocale: employeePortalConfig.defaultLocale,
-      signInEmail: employeePortalConfig.signInEmail,
+      signInEmail: portalSession?.signInEmail ?? employeePortalConfig.signInEmail,
       featureFlags: employeePortalConfig.featureFlags,
       portalTitleKey: "shell.employeePortal",
       navigation: employeeNavigation,

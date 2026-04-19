@@ -42,6 +42,8 @@ export const EMPLOYER_PORTAL_BOOTSTRAP_PERMISSIONS: PermissionCheck[] = [
   { resourceType: "dashboard", action: "read" },
   { resourceType: "absence", action: "read" },
   { resourceType: "ktg_case", action: "read" },
+  { resourceType: "uvg_case", action: "read" },
+  { resourceType: "uvg_case", action: "write" },
   { resourceType: "document", action: "read" },
   { resourceType: "payment_instruction", action: "read" },
   { resourceType: "premium", action: "read" },
@@ -53,7 +55,11 @@ export const INTERNAL_CLAIMS_BOOTSTRAP_PERMISSIONS: PermissionCheck[] = [
   { resourceType: "dashboard", action: "read_internal" },
   { resourceType: "claims_intake_workspace", action: "read" },
   { resourceType: "ktg_case", action: "read_internal" },
+  { resourceType: "uvg_case", action: "read_internal" },
+  { resourceType: "uvg_case", action: "write_internal" },
   { resourceType: "benefit_calculation", action: "read" },
+  { resourceType: "payment_run", action: "read_internal" },
+  { resourceType: "reconciliation", action: "read_internal" },
 ];
 
 export const INTERNAL_COMPLIANCE_BOOTSTRAP_PERMISSIONS: PermissionCheck[] = [
@@ -88,6 +94,7 @@ export interface Phase2AReferenceData {
     employeeSelfService: { user: PlatformUser; profile: UserProfile };
     internalClaims: { user: PlatformUser; profile: UserProfile };
     internalCompliance: { user: PlatformUser; profile: UserProfile };
+    superUser: { user: PlatformUser; profile: UserProfile };
   };
 }
 
@@ -203,6 +210,11 @@ export const createPhase2AReferenceData = (): Phase2AReferenceData => ({
       lastName: "Compliance",
       displayName: "Nora Compliance",
     }),
+    superUser: buildPlatformUser("user-super-admin", "super.user@demo.elipslife.ch", "en-CH", {
+      firstName: "Sofia",
+      lastName: "Superuser",
+      displayName: "Sofia Superuser",
+    }),
   },
 });
 
@@ -230,6 +242,14 @@ export const seedPhase2AReferenceData = async (service: IdentityAccessService): 
     buildMembership("membership-internal-compliance", tenants.internal.tenantId, users.internalCompliance.user.id),
     actor,
   );
+  await service.createTenantMembership(
+    buildMembership("membership-super-employer", tenants.employer.tenantId, users.superUser.user.id),
+    actor,
+  );
+  await service.createTenantMembership(
+    buildMembership("membership-super-internal", tenants.internal.tenantId, users.superUser.user.id),
+    actor,
+  );
 
   await service.createRoleAssignment(
     buildRoleAssignment("role-employer-admin", tenants.employer.tenantId, users.employerAdmin.user.id, PHASE_2A_REFERENCE_ROLES.employer.tenantAdmin),
@@ -245,6 +265,26 @@ export const seedPhase2AReferenceData = async (service: IdentityAccessService): 
   );
   await service.createRoleAssignment(
     buildRoleAssignment("role-internal-compliance", tenants.internal.tenantId, users.internalCompliance.user.id, PHASE_2A_REFERENCE_ROLES.internal.complianceUser),
+    actor,
+  );
+  await service.createRoleAssignment(
+    buildRoleAssignment("role-super-employer-admin", tenants.employer.tenantId, users.superUser.user.id, PHASE_2A_REFERENCE_ROLES.employer.tenantAdmin),
+    actor,
+  );
+  await service.createRoleAssignment(
+    buildRoleAssignment("role-super-employee-self", tenants.employer.tenantId, users.superUser.user.id, PHASE_2A_REFERENCE_ROLES.employer.employeeSelfService),
+    actor,
+  );
+  await service.createRoleAssignment(
+    buildRoleAssignment("role-super-internal-claims", tenants.internal.tenantId, users.superUser.user.id, PHASE_2A_REFERENCE_ROLES.internal.claimsHandler),
+    actor,
+  );
+  await service.createRoleAssignment(
+    buildRoleAssignment("role-super-internal-compliance", tenants.internal.tenantId, users.superUser.user.id, PHASE_2A_REFERENCE_ROLES.internal.complianceUser),
+    actor,
+  );
+  await service.createRoleAssignment(
+    buildRoleAssignment("role-super-internal-admin", tenants.internal.tenantId, users.superUser.user.id, PHASE_2A_REFERENCE_ROLES.internal.internalAdmin),
     actor,
   );
 
@@ -408,6 +448,18 @@ export const seedPhase2AReferenceData = async (service: IdentityAccessService): 
       referenceJson: { module: "identity-access-service", sensitivity: "audit" },
       createdAt: REFERENCE_EFFECTIVE_AT,
     },
+    {
+      id: "purpose-super-user-document-access",
+      tenantId: tenants.employer.tenantId,
+      userId: users.superUser.user.id,
+      employeeId: "employee-0001",
+      purposeCode: "local_testing_cross_portal_access",
+      lawfulBasis: "consent",
+      grantedAt: REFERENCE_EFFECTIVE_AT,
+      source: "local_testing_reference_seed",
+      referenceJson: { module: "local-launcher", sensitivity: "medical_document" },
+      createdAt: REFERENCE_EFFECTIVE_AT,
+    },
   ];
   for (const record of purposeRecords) {
     await service.createAccessPurposeRecord(record);
@@ -422,6 +474,16 @@ export const seedPhase2AReferenceData = async (service: IdentityAccessService): 
     linkedAt: REFERENCE_EFFECTIVE_AT,
   };
   await service.createUserEmployeeLink(employeeLink, actor);
+
+  const superUserEmployeeLink: UserEmployeeLink = {
+    id: "user-employee-link-super-admin",
+    tenantId: tenants.employer.tenantId,
+    userId: users.superUser.user.id,
+    employeeId: "employee-0001",
+    linkType: "employee_self_service",
+    linkedAt: REFERENCE_EFFECTIVE_AT,
+  };
+  await service.createUserEmployeeLink(superUserEmployeeLink, actor);
 
   const compliancePolicy: AuditAccessPolicy = {
     id: "audit-policy-compliance-user",

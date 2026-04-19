@@ -1,0 +1,1486 @@
+{
+  "snapshot": {
+    "platformUsers": [
+      {
+        "id": "user-employer-admin",
+        "email": "hr.admin@demo.elipslife.ch",
+        "preferredLanguage": "de-CH",
+        "status": "active",
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "user-employee-self",
+        "email": "employee@demo.elipslife.ch",
+        "preferredLanguage": "de-CH",
+        "status": "active",
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "user-internal-claims",
+        "email": "claims.handler@elipslife.ch",
+        "preferredLanguage": "en-CH",
+        "status": "active",
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "user-internal-compliance",
+        "email": "compliance.user@elipslife.ch",
+        "preferredLanguage": "de-CH",
+        "status": "active",
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "user-super-admin",
+        "email": "super.user@demo.elipslife.ch",
+        "preferredLanguage": "en-CH",
+        "status": "active",
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      }
+    ],
+    "userProfiles": [
+      {
+        "userId": "user-employer-admin",
+        "firstName": "Hanna",
+        "lastName": "Admin",
+        "displayName": "Hanna Admin",
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "userId": "user-employee-self",
+        "firstName": "Anna",
+        "lastName": "Keller",
+        "displayName": "Anna Keller",
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "userId": "user-internal-claims",
+        "firstName": "Cleo",
+        "lastName": "Claims",
+        "displayName": "Cleo Claims",
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "userId": "user-internal-compliance",
+        "firstName": "Nora",
+        "lastName": "Compliance",
+        "displayName": "Nora Compliance",
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "userId": "user-super-admin",
+        "firstName": "Sofia",
+        "lastName": "Superuser",
+        "displayName": "Sofia Superuser",
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      }
+    ],
+    "tenantMemberships": [
+      {
+        "id": "membership-employer-admin",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-employer-admin",
+        "membershipStatus": "active",
+        "joinedAt": "2026-04-18T08:00:00.000Z",
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "membership-employee-self",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-employee-self",
+        "membershipStatus": "active",
+        "joinedAt": "2026-04-18T08:00:00.000Z",
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "membership-internal-claims",
+        "tenantId": "tenant-internal-demo",
+        "userId": "user-internal-claims",
+        "membershipStatus": "active",
+        "joinedAt": "2026-04-18T08:00:00.000Z",
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "membership-internal-compliance",
+        "tenantId": "tenant-internal-demo",
+        "userId": "user-internal-compliance",
+        "membershipStatus": "active",
+        "joinedAt": "2026-04-18T08:00:00.000Z",
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "membership-super-employer",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-super-admin",
+        "membershipStatus": "active",
+        "joinedAt": "2026-04-18T08:00:00.000Z",
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "membership-super-internal",
+        "tenantId": "tenant-internal-demo",
+        "userId": "user-super-admin",
+        "membershipStatus": "active",
+        "joinedAt": "2026-04-18T08:00:00.000Z",
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      }
+    ],
+    "userEmployeeLinks": [
+      {
+        "id": "user-employee-link-anna-self",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-employee-self",
+        "employeeId": "employee-0001",
+        "linkType": "employee_self_service",
+        "linkedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "user-employee-link-super-admin",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-super-admin",
+        "employeeId": "employee-0001",
+        "linkType": "employee_self_service",
+        "linkedAt": "2026-04-18T08:00:00.000Z"
+      }
+    ],
+    "roleAssignments": [
+      {
+        "id": "role-employer-admin",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-employer-admin",
+        "roleCode": "tenant_admin",
+        "scopeType": "tenant",
+        "assignedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "role-employee-self",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-employee-self",
+        "roleCode": "employee_self_service",
+        "scopeType": "tenant",
+        "assignedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "role-internal-claims",
+        "tenantId": "tenant-internal-demo",
+        "userId": "user-internal-claims",
+        "roleCode": "claims_handler",
+        "scopeType": "tenant",
+        "assignedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "role-internal-compliance",
+        "tenantId": "tenant-internal-demo",
+        "userId": "user-internal-compliance",
+        "roleCode": "compliance_user",
+        "scopeType": "tenant",
+        "assignedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "role-super-employer-admin",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-super-admin",
+        "roleCode": "tenant_admin",
+        "scopeType": "tenant",
+        "assignedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "role-super-employee-self",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-super-admin",
+        "roleCode": "employee_self_service",
+        "scopeType": "tenant",
+        "assignedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "role-super-internal-claims",
+        "tenantId": "tenant-internal-demo",
+        "userId": "user-super-admin",
+        "roleCode": "claims_handler",
+        "scopeType": "tenant",
+        "assignedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "role-super-internal-compliance",
+        "tenantId": "tenant-internal-demo",
+        "userId": "user-super-admin",
+        "roleCode": "compliance_user",
+        "scopeType": "tenant",
+        "assignedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "role-super-internal-admin",
+        "tenantId": "tenant-internal-demo",
+        "userId": "user-super-admin",
+        "roleCode": "internal_admin",
+        "scopeType": "tenant",
+        "assignedAt": "2026-04-18T08:00:00.000Z"
+      }
+    ],
+    "permissionPolicySets": [
+      {
+        "id": "policy-employer-shell-v1",
+        "tenantId": "tenant-employer-demo",
+        "policyCode": "employer_portal_shell",
+        "policyVersion": 1,
+        "activeFlag": true,
+        "description": "employer_portal_shell baseline policy",
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "policy-employee-shell-v1",
+        "tenantId": "tenant-employer-demo",
+        "policyCode": "employee_portal_shell",
+        "policyVersion": 1,
+        "activeFlag": true,
+        "description": "employee_portal_shell baseline policy",
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "policy-internal-shell-v1",
+        "tenantId": "tenant-internal-demo",
+        "policyCode": "internal_portal_shell",
+        "policyVersion": 1,
+        "activeFlag": true,
+        "description": "internal_portal_shell baseline policy",
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      }
+    ],
+    "permissionGrants": [
+      {
+        "id": "tenant-employer-demo:tenant_admin:dashboard:read",
+        "tenantId": "tenant-employer-demo",
+        "policySetId": "policy-employer-shell-v1",
+        "roleCode": "tenant_admin",
+        "resourceType": "dashboard",
+        "action": "read",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-employer-demo:tenant_admin:absence:read",
+        "tenantId": "tenant-employer-demo",
+        "policySetId": "policy-employer-shell-v1",
+        "roleCode": "tenant_admin",
+        "resourceType": "absence",
+        "action": "read",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-employer-demo:tenant_admin:ktg_case:read",
+        "tenantId": "tenant-employer-demo",
+        "policySetId": "policy-employer-shell-v1",
+        "roleCode": "tenant_admin",
+        "resourceType": "ktg_case",
+        "action": "read",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-employer-demo:tenant_admin:document:read",
+        "tenantId": "tenant-employer-demo",
+        "policySetId": "policy-employer-shell-v1",
+        "roleCode": "tenant_admin",
+        "resourceType": "document",
+        "action": "read",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-employer-demo:tenant_admin:payment_instruction:read",
+        "tenantId": "tenant-employer-demo",
+        "policySetId": "policy-employer-shell-v1",
+        "roleCode": "tenant_admin",
+        "resourceType": "payment_instruction",
+        "action": "read",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-employer-demo:tenant_admin:premium:read",
+        "tenantId": "tenant-employer-demo",
+        "policySetId": "policy-employer-shell-v1",
+        "roleCode": "tenant_admin",
+        "resourceType": "premium",
+        "action": "read",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-employer-demo:tenant_admin:task:read",
+        "tenantId": "tenant-employer-demo",
+        "policySetId": "policy-employer-shell-v1",
+        "roleCode": "tenant_admin",
+        "resourceType": "task",
+        "action": "read",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-employer-demo:tenant_admin:tenant_admin:manage",
+        "tenantId": "tenant-employer-demo",
+        "policySetId": "policy-employer-shell-v1",
+        "roleCode": "tenant_admin",
+        "resourceType": "tenant_admin",
+        "action": "manage",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-internal-demo:claims_handler:dashboard:read_internal",
+        "tenantId": "tenant-internal-demo",
+        "policySetId": "policy-internal-shell-v1",
+        "roleCode": "claims_handler",
+        "resourceType": "dashboard",
+        "action": "read_internal",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-internal-demo:claims_handler:claims_intake_workspace:read",
+        "tenantId": "tenant-internal-demo",
+        "policySetId": "policy-internal-shell-v1",
+        "roleCode": "claims_handler",
+        "resourceType": "claims_intake_workspace",
+        "action": "read",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-internal-demo:claims_handler:ktg_case:read_internal",
+        "tenantId": "tenant-internal-demo",
+        "policySetId": "policy-internal-shell-v1",
+        "roleCode": "claims_handler",
+        "resourceType": "ktg_case",
+        "action": "read_internal",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-internal-demo:claims_handler:benefit_calculation:read",
+        "tenantId": "tenant-internal-demo",
+        "policySetId": "policy-internal-shell-v1",
+        "roleCode": "claims_handler",
+        "resourceType": "benefit_calculation",
+        "action": "read",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-internal-demo:claims_handler:payment_run:read_internal",
+        "tenantId": "tenant-internal-demo",
+        "policySetId": "policy-internal-shell-v1",
+        "roleCode": "claims_handler",
+        "resourceType": "payment_run",
+        "action": "read_internal",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-internal-demo:claims_handler:reconciliation:read_internal",
+        "tenantId": "tenant-internal-demo",
+        "policySetId": "policy-internal-shell-v1",
+        "roleCode": "claims_handler",
+        "resourceType": "reconciliation",
+        "action": "read_internal",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-employer-demo:employee_self_service:dashboard:read",
+        "tenantId": "tenant-employer-demo",
+        "policySetId": "policy-employee-shell-v1",
+        "roleCode": "employee_self_service",
+        "resourceType": "dashboard",
+        "action": "read",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-employer-demo:employee_self_service:absence:read",
+        "tenantId": "tenant-employer-demo",
+        "policySetId": "policy-employee-shell-v1",
+        "roleCode": "employee_self_service",
+        "resourceType": "absence",
+        "action": "read",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-employer-demo:employee_self_service:absence:write",
+        "tenantId": "tenant-employer-demo",
+        "policySetId": "policy-employee-shell-v1",
+        "roleCode": "employee_self_service",
+        "resourceType": "absence",
+        "action": "write",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-employer-demo:employee_self_service:document:read",
+        "tenantId": "tenant-employer-demo",
+        "policySetId": "policy-employee-shell-v1",
+        "roleCode": "employee_self_service",
+        "resourceType": "document",
+        "action": "read",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-employer-demo:employee_self_service:document:write",
+        "tenantId": "tenant-employer-demo",
+        "policySetId": "policy-employee-shell-v1",
+        "roleCode": "employee_self_service",
+        "resourceType": "document",
+        "action": "write",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-internal-demo:compliance_user:dashboard:read_internal",
+        "tenantId": "tenant-internal-demo",
+        "policySetId": "policy-internal-shell-v1",
+        "roleCode": "compliance_user",
+        "resourceType": "dashboard",
+        "action": "read_internal",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-internal-demo:compliance_user:audit:view",
+        "tenantId": "tenant-internal-demo",
+        "policySetId": "policy-internal-shell-v1",
+        "roleCode": "compliance_user",
+        "resourceType": "audit",
+        "action": "view",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "tenant-internal-demo:compliance_user:internal_admin:manage",
+        "tenantId": "tenant-internal-demo",
+        "policySetId": "policy-internal-shell-v1",
+        "roleCode": "compliance_user",
+        "resourceType": "internal_admin",
+        "action": "manage",
+        "effect": "allow",
+        "conditionJson": {},
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      }
+    ],
+    "portalSessionPolicies": [
+      {
+        "id": "session-policy-employer-demo",
+        "tenantId": "tenant-employer-demo",
+        "mfaRequiredFlag": true,
+        "idleTimeoutMinutes": 30,
+        "allowedAuthMethodsJson": [
+          "passwordless_link",
+          "saml"
+        ],
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "session-policy-internal-demo",
+        "tenantId": "tenant-internal-demo",
+        "mfaRequiredFlag": true,
+        "idleTimeoutMinutes": 15,
+        "allowedAuthMethodsJson": [
+          "oidc"
+        ],
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      }
+    ],
+    "ssoConfigurations": [],
+    "accessPurposeRecords": [
+      {
+        "id": "purpose-employer-medical-doc-review",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-employer-admin",
+        "employeeId": "employee-0001",
+        "purposeCode": "medical_document_review",
+        "lawfulBasis": "insurance_claim_handling",
+        "grantedAt": "2026-04-18T08:00:00.000Z",
+        "source": "phase_2a_reference_seed",
+        "referenceJson": {
+          "module": "document-service",
+          "sensitivity": "medical_document"
+        },
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "purpose-employee-self-service-document",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-employee-self",
+        "employeeId": "employee-0001",
+        "purposeCode": "employee_self_service_document",
+        "lawfulBasis": "consent",
+        "grantedAt": "2026-04-18T08:00:00.000Z",
+        "source": "phase_2d_reference_seed",
+        "referenceJson": {
+          "module": "employee-portal",
+          "sensitivity": "medical_document"
+        },
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "purpose-internal-audit-review",
+        "tenantId": "tenant-internal-demo",
+        "userId": "user-internal-compliance",
+        "purposeCode": "access_audit_review",
+        "lawfulBasis": "legal_obligation",
+        "grantedAt": "2026-04-18T08:00:00.000Z",
+        "source": "phase_2a_reference_seed",
+        "referenceJson": {
+          "module": "identity-access-service",
+          "sensitivity": "audit"
+        },
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "purpose-super-user-document-access",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-super-admin",
+        "employeeId": "employee-0001",
+        "purposeCode": "local_testing_cross_portal_access",
+        "lawfulBasis": "consent",
+        "grantedAt": "2026-04-18T08:00:00.000Z",
+        "source": "local_testing_reference_seed",
+        "referenceJson": {
+          "module": "local-launcher",
+          "sensitivity": "medical_document"
+        },
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      }
+    ],
+    "auditAccessPolicies": [
+      {
+        "id": "audit-policy-compliance-user",
+        "tenantId": "tenant-internal-demo",
+        "roleCode": "compliance_user",
+        "policySetId": "policy-internal-shell-v1",
+        "canViewAuditFlag": true,
+        "canExportAuditFlag": true,
+        "sensitiveScopeJson": {
+          "resourceTypes": [
+            "access_control",
+            "platform_user",
+            "audit_policy"
+          ],
+          "exportFormats": [
+            "csv",
+            "json"
+          ],
+          "authorityModel": "permission_grant_and_audit_policy"
+        },
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      }
+    ],
+    "onboardingWorkspaces": [
+      {
+        "id": "onboarding-employer-demo",
+        "tenantId": "tenant-employer-demo",
+        "status": "user_provisioning",
+        "currentStep": "user_provisioning",
+        "policySyncStatus": "complete",
+        "userProvisioningStatus": "in_progress",
+        "integrationSetupStatus": "pending",
+        "createdAt": "2026-04-18T08:00:00.000Z",
+        "updatedAt": "2026-04-18T08:00:00.000Z"
+      }
+    ],
+    "provisioningInvites": [
+      {
+        "id": "invite-employer-hr-lead",
+        "tenantId": "tenant-employer-demo",
+        "email": "lead.hr@demo.elipslife.ch",
+        "targetRoleCode": "hr_manager",
+        "inviteStatus": "pending",
+        "expiresAt": "2026-04-25T08:00:00.000Z",
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      },
+      {
+        "id": "invite-employer-payroll",
+        "tenantId": "tenant-employer-demo",
+        "email": "payroll@demo.elipslife.ch",
+        "targetRoleCode": "payroll_specialist",
+        "inviteStatus": "accepted",
+        "expiresAt": "2026-04-21T08:00:00.000Z",
+        "acceptedAt": "2026-04-19T10:30:00.000Z",
+        "createdAt": "2026-04-18T08:00:00.000Z"
+      }
+    ],
+    "accessAuditEvents": [
+      {
+        "id": "fc785e93-7c99-45e5-ac77-1335b3dfa1d3",
+        "tenantId": "00000000-0000-0000-0000-000000000000",
+        "userId": "user-employer-admin",
+        "actorRole": "system",
+        "resourceType": "platform_user",
+        "resourceReference": "user-employer-admin",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "preferredLanguage": "de-CH"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "bd314c8a-3acd-42f1-955f-274f4f57e4eb",
+        "tenantId": "00000000-0000-0000-0000-000000000000",
+        "userId": "user-employee-self",
+        "actorRole": "system",
+        "resourceType": "platform_user",
+        "resourceReference": "user-employee-self",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "preferredLanguage": "de-CH"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "75a42ba4-4d8c-4ad7-9f91-46caa41946e2",
+        "tenantId": "00000000-0000-0000-0000-000000000000",
+        "userId": "user-internal-claims",
+        "actorRole": "system",
+        "resourceType": "platform_user",
+        "resourceReference": "user-internal-claims",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "preferredLanguage": "en-CH"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "b2d9a268-d496-4e12-a558-80780533ef0f",
+        "tenantId": "00000000-0000-0000-0000-000000000000",
+        "userId": "user-internal-compliance",
+        "actorRole": "system",
+        "resourceType": "platform_user",
+        "resourceReference": "user-internal-compliance",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "preferredLanguage": "de-CH"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "c6089700-85ce-44b5-bcad-c98fd23a184f",
+        "tenantId": "00000000-0000-0000-0000-000000000000",
+        "userId": "user-super-admin",
+        "actorRole": "system",
+        "resourceType": "platform_user",
+        "resourceReference": "user-super-admin",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "preferredLanguage": "en-CH"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "5eafa348-3ace-44c3-89e2-9db3b9226b14",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-employer-admin",
+        "actorRole": "system",
+        "resourceType": "tenant_membership",
+        "resourceReference": "membership-employer-admin",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "membershipStatus": "active"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "252e48a0-35ae-4684-bae3-e342e4b6bdff",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-employee-self",
+        "actorRole": "system",
+        "resourceType": "tenant_membership",
+        "resourceReference": "membership-employee-self",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "membershipStatus": "active"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "d0dd621f-df8f-419b-bbe3-ed12f5bfafc2",
+        "tenantId": "tenant-internal-demo",
+        "userId": "user-internal-claims",
+        "actorRole": "system",
+        "resourceType": "tenant_membership",
+        "resourceReference": "membership-internal-claims",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "membershipStatus": "active"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "6b1b4331-3eb8-43e8-abb4-8ba181fdd5ed",
+        "tenantId": "tenant-internal-demo",
+        "userId": "user-internal-compliance",
+        "actorRole": "system",
+        "resourceType": "tenant_membership",
+        "resourceReference": "membership-internal-compliance",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "membershipStatus": "active"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "2c9a3429-38c7-462f-b8b1-3309d9e26478",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-super-admin",
+        "actorRole": "system",
+        "resourceType": "tenant_membership",
+        "resourceReference": "membership-super-employer",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "membershipStatus": "active"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "e5c65e6a-afa9-47fa-b68c-f61de25c204b",
+        "tenantId": "tenant-internal-demo",
+        "userId": "user-super-admin",
+        "actorRole": "system",
+        "resourceType": "tenant_membership",
+        "resourceReference": "membership-super-internal",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "membershipStatus": "active"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "352cb246-3a5f-4df0-b308-18d10842f5fb",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-employer-admin",
+        "actorRole": "system",
+        "resourceType": "role_assignment",
+        "resourceReference": "role-employer-admin",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "tenant_admin",
+          "scopeType": "tenant"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "59b70b30-ac36-4c0a-9d5d-a39807cbe33b",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-employee-self",
+        "actorRole": "system",
+        "resourceType": "role_assignment",
+        "resourceReference": "role-employee-self",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "employee_self_service",
+          "scopeType": "tenant"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "f9cdb9a9-0035-4a8e-b165-4aebd799ab5a",
+        "tenantId": "tenant-internal-demo",
+        "userId": "user-internal-claims",
+        "actorRole": "system",
+        "resourceType": "role_assignment",
+        "resourceReference": "role-internal-claims",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "claims_handler",
+          "scopeType": "tenant"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "1b0698d7-e462-4a25-91bd-1be218474e16",
+        "tenantId": "tenant-internal-demo",
+        "userId": "user-internal-compliance",
+        "actorRole": "system",
+        "resourceType": "role_assignment",
+        "resourceReference": "role-internal-compliance",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "compliance_user",
+          "scopeType": "tenant"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "81c161b4-045a-4a36-ae75-f6f1a41cad54",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-super-admin",
+        "actorRole": "system",
+        "resourceType": "role_assignment",
+        "resourceReference": "role-super-employer-admin",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "tenant_admin",
+          "scopeType": "tenant"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "14acaf17-08fe-45a1-89e7-888acb0dbe11",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-super-admin",
+        "actorRole": "system",
+        "resourceType": "role_assignment",
+        "resourceReference": "role-super-employee-self",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "employee_self_service",
+          "scopeType": "tenant"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "3f426d26-964f-4d21-95a7-8b565d79f55a",
+        "tenantId": "tenant-internal-demo",
+        "userId": "user-super-admin",
+        "actorRole": "system",
+        "resourceType": "role_assignment",
+        "resourceReference": "role-super-internal-claims",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "claims_handler",
+          "scopeType": "tenant"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "c67135e4-c257-4123-bfd9-837fe9e46157",
+        "tenantId": "tenant-internal-demo",
+        "userId": "user-super-admin",
+        "actorRole": "system",
+        "resourceType": "role_assignment",
+        "resourceReference": "role-super-internal-compliance",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "compliance_user",
+          "scopeType": "tenant"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "c68dba0f-d987-4cde-b2ac-13cc1d5d672c",
+        "tenantId": "tenant-internal-demo",
+        "userId": "user-super-admin",
+        "actorRole": "system",
+        "resourceType": "role_assignment",
+        "resourceReference": "role-super-internal-admin",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "internal_admin",
+          "scopeType": "tenant"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "39894f27-632b-4500-98b8-cef2b23a66f7",
+        "tenantId": "tenant-employer-demo",
+        "actorRole": "system",
+        "resourceType": "permission_policy_set",
+        "resourceReference": "policy-employer-shell-v1",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "policyCode": "employer_portal_shell",
+          "policyVersion": 1,
+          "activeFlag": true
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "985ef24d-9ef1-410a-b1a4-ddb72bc77010",
+        "tenantId": "tenant-employer-demo",
+        "actorRole": "system",
+        "resourceType": "permission_policy_set",
+        "resourceReference": "policy-employee-shell-v1",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "policyCode": "employee_portal_shell",
+          "policyVersion": 1,
+          "activeFlag": true
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "056d8a09-7cae-4b09-89c2-23581fa1d045",
+        "tenantId": "tenant-internal-demo",
+        "actorRole": "system",
+        "resourceType": "permission_policy_set",
+        "resourceReference": "policy-internal-shell-v1",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "policyCode": "internal_portal_shell",
+          "policyVersion": 1,
+          "activeFlag": true
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "bd00d6a0-6d4e-4204-a6fe-c83cd97d9bcb",
+        "tenantId": "tenant-employer-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-employer-demo:tenant_admin:dashboard:read",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "tenant_admin",
+          "resourceType": "dashboard",
+          "actionName": "read",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "0b0377c6-8818-426a-8a8c-cce99a39e868",
+        "tenantId": "tenant-employer-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-employer-demo:tenant_admin:absence:read",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "tenant_admin",
+          "resourceType": "absence",
+          "actionName": "read",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "4ede1d6c-06a1-4a53-9ce1-6b1b31e57f6d",
+        "tenantId": "tenant-employer-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-employer-demo:tenant_admin:ktg_case:read",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "tenant_admin",
+          "resourceType": "ktg_case",
+          "actionName": "read",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "0bea6cb2-d4c5-4992-ae22-e79846371791",
+        "tenantId": "tenant-employer-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-employer-demo:tenant_admin:document:read",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "tenant_admin",
+          "resourceType": "document",
+          "actionName": "read",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "29227e7d-9c87-48aa-b251-da5497be61f0",
+        "tenantId": "tenant-employer-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-employer-demo:tenant_admin:payment_instruction:read",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "tenant_admin",
+          "resourceType": "payment_instruction",
+          "actionName": "read",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "368133cc-5b78-405c-897f-64e8d829e116",
+        "tenantId": "tenant-employer-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-employer-demo:tenant_admin:premium:read",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "tenant_admin",
+          "resourceType": "premium",
+          "actionName": "read",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "78f9f9d9-5754-41ca-9a42-28b5c41e6caa",
+        "tenantId": "tenant-employer-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-employer-demo:tenant_admin:task:read",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "tenant_admin",
+          "resourceType": "task",
+          "actionName": "read",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "b11f6174-2a5a-45f7-9c41-96d3145c7337",
+        "tenantId": "tenant-employer-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-employer-demo:tenant_admin:tenant_admin:manage",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "tenant_admin",
+          "resourceType": "tenant_admin",
+          "actionName": "manage",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "989babd9-4474-42f8-84af-496890210fde",
+        "tenantId": "tenant-internal-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-internal-demo:claims_handler:dashboard:read_internal",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "claims_handler",
+          "resourceType": "dashboard",
+          "actionName": "read_internal",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "6472e702-fd6f-4842-959e-c189783bd4d4",
+        "tenantId": "tenant-internal-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-internal-demo:claims_handler:claims_intake_workspace:read",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "claims_handler",
+          "resourceType": "claims_intake_workspace",
+          "actionName": "read",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "257a0fc9-8784-4b6c-9474-4b921bcc0d94",
+        "tenantId": "tenant-internal-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-internal-demo:claims_handler:ktg_case:read_internal",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "claims_handler",
+          "resourceType": "ktg_case",
+          "actionName": "read_internal",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "cc696000-19f9-42b6-b24d-352685c0b3a2",
+        "tenantId": "tenant-internal-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-internal-demo:claims_handler:benefit_calculation:read",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "claims_handler",
+          "resourceType": "benefit_calculation",
+          "actionName": "read",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "e9b0ecfa-7b09-4700-89da-884c735a5114",
+        "tenantId": "tenant-internal-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-internal-demo:claims_handler:payment_run:read_internal",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "claims_handler",
+          "resourceType": "payment_run",
+          "actionName": "read_internal",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "63d60801-17e3-4418-bbb9-0a49cf107a30",
+        "tenantId": "tenant-internal-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-internal-demo:claims_handler:reconciliation:read_internal",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "claims_handler",
+          "resourceType": "reconciliation",
+          "actionName": "read_internal",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "ee957eff-384d-4ff6-bf86-1131aa349b5d",
+        "tenantId": "tenant-employer-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-employer-demo:employee_self_service:dashboard:read",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "employee_self_service",
+          "resourceType": "dashboard",
+          "actionName": "read",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "31038755-ee10-4b48-a0a8-a7094c727f1e",
+        "tenantId": "tenant-employer-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-employer-demo:employee_self_service:absence:read",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "employee_self_service",
+          "resourceType": "absence",
+          "actionName": "read",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "26b48891-d4f0-4350-812e-e761c219a4e7",
+        "tenantId": "tenant-employer-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-employer-demo:employee_self_service:absence:write",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "employee_self_service",
+          "resourceType": "absence",
+          "actionName": "write",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "5fec29bd-83c3-43a3-9e41-3a5a21cce858",
+        "tenantId": "tenant-employer-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-employer-demo:employee_self_service:document:read",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "employee_self_service",
+          "resourceType": "document",
+          "actionName": "read",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "ece78aba-12ad-4a40-a155-1fd63a67e3c5",
+        "tenantId": "tenant-employer-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-employer-demo:employee_self_service:document:write",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "employee_self_service",
+          "resourceType": "document",
+          "actionName": "write",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "27fc23f1-983f-4276-a966-14bf35971bbe",
+        "tenantId": "tenant-internal-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-internal-demo:compliance_user:dashboard:read_internal",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "compliance_user",
+          "resourceType": "dashboard",
+          "actionName": "read_internal",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "d433ea9a-272e-47f8-a6d9-e0c98b92ee9c",
+        "tenantId": "tenant-internal-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-internal-demo:compliance_user:audit:view",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "compliance_user",
+          "resourceType": "audit",
+          "actionName": "view",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "514537af-d392-4257-a590-63b6f90d7535",
+        "tenantId": "tenant-internal-demo",
+        "actorRole": "system",
+        "resourceType": "permission_grant",
+        "resourceReference": "tenant-internal-demo:compliance_user:internal_admin:manage",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "roleCode": "compliance_user",
+          "resourceType": "internal_admin",
+          "actionName": "manage",
+          "effect": "allow"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "fc2a6ca6-f707-49a5-ab5e-1f0bd4697d77",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-employee-self",
+        "actorRole": "system",
+        "resourceType": "user_employee_link",
+        "resourceReference": "user-employee-link-anna-self",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "employeeId": "employee-0001",
+          "linkType": "employee_self_service"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      },
+      {
+        "id": "578ed821-470f-4fc9-8d79-28c3e92a65e5",
+        "tenantId": "tenant-employer-demo",
+        "userId": "user-super-admin",
+        "actorRole": "system",
+        "resourceType": "user_employee_link",
+        "resourceReference": "user-employee-link-super-admin",
+        "action": "create",
+        "result": "success",
+        "occurredAt": "2026-04-18T08:00:00.000Z",
+        "payload": {
+          "employeeId": "employee-0001",
+          "linkType": "employee_self_service"
+        },
+        "actorId": "system-seed",
+        "correlationId": "phase-2a-reference-seed"
+      }
+    ]
+  },
+  "sessions": [
+    {
+      "sessionToken": "7a1cc0f3-9051-494a-a1cf-55273d2a1daf",
+      "tenantId": "tenant-employer-demo",
+      "userId": "user-employer-admin",
+      "createdAt": "2026-04-19T07:58:30.757Z"
+    },
+    {
+      "sessionToken": "b2e48c9a-9271-4c45-8567-ccc6b6f3fc5d",
+      "tenantId": "tenant-employer-demo",
+      "userId": "user-super-admin",
+      "createdAt": "2026-04-19T07:58:46.739Z"
+    },
+    {
+      "sessionToken": "d2aa6f4a-a146-4c73-989a-0860ddaff8f2",
+      "tenantId": "tenant-employer-demo",
+      "userId": "user-employee-self",
+      "createdAt": "2026-04-19T07:59:00.091Z"
+    }
+  ]
+}

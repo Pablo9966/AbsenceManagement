@@ -6,8 +6,13 @@ import {
   loadCatalog,
   resolveLocale,
 } from "./frontend.js";
+import { cookies } from "next/headers";
 import { createIdentityAccessClient } from "../../../packages/identity-access-client/src/client.js";
 import { createPortalWorkflowClient } from "../../../packages/portal-workflow-client/src/client.js";
+import {
+  LOCAL_TEST_PERSONA_COOKIE,
+  resolveLocalTestPersona,
+} from "../../../packages/frontend-platform/src/local-testing.js";
 
 const identityAccessClient = createIdentityAccessClient({
   baseUrl: process.env.IDENTITY_ACCESS_SERVICE_BASE_URL ?? "http://127.0.0.1:4010",
@@ -28,6 +33,8 @@ const employerPortalPermissions = [
   { resourceType: "dashboard", action: "read" },
   { resourceType: "absence", action: "read" },
   { resourceType: "ktg_case", action: "read" },
+  { resourceType: "uvg_case", action: "read" },
+  { resourceType: "uvg_case", action: "write" },
   { resourceType: "document", action: "read" },
   { resourceType: "payment_instruction", action: "read" },
   { resourceType: "premium", action: "read" },
@@ -36,9 +43,15 @@ const employerPortalPermissions = [
 ];
 
 export const getEmployerPortalRuntime = async (routeLocale) => {
+  const cookieStore = await cookies();
+  const selectedPersona = resolveLocalTestPersona(cookieStore.get(LOCAL_TEST_PERSONA_COOKIE)?.value);
+  if (selectedPersona && !selectedPersona.portalSessions.employer) {
+    throw new Error(`${selectedPersona.label} does not support the employer portal.`);
+  }
+  const portalSession = selectedPersona?.portalSessions.employer;
   const session = await identityAccessClient.signIn({
-    email: employerPortalConfig.signInEmail,
-    tenantId: employerPortalConfig.tenantId,
+    email: portalSession?.signInEmail ?? employerPortalConfig.signInEmail,
+    tenantId: portalSession?.tenantId ?? employerPortalConfig.tenantId,
   });
   const bootstrap = await identityAccessClient.getPortalBootstrap(session.sessionToken, {
     routeLocale,
@@ -52,7 +65,7 @@ export const getEmployerPortalRuntime = async (routeLocale) => {
   const messages = loadCatalog(locale);
   const userContext = {
     userId: bootstrap.user.id,
-    tenantId: employerPortalConfig.tenantId,
+    tenantId: portalSession?.tenantId ?? employerPortalConfig.tenantId,
     locale,
     roleCodes: bootstrap.roleAssignments
       .filter((assignment) => !assignment.revokedAt)
@@ -64,7 +77,7 @@ export const getEmployerPortalRuntime = async (routeLocale) => {
     })),
   };
   const tenantContext = {
-    tenantId: employerPortalConfig.tenantId,
+    tenantId: portalSession?.tenantId ?? employerPortalConfig.tenantId,
     tenantName: employerPortalConfig.tenantName,
     defaultLocale: locale,
     featureFlags: employerPortalConfig.featureFlags,

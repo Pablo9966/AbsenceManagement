@@ -420,3 +420,153 @@ export interface EmployerPaymentRunSummary {
   runStatus: string;
   createdAt: string;
 }
+
+// Phase 2E: UVG Native Flow
+
+export type WorkflowUvgCaseType = "bu" | "nbu";
+export type WorkflowUvgCaseStatus =
+  | "reported"
+  | "intake_in_progress"
+  | "under_review"
+  | "awaiting_documents"
+  | "coordinating"
+  | "approved"
+  | "rejected"
+  | "closed";
+export type WorkflowUvgCoordinationStatus = "not_required" | "open" | "in_review" | "resolved";
+
+export interface EmployerUvgCaseListItem {
+  caseId: string;
+  caseNumber: string;
+  employeeId: string;
+  employeeName: string;
+  uvgCaseType: WorkflowUvgCaseType;
+  caseStatus: WorkflowUvgCaseStatus;
+  accidentDate: string;
+  incidentLocation: string;
+  coordinationStatus: WorkflowUvgCoordinationStatus;
+  linkedKtgCaseId?: string;
+  reportArtifactCount: number;
+}
+
+export interface EmployerUvgCaseDetail extends EmployerUvgCaseListItem {
+  incidentSummary: string;
+  reportedAt: string;
+  accidentDescription?: string;
+  witnessDetails?: string;
+  policeInvolvedFlag?: boolean;
+  linkedDocumentIds: string[];
+  reportArtifacts: Array<{
+    artifactId: string;
+    fileName: string;
+    reportType: string;
+    generatedAt: string;
+  }>;
+}
+
+export interface EmployerUvgAccidentReportResult {
+  caseId: string;
+  caseNumber: string;
+  caseStatus: WorkflowUvgCaseStatus;
+  uvgCaseType: WorkflowUvgCaseType;
+  reportedAt: string;
+}
+
+export interface EmployerUvgReportArtifactResult {
+  artifactId: string;
+  caseId: string;
+  fileName: string;
+  storageReference: string;
+  generatedAt: string;
+  pdfSizeBytes: number;
+}
+
+export interface InternalUvgCaseListItem {
+  caseId: string;
+  caseNumber: string;
+  employeeId: string;
+  employeeName: string;
+  uvgCaseType: WorkflowUvgCaseType;
+  caseStatus: WorkflowUvgCaseStatus;
+  accidentDate: string;
+  coordinationStatus: WorkflowUvgCoordinationStatus;
+  linkedKtgCaseId?: string;
+  injuryCount: number;
+  decisionStatus?: string;
+}
+
+export interface InternalUvgCaseDetail extends InternalUvgCaseListItem {
+  policyId: string;
+  incidentLocation: string;
+  incidentSummary: string;
+  intake?: {
+    reporterRole: string;
+    employerReference?: string;
+    accidentTime?: string;
+    accidentPlace: string;
+    occupationalContext: string;
+    accidentDescription: string;
+    witnessDetails?: string;
+    policeInvolvedFlag: boolean;
+    submittedAt: string;
+  };
+  injuries: Array<{
+    id: string;
+    injuryType: string;
+    bodyPart: string;
+    severity: string;
+    medicalTreatmentFlag: boolean;
+    hospitalizedFlag: boolean;
+    notes?: string;
+  }>;
+  circumstances: Array<{
+    id: string;
+    causeCategory: string;
+    activityContext: string;
+    thirdPartyInvolvedFlag: boolean;
+    vehicleInvolvedFlag: boolean;
+    narrative: string;
+    createdAt: string;
+  }>;
+  documentReferences: Array<{
+    id: string;
+    documentId: string;
+    documentRole: string;
+    linkedAt: string;
+  }>;
+  coordinationRecords: Array<{
+    id: string;
+    coordinationType: string;
+    relatedKtgCaseId?: string;
+    overlapStart?: string;
+    overlapEnd?: string;
+    coordinationStatus: WorkflowUvgCoordinationStatus;
+    benefitOverlapFlag: boolean;
+    notes?: string;
+    updatedAt: string;
+  }>;
+  decisions: Array<{
+    id: string;
+    decisionStatus: string;
+    decisionReason: string;
+    effectiveFrom: string;
+    effectiveTo?: string;
+    decidedAt: string;
+    decidedBy: string;
+  }>;
+  reportArtifacts: Array<{
+    artifactId: string;
+    fileName: string;
+    reportType: string;
+    generatedAt: string;
+    storageReference: string;
+  }>;
+  auditEvents: Array<{
+    eventId: string;
+    eventType: string;
+    occurredAt: string;
+    actorId: string;
+    actorRole: string;
+    payload?: Record<string, unknown>;
+  }>;
+}
