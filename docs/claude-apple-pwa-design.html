@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude × Apple — PWA Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Core palette */
+    --clay-warm: #C68B5A;
+    --clay-light: #E8C9A0;
+    --obsidian: #0A0A0F;
+    --obsidian-2: #111118;
+    --obsidian-3: #1C1C26;
+    --glass-white: rgba(255,255,255,0.09);
+    --glass-border: rgba(255,255,255,0.16);
+    --mist: rgba(255,255,255,0.75);
+    --aurora-1: #C97B4B;
+    --aurora-2: #A855B5;
+    --aurora-3: #6366F1;
+    --aurora-4: #0EA5E9;
+    --text-primary: #FFFFFF;
+    --text-secondary: rgba(255,255,255,0.78);
+    --text-tertiary: rgba(255,255,255,0.48);
+    --radius-lg: 20px;
+    --radius-xl: 28px;
+    --radius-pill: 100px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--obsidian);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Ambient background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(201,123,75,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(99,102,241,0.1) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 50% 50%, rgba(168,85,181,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page { position: relative; z-index: 1; }
+
+  /* ── HEADER ── */
+  .header {
+    padding: 72px 60px 48px;
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 40px;
+  }
+
+  .header-left {}
+
+  .label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 16px;
+  }
+
+  .title-display {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(40px, 5vw, 72px);
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+
+  .title-display em {
+    font-style: italic;
+    background: linear-gradient(135deg, var(--aurora-1), var(--aurora-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .header-desc {
+    max-width: 320px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.72);
+    line-height: 1.7;
+  }
+
+  /* ── GRID LAYOUT ── */
+  .grid {
+    display: grid;
+    padding: 60px;
+    gap: 24px;
+  }
+
+  .grid-main {
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  /* ── CARD BASE ── */
+  .card {
+    background: var(--glass-white);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: 36px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, transform 0.3s ease;
+  }
+
+  .card:hover {
+    border-color: rgba(255,255,255,0.18);
+    transform: translateY(-2px);
+  }
+
+  .card-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.52);
+    margin-bottom: 24px;
+  }
+
+  /* ── SECTION 1: MOODBOARD ── */
+  .section-title {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.52);
+    padding: 0 60px;
+    margin-bottom: 20px;
+    margin-top: 60px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--glass-border);
+  }
+
+  /* ── COLOR PALETTE ── */
+  .palette-card {
+    grid-column: span 2;
+  }
+
+  .swatches {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .swatch {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 80px;
+  }
+
+  .swatch-block {
+    height: 64px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.06);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .swatch-name {
+    font-size: 11px;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.4;
+  }
+
+  .swatch-hex {
+    font-size: 10px;
+    color: rgba(255,255,255,0.45);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  /* ── PHILOSOPHY CARD ── */
+  .philosophy-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 260px;
+  }
+
+  .philosophy-card .big-quote {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    font-style: italic;
+    line-height: 1.4;
+    color: #FFFFFF;
+  }
+
+  .philosophy-card .attribution {
+    font-size: 11px;
+    color: rgba(255,255,255,0.48);
+    letter-spacing: 0.1em;
+  }
+
+  /* ── TYPOGRAPHY ── */
+  .type-showcase {
+    grid-column: span 3;
+  }
+
+  .type-row {
+    padding: 28px 0;
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    align-items: baseline;
+    gap: 32px;
+  }
+
+  .type-row:last-child { border-bottom: none; }
+
+  .type-meta {
+    min-width: 160px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.1em;
+  }
+
+  .t-display {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    background: linear-gradient(135deg, #FFFFFF 40%, var(--clay-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .t-headline {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: #FFFFFF;
+  }
+
+  .t-body {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.78);
+    line-height: 1.7;
+    max-width: 600px;
+  }
+
+  .t-caption {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: rgba(255,255,255,0.52);
+  }
+
+  .t-mono {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    color: var(--clay-warm);
+    background: rgba(201,123,75,0.1);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  /* ── PWA SCREENS ── */
+  .screens-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
+    padding: 0 60px 60px;
+  }
+
+  .phone-frame {
+    aspect-ratio: 9/19;
+    border-radius: 44px;
+    border: 1.5px solid var(--glass-border);
+    background: var(--obsidian-2);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  /* Dynamic island */
+  .dynamic-island {
+    width: 90px;
+    height: 28px;
+    background: #000;
+    border-radius: 20px;
+    margin: 12px auto 0;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+  }
+
+  .screen-content {
+    flex: 1;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Screen 1: Home / Chat */
+  .s1-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .s1-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--aurora-1), var(--aurora-2));
+  }
+
+  .s1-greeting {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-style: italic;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    line-height: 1.2;
+  }
+
+  .s1-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.52);
+  }
+
+  .s1-bubble {
+    border-radius: 18px 18px 4px 18px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .s1-bubble.user {
+    background: linear-gradient(135deg, rgba(201,123,75,0.3), rgba(168,85,181,0.2));
+    border: 1px solid rgba(201,123,75,0.2);
+    align-self: flex-end;
+    border-radius: 18px 4px 18px 18px;
+    color: var(--text-primary);
+    margin-left: 20%;
+  }
+
+  .s1-bubble.ai {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+    color: rgba(255,255,255,0.85);
+    margin-right: 20%;
+  }
+
+  .bubbles-area {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    margin-bottom: 12px;
+  }
+
+  .s1-input {
+    background: rgba(255,255,255,0.09);
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 24px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: rgba(255,255,255,0.52);
+    flex-shrink: 0;
+  }
+
+  .s1-send {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--aurora-1), var(--aurora-2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Screen 2: History */
+  .s2-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 400;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+  }
+
+  .s2-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .s2-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .s2-item-text {
+    font-size: 11.5px;
+    color: rgba(255,255,255,0.82);
+    line-height: 1.4;
+    flex: 1;
+  }
+
+  .s2-time {
+    font-size: 10px;
+    color: rgba(255,255,255,0.42);
+  }
+
+  /* Screen 3: Settings */
+  .s3-header {
+    text-align: center;
+    padding: 16px 0;
+    margin-bottom: 16px;
+  }
+
+  .s3-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #C97B4B, #A855B5);
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+
+  .s3-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+
+  .s3-role {
+    font-size: 11px;
+    color: rgba(255,255,255,0.48);
+  }
+
+  .s3-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 12px;
+    margin-bottom: 6px;
+  }
+
+  .s3-row-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.82);
+  }
+
+  .s3-toggle {
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--aurora-1), var(--aurora-2));
+    position: relative;
+  }
+
+  .s3-toggle::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    top: 2px;
+    right: 2px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  }
+
+  /* ── COMPONENTS ── */
+  .components-section {
+    padding: 0 60px 60px;
+  }
+
+  .comp-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+
+  .comp-card {
+    background: var(--glass-white);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .comp-title {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.52);
+  }
+
+  /* Buttons */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(135deg, var(--aurora-1) 0%, var(--aurora-2) 100%);
+    font-size: 14px;
+    font-weight: 400;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+  }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    border-radius: var(--radius-pill);
+    background: rgba(255,255,255,0.07);
+    border: 1px solid var(--glass-border);
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-primary);
+    cursor: pointer;
+  }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    border: 1px solid rgba(201,123,75,0.4);
+    font-size: 13px;
+    color: var(--clay-warm);
+    cursor: pointer;
+  }
+
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Input field */
+  .input-demo {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: #FFFFFF;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    width: 100%;
+  }
+
+  .input-demo::placeholder {
+    color: rgba(255,255,255,0.38);
+  }
+
+  .input-focused {
+    border-color: rgba(201,123,75,0.5);
+    background: rgba(201,123,75,0.05);
+    box-shadow: 0 0 0 3px rgba(201,123,75,0.08);
+  }
+
+  .input-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 6px;
+    letter-spacing: 0.06em;
+  }
+
+  /* Badge / chip */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+  }
+
+  .badge.warm {
+    background: rgba(201,123,75,0.18);
+    border: 1px solid rgba(201,123,75,0.4);
+    color: #F0C898;
+  }
+
+  .badge.indigo {
+    background: rgba(99,102,241,0.18);
+    border: 1px solid rgba(99,102,241,0.4);
+    color: #c7d2fe;
+  }
+
+  .badge.sky {
+    background: rgba(14,165,233,0.18);
+    border: 1px solid rgba(14,165,233,0.4);
+    color: #bae6fd;
+  }
+
+  .badge.violet {
+    background: rgba(168,85,181,0.18);
+    border: 1px solid rgba(168,85,181,0.4);
+    color: #e9d5ff;
+  }
+
+  .badge-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Icon set */
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .icon-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.16);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  .icon-name {
+    font-size: 9px;
+    color: rgba(255,255,255,0.52);
+    text-align: center;
+  }
+
+  /* ── MOTION PRINCIPLES ── */
+  .motion-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    padding: 0 60px 60px;
+  }
+
+  .motion-card {
+    background: var(--glass-white);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+  }
+
+  .motion-name {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+
+  .motion-spec {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    color: #E8A86A;
+    background: rgba(201,123,75,0.15);
+    padding: 6px 10px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+
+  .motion-desc {
+    font-size: 13px;
+    color: rgba(255,255,255,0.78);
+    line-height: 1.6;
+  }
+
+  .motion-bar {
+    height: 3px;
+    border-radius: 2px;
+    margin-top: 16px;
+  }
+
+  /* ── FOOTER MANIFEST ── */
+  .manifest {
+    padding: 60px;
+    border-top: 1px solid var(--glass-border);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 40px;
+  }
+
+  .manifest-col h4 {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.52);
+    margin-bottom: 20px;
+  }
+
+  .manifest-col p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.78);
+    line-height: 1.7;
+  }
+
+  .principle-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .principle-list li {
+    font-size: 13px;
+    color: rgba(255,255,255,0.78);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.5;
+  }
+
+  .principle-list li::before {
+    content: '—';
+    color: var(--clay-warm);
+    font-size: 11px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .page > * {
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .header { animation-delay: 0s; }
+  .section-title { animation-delay: 0.1s; }
+  .grid { animation-delay: 0.15s; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <div class="label">Design System · PWA Identity</div>
+      <h1 class="title-display">Claude <em>×</em> Apple<br>Design Language</h1>
+    </div>
+    <p class="header-desc">
+      A fusion of Anthropic's warmth and intellectual depth with Apple's hardware-grade refinement. Tactile without being skeuomorphic. Intelligent without being clinical.
+    </p>
+  </header>
+
+  <!-- ── PALETTE + PHILOSOPHY ── -->
+  <div class="section-title">Color & Tone</div>
+
+  <div class="grid grid-main">
+
+    <!-- Color Palette -->
+    <div class="card palette-card">
+      <div class="card-label">Palette</div>
+      <div class="swatches">
+        <div class="swatch">
+          <div class="swatch-block" style="background: linear-gradient(160deg, #C97B4B, #E8C9A0);"></div>
+          <div class="swatch-name">Clay Warm</div>
+          <div class="swatch-hex">#C97B4B</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-block" style="background: linear-gradient(160deg, #A855B5, #7C3AED);"></div>
+          <div class="swatch-name">Aurora Violet</div>
+          <div class="swatch-hex">#A855B5</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-block" style="background: linear-gradient(160deg, #6366F1, #4F46E5);"></div>
+          <div class="swatch-name">Deep Indigo</div>
+          <div class="swatch-hex">#6366F1</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-block" style="background: linear-gradient(160deg, #0EA5E9, #0284C7);"></div>
+          <div class="swatch-name">Horizon Blue</div>
+          <div class="swatch-hex">#0EA5E9</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-block" style="background: #0A0A0F; border: 1px solid rgba(255,255,255,0.1);"></div>
+          <div class="swatch-name">Obsidian</div>
+          <div class="swatch-hex">#0A0A0F</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-block" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(10px);"></div>
+          <div class="swatch-name">Glass</div>
+          <div class="swatch-hex">rgba white 6%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Philosophy -->
+    <div class="card philosophy-card">
+      <div class="card-label">Design Philosophy</div>
+      <p class="big-quote">"Warm intelligence, cold precision. Human warmth surfaced through machine-grade craft."</p>
+      <div class="attribution">Fusion Identity · 2025</div>
+    </div>
+
+    <!-- Typography showcase -->
+    <div class="card type-showcase" style="grid-column: span 3;">
+      <div class="card-label">Typography</div>
+      <div class="type-row">
+        <div class="type-meta">Display<br>Playfair Display 48 / 400</div>
+        <div class="t-display">Intelligence, refined.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">Headline<br>DM Sans 28 / 300</div>
+        <div class="t-headline">Ask anything. Think deeper.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">Body<br>DM Sans 16 / 300</div>
+        <div class="t-body">The interface disappears. What remains is a conversation that feels like thinking alongside someone who genuinely understands your intent.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">Caption<br>DM Sans 12 / 400</div>
+        <div class="t-caption">Updated just now · 3 sources referenced</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta">Mono<br>SF Mono 13</div>
+        <div class="t-mono">const clarity = thought.distilled()</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── PWA SCREENS ── -->
+  <div class="section-title">Screen Compositions</div>
+
+  <div class="screens-grid">
+
+    <!-- Screen 1: Chat -->
+    <div class="phone-frame">
+      <div class="dynamic-island"></div>
+      <div class="screen-content">
+        <div class="s1-topbar">
+          <div>
+            <div class="s1-greeting">Good evening,<br>Pascal.</div>
+            <div class="s1-sub">3 threads · last active 2h ago</div>
+          </div>
+          <div class="s1-avatar"></div>
+        </div>
+        <div class="bubbles-area">
+          <div class="s1-bubble ai">Summarising Program Square financials — TP1 internal costs were over by CHF 42k, TP3 significantly under. Net result: underspend.</div>
+          <div class="s1-bubble user">Can you draft the executive summary slide?</div>
+          <div class="s1-bubble ai">On it. Would you prefer a McKinsey action title or a neutral descriptive heading?</div>
+          <div class="s1-bubble user">Action title, consistent with the deck.</div>
+        </div>
+        <div class="s1-input">
+          <span>Continue…</span>
+          <div class="s1-send">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 10L10 6L2 2V5.5L7 6L2 6.5V10Z" fill="white"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 2: History -->
+    <div class="phone-frame">
+      <div class="dynamic-island"></div>
+      <div class="screen-content">
+        <div class="s2-title">Conversations</div>
+        <div class="s2-item">
+          <div class="s2-dot" style="background: linear-gradient(135deg, #C97B4B, #A855B5);"></div>
+          <div class="s2-item-text">Program Square STC closure deck — financial reconciliation</div>
+          <div class="s2-time">2h</div>
+        </div>
+        <div class="s2-item">
+          <div class="s2-dot" style="background: linear-gradient(135deg, #6366F1, #0EA5E9);"></div>
+          <div class="s2-item-text">Tesla brake caliper service intervals for EV in Swiss conditions</div>
+          <div class="s2-time">1d</div>
+        </div>
+        <div class="s2-item">
+          <div class="s2-dot" style="background: linear-gradient(135deg, #A855B5, #6366F1);"></div>
+          <div class="s2-item-text">Richterswil property — Erbvorbezug structure analysis</div>
+          <div class="s2-time">3d</div>
+        </div>
+        <div class="s2-item">
+          <div class="s2-dot" style="background: rgba(255,255,255,0.2);"></div>
+          <div class="s2-item-text">AI roadmap CoPilot rollout — stakeholder mapping</div>
+          <div class="s2-time">5d</div>
+        </div>
+        <div class="s2-item">
+          <div class="s2-dot" style="background: rgba(255,255,255,0.2);"></div>
+          <div class="s2-item-text">ETH CAS AI/ML — admission requirements and timeline</div>
+          <div class="s2-time">1w</div>
+        </div>
+        <div class="s2-item">
+          <div class="s2-dot" style="background: rgba(255,255,255,0.1);"></div>
+          <div class="s2-item-text">KTG/UVG module code review — absence platform</div>
+          <div class="s2-time">2w</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 3: Settings / Profile -->
+    <div class="phone-frame">
+      <div class="dynamic-island"></div>
+      <div class="screen-content">
+        <div class="s3-header">
+          <div class="s3-icon">✦</div>
+          <div class="s3-name">Pascal</div>
+          <div class="s3-role">Senior Manager · elipsLife AG</div>
+        </div>
+        <div class="s3-row">
+          <span class="s3-row-label">Memory enabled</span>
+          <div class="s3-toggle"></div>
+        </div>
+        <div class="s3-row">
+          <span class="s3-row-label">Extended thinking</span>
+          <div class="s3-toggle"></div>
+        </div>
+        <div class="s3-row">
+          <span class="s3-row-label">Compact responses</span>
+          <div style="width:36px; height:20px; border-radius:10px; background:rgba(255,255,255,0.1); border:1px solid var(--glass-border);"></div>
+        </div>
+        <div class="s3-row">
+          <span class="s3-row-label">Voice input</span>
+          <div style="width:36px; height:20px; border-radius:10px; background:rgba(255,255,255,0.1); border:1px solid var(--glass-border);"></div>
+        </div>
+        <div class="s3-row" style="margin-top: 8px;">
+          <span class="s3-row-label" style="color: rgba(201,123,75,0.8);">Export all data</span>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3L9 7L5 11" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── COMPONENTS ── -->
+  <div class="section-title">Component Library</div>
+
+  <div class="components-section">
+    <div class="comp-grid">
+
+      <!-- Buttons -->
+      <div class="comp-card">
+        <div class="comp-title">Actions</div>
+        <div class="btn-group">
+          <button class="btn-primary">Send message</button>
+          <button class="btn-secondary">View thread</button>
+          <button class="btn-ghost">↗ Share</button>
+        </div>
+      </div>
+
+      <!-- Inputs -->
+      <div class="comp-card">
+        <div class="comp-title">Input Fields</div>
+        <div>
+          <div class="input-label">Message</div>
+          <input class="input-demo" placeholder="Ask anything…" disabled style="margin-bottom: 10px;">
+          <div class="input-label">Focused state</div>
+          <input class="input-demo input-focused" value="Explain the Erbvorbezug structure" disabled>
+        </div>
+      </div>
+
+      <!-- Badges -->
+      <div class="comp-card">
+        <div class="comp-title">Labels & Status</div>
+        <div class="badge-group">
+          <span class="badge warm">Strategy</span>
+          <span class="badge indigo">AI/ML</span>
+          <span class="badge sky">Analysis</span>
+          <span class="badge violet">Creative</span>
+          <span class="badge warm">elipsLife</span>
+          <span class="badge indigo">Code review</span>
+          <span class="badge sky">Research</span>
+        </div>
+      </div>
+
+      <!-- Icons -->
+      <div class="comp-card">
+        <div class="comp-title">Iconography</div>
+        <div class="icon-grid">
+          <div class="icon-item">
+            <div class="icon-box">✦</div>
+            <div class="icon-name">Claude</div>
+          </div>
+          <div class="icon-item">
+            <div class="icon-box">◎</div>
+            <div class="icon-name">Focus</div>
+          </div>
+          <div class="icon-item">
+            <div class="icon-box">⌘</div>
+            <div class="icon-name">Command</div>
+          </div>
+          <div class="icon-item">
+            <div class="icon-box">⟡</div>
+            <div class="icon-name">Thread</div>
+          </div>
+          <div class="icon-item">
+            <div class="icon-box">◈</div>
+            <div class="icon-name">Memory</div>
+          </div>
+          <div class="icon-item">
+            <div class="icon-box">⊕</div>
+            <div class="icon-name">New</div>
+          </div>
+          <div class="icon-item">
+            <div class="icon-box">⌬</div>
+            <div class="icon-name">Delta</div>
+          </div>
+          <div class="icon-item">
+            <div class="icon-box">⊞</div>
+            <div class="icon-name">Grid</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── MOTION ── -->
+  <div class="section-title">Motion Principles</div>
+
+  <div class="motion-grid">
+    <div class="motion-card">
+      <div class="motion-name">Response Entry</div>
+      <div class="motion-spec">ease-out · 420ms</div>
+      <div class="motion-desc">AI responses fade up and in. Never sudden. Communicates thought arriving, not data loading.</div>
+      <div class="motion-bar" style="background: linear-gradient(90deg, var(--clay-warm), transparent); width: 65%;"></div>
+    </div>
+    <div class="motion-card">
+      <div class="motion-name">Haptic Confirm</div>
+      <div class="motion-spec">spring · stiffness 280 · damping 24</div>
+      <div class="motion-desc">Send button uses spring physics. Feels physical, like pressing a real key. Borrowed from Apple's keyboard.</div>
+      <div class="motion-bar" style="background: linear-gradient(90deg, var(--aurora-2), var(--aurora-3), transparent); width: 80%;"></div>
+    </div>
+    <div class="motion-card">
+      <div class="motion-name">Surface Reveal</div>
+      <div class="motion-spec">staggered · 60ms offset</div>
+      <div class="motion-desc">Cards and list items stagger in on first render. Each element 60ms after the previous. Spatial hierarchy made visible.</div>
+      <div class="motion-bar" style="background: linear-gradient(90deg, var(--aurora-4), transparent); width: 90%;"></div>
+    </div>
+  </div>
+
+  <!-- ── MANIFEST ── -->
+  <footer class="manifest">
+    <div class="manifest-col">
+      <h4>Design DNA</h4>
+      <ul class="principle-list">
+        <li>Obsidian base, never pure black. Depth without aggression.</li>
+        <li>Glass morphism with restraint: blur only where hierarchy demands it.</li>
+        <li>Clay warm as the human signal in a cold system.</li>
+        <li>Serif display type for emotional weight; geometric sans for function.</li>
+      </ul>
+    </div>
+    <div class="manifest-col">
+      <h4>What It Takes From Each</h4>
+      <ul class="principle-list">
+        <li>From Claude: warm amber palette, intellectual tone, flowing conversation rhythm.</li>
+        <li>From Apple: hardware-grade radius precision, Dynamic Island framing, spring physics, spatial audio metaphors in motion.</li>
+        <li>Neither: no purple gradients, no SF Symbols overuse, no chatbot bubble kitsch.</li>
+      </ul>
+    </div>
+    <div class="manifest-col">
+      <h4>Anti-Patterns</h4>
+      <ul class="principle-list">
+        <li>No loading spinners. Use skeleton shimmer or nothing.</li>
+        <li>No modal alerts. Inline contextual feedback only.</li>
+        <li>No hamburger menus. Bottom tab bar or gesture-first navigation.</li>
+        <li>No border-radius below 12px on interactive surfaces.</li>
+      </ul>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
