@@ -1,6 +1,13 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { randomUUID } from "node:crypto";
 import { URL } from "node:url";
+import {
+  createRuntimeRequestContext,
+  handleRuntimeError,
+  logRuntimeEvent,
+  writeHealth,
+  writeRuntimeError,
+} from "../../../packages/runtime-baseline/src/index.js";
 import { IdentityAccessService } from "./application/identity-access.service.js";
 import {
   EMPLOYER_PORTAL_BOOTSTRAP_PERMISSIONS,
@@ -71,8 +78,17 @@ const createIdentityAccessHttpServer = async () => {
   const server = createServer(async (request, response) => {
     const method = request.method as HttpMethod | undefined;
     const url = new URL(request.url ?? "/", `http://${request.headers.host ?? "localhost"}`);
+    const context = createRuntimeRequestContext("identity-access-service", request, url.pathname);
 
     try {
+      if (method === "GET" && url.pathname === "/health") {
+        writeHealth(response, context, {
+          service: "identity-access-service",
+          persistenceMode: "file-backed",
+        });
+        return;
+      }
+
       if (method === "POST" && url.pathname === "/v1/session/sign-in") {
         const payload = await readRequestBody<{ email: string; tenantId: string }>(request);
         const snapshot = adapter.getRepository().exportSnapshot();
@@ -86,7 +102,7 @@ const createIdentityAccessHttpServer = async () => {
         );
 
         if (!user || !membership) {
-          writeJson(response, 401, { error: "Invalid sign-in request." });
+          writeRuntimeError(response, context, 401, "unauthorized", "Invalid sign-in request.");
           return;
         }
 
@@ -104,7 +120,7 @@ const createIdentityAccessHttpServer = async () => {
 
       const session = requireSession(request);
       if (!session) {
-        writeJson(response, 401, { error: "Missing or invalid session token." });
+        writeRuntimeError(response, context, 401, "unauthorized", "Missing or invalid session token.");
         return;
       }
 
@@ -126,13 +142,13 @@ const createIdentityAccessHttpServer = async () => {
 
       const tenantMatch = url.pathname.match(/^\/v1\/tenants\/([^/]+)\/(.+)$/);
       if (!tenantMatch) {
-        writeJson(response, 404, { error: "Route not found." });
+        writeRuntimeError(response, context, 404, "not_found", "Route not found.");
         return;
       }
 
       const [, tenantId, resourcePath] = tenantMatch;
       if (tenantId !== session.tenantId) {
-        writeJson(response, 403, { error: "Session tenant mismatch." });
+        writeRuntimeError(response, context, 403, "forbidden", "Session tenant mismatch.");
         return;
       }
 
@@ -180,7 +196,7 @@ const createIdentityAccessHttpServer = async () => {
         const canViewAudit = permission.allowed.value && auditPolicies.some((policy) => policy.canViewAuditFlag);
 
         if (!canViewAudit) {
-          writeJson(response, 403, { error: "Audit queries require matching permission grant and audit access policy." });
+          writeRuntimeError(response, context, 403, "forbidden", "Audit queries require matching permission grant and audit access policy.");
           return;
         }
 
@@ -275,21 +291,64 @@ const createIdentityAccessHttpServer = async () => {
         return;
       }
 
-      writeJson(response, 404, { error: "Route not found." });
+      writeRuntimeError(response, context, 404, "not_found", "Route not found.");
     } catch (error) {
-      writeJson(response, 500, {
-        error: error instanceof Error ? error.message : "Unexpected identity access server error.",
-      });
+      handleRuntimeError(response, context, error, "Unexpected identity access server error.");
     }
   });
 
   return server;
 };
 
+export const executeIdentityAccessRequest = async (
+  requestPath: string,
+  input?: { method?: HttpMethod; body?: unknown; headers?: Record<string, string> },
+): Promise<{ statusCode: number; body: unknown }> => {
+  let statusCode = 200;
+  let body;
+  const response = {
+    writeHead(code: number) {
+      statusCode = code;
+    },
+    setHeader() {
+      return undefined;
+    },
+    end(payload?: string) {
+      body = payload ? JSON.parse(payload) : undefined;
+    },
+  } as unknown as ServerResponse;
+
+  const request = {
+    method: input?.method ?? "GET",
+    url: requestPath,
+    headers: {
+      host: "localhost",
+      ...(input?.headers ?? {}),
+    },
+    async *[Symbol.asyncIterator]() {
+      if (input?.body !== undefined) {
+        yield Buffer.from(JSON.stringify(input.body));
+      }
+    },
+  } as IncomingMessage;
+
+  const server = await createIdentityAccessHttpServer();
+  const listener = server.listeners("request")[0];
+  if (typeof listener !== "function") {
+    throw new Error("Identity access server request handler unavailable.");
+  }
+  await listener(request, response);
+  server.close();
+  return { statusCode, body };
+};
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const server = await createIdentityAccessHttpServer();
   server.listen(PORT, () => {
-    process.stdout.write(`identity-access-service listening on http://127.0.0.1:${PORT}\n`);
+    logRuntimeEvent("identity-access-service", "info", "startup", {
+      port: PORT,
+      persistenceMode: "file-backed",
+    });
   });
 }
 

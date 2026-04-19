@@ -33,6 +33,7 @@ This repository currently contains:
 - Phase 2 UVG native flow package
 - Phase 2 premium reconciliation package
 - Phase 2 client analytics package
+- Phase 2 hardening and release readiness package
 - Module 1 design package for Employee Master Data Management
 - Module 2 design package for Absence Recording and Tracking
 - Module 3 design package for KTG Case Registration and Deadline Management
@@ -65,6 +66,7 @@ This repository currently contains:
 - `tests/phase-2e.smoke.test.mjs` UVG native-flow smoke coverage for direct service runtime and portal workflow routes
 - `tests/phase-2f.smoke.test.mjs` premium reconciliation smoke coverage for direct service runtime and employer finance workflow routes
 - `tests/phase-2g.smoke.test.mjs` client analytics smoke coverage for employer analytics projections, filters, refresh, and access
+- `tests/phase-2h.integration.test.mjs` release-readiness integration coverage for health, identity bootstrap, employee self-service, payment, UVG, premium, and analytics flows
 
 ## Repository Layout
 
@@ -76,6 +78,7 @@ This repository currently contains:
 - [docs/phase-2/module-2e-uvg-native-flow.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-2/module-2e-uvg-native-flow.md)
 - [docs/phase-2/module-2f-premium-reconciliation.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-2/module-2f-premium-reconciliation.md)
 - [docs/phase-2/module-2g-client-analytics.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-2/module-2g-client-analytics.md)
+- [docs/phase-2/module-2h-hardening-release-readiness.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-2/module-2h-hardening-release-readiness.md)
 - [docs/phase-1/module-01-employee-master-data.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-1/module-01-employee-master-data.md)
 - [docs/phase-1/module-02-absence-recording.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-1/module-02-absence-recording.md)
 - [docs/phase-1/module-03-ktg-case-management.md](/C:/Users/stp/OneDrive%20-%20Elips%20Life%20AG/Documents/Codex/docs/phase-1/module-03-ktg-case-management.md)
@@ -147,11 +150,16 @@ This repository currently contains:
 The repository currently validates:
 
 - root `npm run typecheck`
+- root `npm run migrations:validate`
 - employer portal `npm run build`
 - internal portal `npm run build`
+- employee portal `npm run build`
 - `npm run test:smoke` for key 2B workflow, 2C payment-operation, 2D employee self-service, 2E UVG native-flow, 2F premium reconciliation, and 2G client analytics scenarios
+- `npm run test:integration` for release-readiness health and cross-service workflow coverage
 
 `portal-workflow-service` is currently a route-oriented aggregation layer built by composing the real Phase 1 application service modules over seeded in-memory repository adapters. That keeps the workflow routes aligned with backend service logic, but it is still not the same as live distributed service integration or persistence-backed runtime wiring.
+
+Phase 2H adds a shared runtime baseline for request ids, correlation ids, structured startup/error logs, standardized error envelopes, and `/health` responses across the hardened runtimes. The current release-readiness posture also includes repo-level migration validation via `npm run migrations:validate`.
 
 `payment-operations-service` now includes its own file-backed runtime/API layer for payment runs, exports, statements, reconciliation, settlement summaries, payroll booking confirmations, and audit-event queries. The portals continue to consume payment visibility through `portal-workflow-service` read models while the dedicated payment service owns operational write paths and payment-run state.
 

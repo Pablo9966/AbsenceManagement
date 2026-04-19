@@ -6,5 +6,9 @@
     "rootDir": "src"
   },
   "include": ["src/**/*.ts"],
-  "references": []
+  "references": [
+    {
+      "path": "../../packages/runtime-baseline"
+    }
+  ]
 }

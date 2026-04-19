@@ -11,6 +11,9 @@
   ],
   "references": [
     {
+      "path": "../../packages/runtime-baseline"
+    },
+    {
       "path": "../../services/absence-service"
     },
     {

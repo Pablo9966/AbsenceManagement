@@ -1,5 +1,14 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { URL } from "node:url";
+import {
+  createRuntimeRequestContext,
+  handleRuntimeError,
+  HttpRuntimeError,
+  logRuntimeEvent,
+  writeHealth,
+  writeJson,
+  writeRuntimeError,
+} from "../../../packages/runtime-baseline/src/index.js";
 import { FileBackedPaymentOperationsRepositoryAdapter } from "./adapters/persistence/file-backed.repository.js";
 import { PaymentOperationsService } from "./application/payment-operations.service.js";
 import {
@@ -22,11 +31,6 @@ const readRequestBody = async <T>(request: IncomingMessage): Promise<T> => {
     chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
   }
   return JSON.parse(Buffer.concat(chunks).toString("utf-8")) as T;
-};
-
-const writeJson = (response: ServerResponse, statusCode: number, payload: unknown): void => {
-  response.writeHead(statusCode, { "Content-Type": "application/json" });
-  response.end(JSON.stringify(payload));
 };
 
 const createActor = (actorId?: string, actorRole?: "finance_operator" | "team_lead" | "system" | "api") => ({
@@ -68,12 +72,11 @@ const paginate = <T>(items: T[], page?: number, pageSize?: number) => {
   };
 };
 
-const notFound = (response: ServerResponse): void => writeJson(response, 404, { error: "Not found." });
-
 const buildPaymentOperationsHttpServer = async () => {
   const adapter = new FileBackedPaymentOperationsRepositoryAdapter();
   await adapter.load();
   const service = new PaymentOperationsService(adapter.getRepository());
+  const stateFilePath = process.env.PAYMENT_OPERATIONS_STATE_FILE ?? new URL("../.data/payment-operations-state.json", import.meta.url).pathname;
 
   const persist = async (): Promise<void> => {
     await adapter.save(adapter.exportState());
@@ -82,14 +85,27 @@ const buildPaymentOperationsHttpServer = async () => {
   const server = createServer(async (request, response) => {
     const method = request.method;
     const url = new URL(request.url ?? "/", `http://${request.headers.host ?? "localhost"}`);
+    const context = createRuntimeRequestContext("payment-operations-service", request, url.pathname);
 
     try {
+      if (method === "GET" && url.pathname === "/health") {
+        writeHealth(response, context, {
+          service: "payment-operations-service",
+          persistenceMode: "file-backed",
+          details: {
+            stateFilePath,
+            referenceEffectiveAt: REFERENCE_EFFECTIVE_AT,
+          },
+        });
+        return;
+      }
+
       if (method === "GET" && url.pathname === "/v1/internal/payment-runs") {
         const runs = await service.listPaymentRuns(getTenantId(url), {
           runStatus: url.searchParams.get("runStatus") ?? undefined,
           runType: url.searchParams.get("runType") ?? undefined,
         });
-        writeJson(response, 200, paginate(runs, getPage(url), getPageSize(url)));
+        writeJson(response, 200, paginate(runs, getPage(url), getPageSize(url)), context);
         return;
       }
 
@@ -104,11 +120,11 @@ const buildPaymentOperationsHttpServer = async () => {
         }>(request);
         const result = await service.createPaymentRun(payload, createActor(payload.actorId, payload.actorRole));
         if (!result.data) {
-          writeJson(response, 400, result);
+          writeRuntimeError(response, context, 400, "validation_error", "Payment run creation failed.", { issues: result.issues });
           return;
         }
         await persist();
-        writeJson(response, 200, result);
+        writeJson(response, 200, result, context);
         return;
       }
 
@@ -116,18 +132,16 @@ const buildPaymentOperationsHttpServer = async () => {
       if (runPathMatch) {
         const [, runId, action] = runPathMatch;
         if (!runId) {
-          notFound(response);
-          return;
+          throw new HttpRuntimeError(404, "not_found", "Payment run not found.");
         }
         const tenantId = getTenantId(url);
 
         if (method === "GET" && !action) {
           const detail = await service.getPaymentRunDetail(tenantId, runId);
           if (!detail) {
-            notFound(response);
-            return;
+            throw new HttpRuntimeError(404, "not_found", "Payment run not found.", { runId, tenantId });
           }
-          writeJson(response, 200, detail);
+          writeJson(response, 200, detail, context);
           return;
         }
 
@@ -144,11 +158,11 @@ const buildPaymentOperationsHttpServer = async () => {
             paymentInstruction: payload.paymentInstruction,
           }, createActor(payload.actorId, payload.actorRole));
           if (!result.data) {
-            writeJson(response, 400, result);
+            writeRuntimeError(response, context, 400, "validation_error", "Adding payment instruction failed.", { issues: result.issues });
             return;
           }
           await persist();
-          writeJson(response, 200, result);
+          writeJson(response, 200, result, context);
           return;
         }
 
@@ -156,11 +170,11 @@ const buildPaymentOperationsHttpServer = async () => {
           const payload = await readRequestBody<{ tenantId: string; actorId?: string; actorRole?: "finance_operator" | "team_lead" | "system" | "api" }>(request);
           const result = await service.markReadyForExport({ tenantId: payload.tenantId, runId }, createActor(payload.actorId, payload.actorRole));
           if (!result.data) {
-            writeJson(response, 400, result);
+            writeRuntimeError(response, context, 400, "validation_error", "Marking payment run ready failed.", { issues: result.issues });
             return;
           }
           await persist();
-          writeJson(response, 200, result);
+          writeJson(response, 200, result, context);
           return;
         }
 
@@ -168,11 +182,11 @@ const buildPaymentOperationsHttpServer = async () => {
           const payload = await readRequestBody<{ tenantId: string; actorId?: string; actorRole?: "finance_operator" | "team_lead" | "system" | "api" }>(request);
           const result = await service.cancelPaymentRun({ tenantId: payload.tenantId, runId }, createActor(payload.actorId, payload.actorRole));
           if (!result.data) {
-            writeJson(response, 400, result);
+            writeRuntimeError(response, context, 400, "validation_error", "Canceling payment run failed.", { issues: result.issues });
             return;
           }
           await persist();
-          writeJson(response, 200, result);
+          writeJson(response, 200, result, context);
           return;
         }
 
@@ -191,11 +205,11 @@ const buildPaymentOperationsHttpServer = async () => {
             generatedBy: payload.generatedBy,
           }, createActor(payload.actorId, payload.actorRole));
           if (!result.data) {
-            writeJson(response, 400, result);
+            writeRuntimeError(response, context, 400, "validation_error", "Generating export package failed.", { issues: result.issues });
             return;
           }
           await persist();
-          writeJson(response, 200, result);
+          writeJson(response, 200, result, context);
           return;
         }
 
@@ -218,11 +232,11 @@ const buildPaymentOperationsHttpServer = async () => {
             taggelddispositivData: payload.taggelddispositivData,
           }, createActor(payload.actorId, payload.actorRole));
           if (!result.data) {
-            writeJson(response, 400, result);
+            writeRuntimeError(response, context, 400, "validation_error", "Generating statement failed.", { issues: result.issues });
             return;
           }
           await persist();
-          writeJson(response, 200, result);
+          writeJson(response, 200, result, context);
           return;
         }
 
@@ -245,11 +259,11 @@ const buildPaymentOperationsHttpServer = async () => {
             payrollBookingReference: payload.payrollBookingReference,
           }, createActor(payload.actorId, payload.actorRole));
           if (!result.data) {
-            writeJson(response, 400, result);
+            writeRuntimeError(response, context, 400, "validation_error", "Updating reconciliation status failed.", { issues: result.issues });
             return;
           }
           await persist();
-          writeJson(response, 200, result);
+          writeJson(response, 200, result, context);
           return;
         }
 
@@ -270,11 +284,11 @@ const buildPaymentOperationsHttpServer = async () => {
             bookingPayload: payload.bookingPayload,
           }, createActor(payload.actorId, payload.actorRole));
           if (!result.data) {
-            writeJson(response, 400, result);
+            writeRuntimeError(response, context, 400, "validation_error", "Recording payroll booking confirmation failed.", { issues: result.issues });
             return;
           }
           await persist();
-          writeJson(response, 200, result);
+          writeJson(response, 200, result, context);
           return;
         }
       }
@@ -307,7 +321,7 @@ const buildPaymentOperationsHttpServer = async () => {
           unresolved: runs.filter((run) => run.runStatus !== "cancelled" && run.reconciliationStatus !== "confirmed").length,
           mismatches: entries.filter((entry) => entry.mismatch).length,
           entries,
-        });
+        }, context);
         return;
       }
 
@@ -315,7 +329,7 @@ const buildPaymentOperationsHttpServer = async () => {
         const records = await service.listReconciliationRecords(getTenantId(url), {
           reconciliationStatus: url.searchParams.get("reconciliationStatus") ?? undefined,
         });
-        writeJson(response, 200, records);
+        writeJson(response, 200, records, context);
         return;
       }
 
@@ -323,15 +337,13 @@ const buildPaymentOperationsHttpServer = async () => {
       if (method === "GET" && settlementMatch) {
         const ktgCaseId = settlementMatch[1];
         if (!ktgCaseId) {
-          notFound(response);
-          return;
+          throw new HttpRuntimeError(404, "not_found", "Settlement summary not found.");
         }
         const summary = await service.getSettlementSummaryByCase(getTenantId(url), ktgCaseId);
         if (!summary) {
-          notFound(response);
-          return;
+          throw new HttpRuntimeError(404, "not_found", "Settlement summary not found.", { tenantId: getTenantId(url), ktgCaseId });
         }
-        writeJson(response, 200, summary);
+        writeJson(response, 200, summary, context);
         return;
       }
 
@@ -339,7 +351,7 @@ const buildPaymentOperationsHttpServer = async () => {
         const events = await service.listAuditEvents(getTenantId(url), {
           runId: url.searchParams.get("runId") ?? undefined,
         });
-        writeJson(response, 200, events);
+        writeJson(response, 200, events, context);
         return;
       }
 
@@ -353,15 +365,13 @@ const buildPaymentOperationsHttpServer = async () => {
           runStatus: run.runStatus,
           createdAt: run.createdAt,
         }));
-        writeJson(response, 200, paginate(summaries, getPage(url), getPageSize(url)));
+        writeJson(response, 200, paginate(summaries, getPage(url), getPageSize(url)), context);
         return;
       }
 
-      notFound(response);
+      writeRuntimeError(response, context, 404, "not_found", "Not found.");
     } catch (error) {
-      writeJson(response, 500, {
-        error: error instanceof Error ? error.message : "Unhandled payment operations error.",
-      });
+      handleRuntimeError(response, context, error, "Unhandled payment operations error.");
     }
   });
 
@@ -375,8 +385,14 @@ export const executePaymentOperationsRequest = async (
   let statusCode = 200;
   let body;
   const response = {
-    writeHead(code: number) {
+    set statusCode(code: number) {
       statusCode = code;
+    },
+    get statusCode() {
+      return statusCode;
+    },
+    setHeader() {
+      return undefined;
     },
     end(payload?: string) {
       body = payload ? JSON.parse(payload) : undefined;
@@ -411,7 +427,10 @@ export const createPaymentOperationsHttpServer = async () => buildPaymentOperati
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1])) {
   createPaymentOperationsHttpServer().then((server) => {
     server.listen(PORT, () => {
-      process.stdout.write(`payment-operations-service listening on http://127.0.0.1:${PORT}\n`);
+      logRuntimeEvent("payment-operations-service", "info", "startup", {
+        port: PORT,
+        persistenceMode: "file-backed",
+      });
     });
   });
 }

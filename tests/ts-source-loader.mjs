@@ -11,6 +11,16 @@ const canRead = async (url) => {
 };
 
 export const resolve = async (specifier, context, defaultResolve) => {
+  if (specifier.endsWith(".js") && context.parentURL?.startsWith("file:")) {
+    const tsUrl = new URL(specifier.replace(/\.js$/, ".ts"), context.parentURL);
+    if (await canRead(tsUrl)) {
+      return {
+        url: pathToFileURL(fileURLToPath(tsUrl)).href,
+        shortCircuit: true,
+      };
+    }
+  }
+
   try {
     return await defaultResolve(specifier, context, defaultResolve);
   } catch (error) {

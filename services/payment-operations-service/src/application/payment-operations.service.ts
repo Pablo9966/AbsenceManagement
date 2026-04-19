@@ -428,10 +428,12 @@ export class PaymentOperationsService {
         return { issues: [{ field: "runId", message: "Zahlungslauf nicht gefunden.", severity: "error" }] };
       }
 
+      const statementPeriodStart = params.taggelddispositivData?.statementPeriodStart ?? run.createdAt.slice(0, 10);
+      const statementPeriodEnd = params.taggelddispositivData?.statementPeriodEnd ?? actor.effectiveAt.slice(0, 10);
       const lines = buildStatementLines(params.statementType, run, params);
       const pdfBuffer = buildStatementPdf(lines);
       const statementId = generateId();
-      const fileName = `${params.statementType}-${statementId}.pdf`;
+      const fileName = `${run.runNumber}-${params.ktgCaseId}-${params.statementType}-${statementPeriodStart}-${statementPeriodEnd}.pdf`;
 
       const stmt: PaymentStatement = {
         id: statementId,
@@ -440,10 +442,10 @@ export class PaymentOperationsService {
         paymentInstructionId: params.paymentInstructionId,
         ktgCaseId: params.ktgCaseId,
         statementType: params.statementType,
-        statementPeriodStart: params.taggelddispositivData?.statementPeriodStart ?? run.createdAt.slice(0, 10),
-        statementPeriodEnd: params.taggelddispositivData?.statementPeriodEnd ?? actor.effectiveAt.slice(0, 10),
+        statementPeriodStart,
+        statementPeriodEnd,
         fileName,
-        storageReference: `memory://statements/${statementId}.pdf`,
+        storageReference: `memory://statements/${params.tenantId}/${run.runNumber}/${fileName}`,
         pdfSizeBytes: pdfBuffer.byteLength,
         generatedAt: actor.effectiveAt,
       };

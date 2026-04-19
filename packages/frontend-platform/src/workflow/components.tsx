@@ -4,14 +4,14 @@ export const PageHeader = (props: {
   description: string;
   actions?: any;
 }) => (
-  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", marginBottom: "2rem" }}>
+  <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", marginBottom: "2rem" }}>
     <div>
       <p className="page-eyebrow">{props.eyebrow}</p>
       <h1 className="page-title">{props.title}</h1>
       <p className="page-description">{props.description}</p>
     </div>
     {props.actions ? <div>{props.actions}</div> : null}
-  </div>
+  </header>
 );
 
 export const MetricCards = (props: {
@@ -55,7 +55,7 @@ export const EmptyState = (props: {
   title: string;
   message: string;
 }) => (
-  <section className="surface-card" style={{ padding: "2rem" }}>
+  <section className="surface-card" style={{ padding: "2rem" }} aria-live="polite">
     <h1>{props.title}</h1>
     <p>{props.message}</p>
   </section>
@@ -65,7 +65,7 @@ export const ErrorState = (props: {
   title: string;
   message: string;
 }) => (
-  <section className="surface-card" style={{ padding: "2rem" }}>
+  <section className="surface-card" style={{ padding: "2rem" }} role="alert" aria-live="assertive">
     <h1>{props.title}</h1>
     <p>{props.message}</p>
   </section>
@@ -75,7 +75,7 @@ export const LoadingState = (props: {
   title: string;
   message?: string;
 }) => (
-  <section className="surface-card" style={{ padding: "2rem" }}>
+  <section className="surface-card" style={{ padding: "2rem" }} aria-busy="true" aria-live="polite">
     <h1>{props.title}</h1>
     <p>{props.message ?? "Loading..."}</p>
   </section>

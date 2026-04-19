@@ -6,6 +6,13 @@ initializeWorkflowContext(createServices());
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { URL } from "node:url";
+import {
+  createRuntimeRequestContext,
+  handleRuntimeError,
+  logRuntimeEvent,
+  writeHealth,
+  writeRuntimeError,
+} from "../../../packages/runtime-baseline/src/index.js";
 
 import type { PortalLocale } from "@elipslife/portal-workflow-client";
 import {
@@ -486,14 +493,27 @@ const handleInternalRoutes = async (pathname: string, requestUrl: URL, request: 
 
 const requestHandler = async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
   if (!request.url) {
-    notFound(response);
+    const context = createRuntimeRequestContext("portal-workflow-service", request, "/");
+    writeRuntimeError(response, context, 404, "not_found", "Not found.");
     return;
   }
 
   const requestUrl = new URL(request.url, "http://127.0.0.1");
   const { pathname } = requestUrl;
+  const context = createRuntimeRequestContext("portal-workflow-service", request, pathname);
 
   try {
+    if (request.method === "GET" && pathname === "/health") {
+      writeHealth(response, context, {
+        service: "portal-workflow-service",
+        persistenceMode: "composed-runtime",
+        details: {
+          bootstrap: "demo-wiring",
+        },
+      });
+      return;
+    }
+
     if (await handleEmployeeRoutes(pathname, requestUrl, request, response)) {
       return;
     }
@@ -506,19 +526,17 @@ const requestHandler = async (request: IncomingMessage, response: ServerResponse
       return;
     }
 
-    notFound(response);
+    writeRuntimeError(response, context, 404, "not_found", "Not found.");
   } catch (error) {
     if (error instanceof WorkflowNotFoundError) {
-      writeJson(response, 404, { error: error.message });
+      writeRuntimeError(response, context, 404, "not_found", error.message);
       return;
     }
     if (error instanceof WorkflowForbiddenError) {
-      writeJson(response, 403, { error: error.message });
+      writeRuntimeError(response, context, 403, "forbidden", error.message);
       return;
     }
-    writeJson(response, 500, {
-      error: error instanceof Error ? error.message : "Unhandled portal workflow error.",
-    });
+    handleRuntimeError(response, context, error, "Unhandled portal workflow error.");
   }
 };
 
@@ -567,6 +585,9 @@ export const executePortalWorkflowRequest = async (
 
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1])) {
   createPortalWorkflowHttpServer().listen(PORT, () => {
-    process.stdout.write(`portal-workflow-service listening on http://127.0.0.1:${PORT}\n`);
+    logRuntimeEvent("portal-workflow-service", "info", "startup", {
+      port: PORT,
+      bootstrap: "demo-wiring",
+    });
   });
 }

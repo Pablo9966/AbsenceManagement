@@ -1,6 +1,14 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { URL } from "node:url";
 import {
+  createRuntimeRequestContext,
+  handleRuntimeError,
+  logRuntimeEvent,
+  writeHealth,
+  writeJson,
+  writeRuntimeError,
+} from "../../../packages/runtime-baseline/src/index.js";
+import {
   PremiumReconciliationFileRepository,
   PremiumReconciliationService,
   type PremiumActorContext,
@@ -12,12 +20,6 @@ const stateFilePath =
   new URL("../.data/premium-reconciliation-state.json", import.meta.url).pathname;
 const repository = new PremiumReconciliationFileRepository(stateFilePath);
 const service = new PremiumReconciliationService(repository);
-
-const writeJson = (response: ServerResponse, statusCode: number, body: unknown): void => {
-  response.statusCode = statusCode;
-  response.setHeader("Content-Type", "application/json");
-  response.end(JSON.stringify(body));
-};
 
 const readBody = async <T>(request: IncomingMessage): Promise<T> => {
   const chunks: Buffer[] = [];
@@ -33,67 +35,80 @@ const actorFrom = (request: IncomingMessage): PremiumActorContext => ({
 });
 
 const requestHandler = async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
-  if (!request.url) return writeJson(response, 404, { error: "Not found." });
+  if (!request.url) {
+    const context = createRuntimeRequestContext("premium-reconciliation-service", request, "/");
+    writeRuntimeError(response, context, 404, "not_found", "Not found.");
+    return;
+  }
   const requestUrl = new URL(request.url, "http://127.0.0.1");
   const pathname = requestUrl.pathname;
   const tenantId = requestUrl.searchParams.get("tenantId") ?? "";
+  const context = createRuntimeRequestContext("premium-reconciliation-service", request, pathname);
 
   try {
+    if (request.method === "GET" && pathname === "/health") {
+      writeHealth(response, context, {
+        service: "premium-reconciliation-service",
+        persistenceMode: "file-backed",
+        details: { stateFilePath },
+      });
+      return;
+    }
     if (request.method === "POST" && pathname === "/v1/premium/periods") {
       const body = await readBody<Parameters<PremiumReconciliationService["createReportingPeriod"]>[0]>(request);
-      return writeJson(response, 200, await service.createReportingPeriod(body, actorFrom(request)));
+      return writeJson(response, 200, await service.createReportingPeriod(body, actorFrom(request)), context);
     }
     if (request.method === "GET" && pathname === "/v1/premium/periods") {
-      return writeJson(response, 200, await service.listReportingPeriods(tenantId));
+      return writeJson(response, 200, await service.listReportingPeriods(tenantId), context);
     }
     if (request.method === "POST" && pathname === "/v1/premium/salary-mass-reports") {
       const body = await readBody<Parameters<PremiumReconciliationService["createDraftSalaryMassReport"]>[0]>(request);
-      return writeJson(response, 200, await service.createDraftSalaryMassReport(body, actorFrom(request)));
+      return writeJson(response, 200, await service.createDraftSalaryMassReport(body, actorFrom(request)), context);
     }
     if (request.method === "GET" && pathname === "/v1/premium/salary-mass-reports") {
-      return writeJson(response, 200, await service.listSalaryMassReports(tenantId, requestUrl.searchParams.get("periodId") ?? undefined));
+      return writeJson(response, 200, await service.listSalaryMassReports(tenantId, requestUrl.searchParams.get("periodId") ?? undefined), context);
     }
     if (request.method === "GET" && pathname.match(/^\/v1\/premium\/salary-mass-reports\/[^/]+$/)) {
-      return writeJson(response, 200, await service.getSalaryMassReportDetail(tenantId, pathname.split("/").at(-1) ?? ""));
+      return writeJson(response, 200, await service.getSalaryMassReportDetail(tenantId, pathname.split("/").at(-1) ?? ""), context);
     }
     if (request.method === "POST" && pathname.match(/^\/v1\/premium\/salary-mass-reports\/[^/]+\/submit$/)) {
-      return writeJson(response, 200, await service.submitSalaryMassReport(tenantId, pathname.split("/").at(-2) ?? "", actorFrom(request)));
+      return writeJson(response, 200, await service.submitSalaryMassReport(tenantId, pathname.split("/").at(-2) ?? "", actorFrom(request)), context);
     }
     if (request.method === "POST" && pathname === "/v1/premium/adjustments/calculate") {
       const body = await readBody<Parameters<PremiumReconciliationService["calculatePremiumAdjustment"]>[0]>(request);
-      return writeJson(response, 200, await service.calculatePremiumAdjustment(body, actorFrom(request)));
+      return writeJson(response, 200, await service.calculatePremiumAdjustment(body, actorFrom(request)), context);
     }
     if (request.method === "GET" && pathname === "/v1/premium/adjustments") {
-      return writeJson(response, 200, await service.listAdjustmentCalculations(tenantId, requestUrl.searchParams.get("periodId") ?? undefined));
+      return writeJson(response, 200, await service.listAdjustmentCalculations(tenantId, requestUrl.searchParams.get("periodId") ?? undefined), context);
     }
     if (request.method === "GET" && pathname.match(/^\/v1\/premium\/adjustments\/[^/]+$/)) {
-      return writeJson(response, 200, await service.getAdjustmentCalculation(tenantId, pathname.split("/").at(-1) ?? ""));
+      return writeJson(response, 200, await service.getAdjustmentCalculation(tenantId, pathname.split("/").at(-1) ?? ""), context);
     }
     if (request.method === "POST" && pathname.match(/^\/v1\/premium\/adjustments\/[^/]+\/recommendation$/)) {
-      return writeJson(response, 200, await service.generateSettlementRecommendation(tenantId, pathname.split("/").at(-2) ?? "", actorFrom(request)));
+      return writeJson(response, 200, await service.generateSettlementRecommendation(tenantId, pathname.split("/").at(-2) ?? "", actorFrom(request)), context);
     }
     if (request.method === "GET" && pathname.match(/^\/v1\/premium\/recommendations\/[^/]+$/)) {
-      return writeJson(response, 200, await service.getSettlementRecommendation(tenantId, pathname.split("/").at(-1) ?? ""));
+      return writeJson(response, 200, await service.getSettlementRecommendation(tenantId, pathname.split("/").at(-1) ?? ""), context);
     }
     if (request.method === "POST" && pathname === "/v1/premium/installment-plans") {
       const body = await readBody<Parameters<PremiumReconciliationService["createInstallmentPlan"]>[0]>(request);
-      return writeJson(response, 200, await service.createInstallmentPlan(body, actorFrom(request)));
+      return writeJson(response, 200, await service.createInstallmentPlan(body, actorFrom(request)), context);
     }
     if (request.method === "GET" && pathname === "/v1/premium/installment-plans") {
-      return writeJson(response, 200, await service.listInstallmentPlans(tenantId, requestUrl.searchParams.get("periodId") ?? undefined));
+      return writeJson(response, 200, await service.listInstallmentPlans(tenantId, requestUrl.searchParams.get("periodId") ?? undefined), context);
     }
     if (request.method === "GET" && pathname.match(/^\/v1\/premium\/installment-plans\/[^/]+$/)) {
-      return writeJson(response, 200, await service.getInstallmentPlanDetail(tenantId, pathname.split("/").at(-1) ?? ""));
+      return writeJson(response, 200, await service.getInstallmentPlanDetail(tenantId, pathname.split("/").at(-1) ?? ""), context);
     }
     if (request.method === "GET" && pathname === "/v1/premium/dashboard") {
-      return writeJson(response, 200, await service.getEmployerPremiumDashboard(tenantId, requestUrl.searchParams.get("periodId") ?? undefined));
+      return writeJson(response, 200, await service.getEmployerPremiumDashboard(tenantId, requestUrl.searchParams.get("periodId") ?? undefined), context);
     }
     if (request.method === "GET" && pathname === "/v1/premium/audit-events") {
-      return writeJson(response, 200, await service.listAuditEvents(tenantId, { periodId: requestUrl.searchParams.get("periodId") ?? undefined, reportId: requestUrl.searchParams.get("reportId") ?? undefined }));
+      return writeJson(response, 200, await service.listAuditEvents(tenantId, { periodId: requestUrl.searchParams.get("periodId") ?? undefined, reportId: requestUrl.searchParams.get("reportId") ?? undefined }), context);
     }
-    return writeJson(response, 404, { error: "Not found." });
+    return writeRuntimeError(response, context, 404, "not_found", "Not found.");
   } catch (error) {
-    return writeJson(response, 500, { error: error instanceof Error ? error.message : "Unhandled premium reconciliation error." });
+    return handleRuntimeError(response, context, error, "Unhandled premium reconciliation error.");
   }
 };
 
@@ -124,6 +139,10 @@ export const executePremiumReconciliationRequest = async (
 
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1])) {
   createPremiumReconciliationHttpServer().listen(PORT, () => {
-    process.stdout.write(`premium-reconciliation-service listening on http://127.0.0.1:${PORT}\n`);
+    logRuntimeEvent("premium-reconciliation-service", "info", "startup", {
+      port: PORT,
+      persistenceMode: "file-backed",
+      stateFilePath,
+    });
   });
 }

@@ -11,10 +11,15 @@ export interface PortalLayoutProps {
 
 export const PortalLayout = (props: PortalLayoutProps) => (
   <div className="portal-layout">
+    <a href="#main-content" className="skip-link">
+      {props.messages["shell.skipToContent"] ?? "Skip to content"}
+    </a>
     <TopBar shell={props.shell} messages={props.messages} />
     <div className="portal-body">
       <SidebarNav shell={props.shell} />
-      <main className="portal-main">{props.children}</main>
+      <main id="main-content" className="portal-main" tabIndex={-1}>
+        {props.children}
+      </main>
     </div>
   </div>
 );
@@ -43,7 +48,7 @@ export const SidebarNav = (props: {
       <ul>
         {props.shell.navigation.map((item) => (
           <li key={item.key}>
-            <a href={item.href}>{item.label}</a>
+            <a href={item.href} aria-label={item.label}>{item.label}</a>
           </li>
         ))}
       </ul>
@@ -73,7 +78,7 @@ export const PermissionDeniedState = (props: {
   title: string;
   message?: string;
 }) => (
-  <section>
+  <section className="surface-card" style={{ padding: "2rem" }} role="alert" aria-live="polite">
     <h1>{props.title}</h1>
     <p>{props.message ?? "You do not have access to this route."}</p>
   </section>
@@ -97,9 +102,9 @@ export const PlaceholderPageState = (props: {
   description: string;
   identifier?: string;
 }) => (
-  <section className="surface-card">
+  <section className="surface-card" aria-labelledby="placeholder-page-title">
     <p className="page-eyebrow">{props.eyebrow}</p>
-    <h1 className="page-title">{props.title}</h1>
+    <h1 id="placeholder-page-title" className="page-title">{props.title}</h1>
     <p className="page-description">{props.description}</p>
     {props.identifier ? <p>Reference: <code>{props.identifier}</code></p> : null}
   </section>

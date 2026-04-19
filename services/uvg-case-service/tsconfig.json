@@ -6,5 +6,10 @@
     "outDir": "../../dist/services/uvg-case-service",
     "tsBuildInfoFile": "../../dist/services/uvg-case-service.tsbuildinfo"
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "references": [
+    {
+      "path": "../../packages/runtime-baseline"
+    }
+  ]
 }

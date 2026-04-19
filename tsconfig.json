@@ -35,6 +35,9 @@
       "path": "./packages/frontend-platform"
     },
     {
+      "path": "./packages/runtime-baseline"
+    },
+    {
       "path": "./packages/identity-access-client"
     },
     {

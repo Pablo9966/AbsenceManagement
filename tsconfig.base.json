@@ -24,6 +24,9 @@
       "@elipslife/frontend-platform": [
         "packages/frontend-platform/src/index.ts"
       ],
+      "@elipslife/runtime-baseline": [
+        "packages/runtime-baseline/src/index.ts"
+      ],
       "@elipslife/absence-service": [
         "services/absence-service/src/index.ts"
       ],
