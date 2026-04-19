@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 import { resolveRouteAccess } from "../packages/frontend-platform/src/access/guards.js";
 import { employerRouteAccessRules } from "../packages/frontend-platform/src/navigation/employer.js";
@@ -99,6 +102,53 @@ test("premium-reconciliation-service runtime supports salary mass through dashbo
   assert.equal(dashboard.body.period.id, periodId);
   assert.equal(dashboard.body.snapshot.adjustmentDeltaChf, 4000);
   assert.ok(dashboard.body.snapshot.claimsRatio > 0);
+});
+
+test("premium file-backed repository persists across service instances", { concurrency: false }, async () => {
+  const {
+    PremiumReconciliationFileRepository,
+    PremiumReconciliationService,
+  } = await import("../services/premium-reconciliation-service/src/index.ts");
+  const tempDir = await mkdtemp(join(tmpdir(), "premium-reconciliation-"));
+  const stateFile = join(tempDir, "state.json");
+  const tenantId = "tenant-premium-file-repository";
+  const actor = {
+    actorId: "finance-user",
+    actorRole: "employer_finance",
+    effectiveAt: "2026-04-19T10:00:00.000Z",
+    correlationId: "phase-2f-file-repository-smoke",
+  };
+
+  try {
+    const writer = new PremiumReconciliationService(new PremiumReconciliationFileRepository(stateFile));
+    const period = await writer.createReportingPeriod({
+      tenantId,
+      periodStart: "2026-01-01",
+      periodEnd: "2026-12-31",
+      reportingYear: 2026,
+      periodType: "annual",
+    }, actor);
+    await writer.createDraftSalaryMassReport({
+      tenantId,
+      premiumReportingPeriodId: period.id,
+      annualSalaryMassChf: 7000000,
+      insuredSalaryMassChf: 6500000,
+      employeeCount: 70,
+      submissionSource: "file_repository_smoke",
+      submittedBy: "finance-user",
+    }, actor);
+
+    const reader = new PremiumReconciliationService(new PremiumReconciliationFileRepository(stateFile));
+    const periods = await reader.listReportingPeriods(tenantId);
+    const reports = await reader.listSalaryMassReports(tenantId, period.id);
+
+    assert.equal(periods.length, 1);
+    assert.equal(periods[0].id, period.id);
+    assert.equal(reports.length, 1);
+    assert.equal(reports[0].insuredSalaryMassChf, 6500000);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
 });
 
 test("premium adjustment distinguishes refund and no adjustment", { concurrency: false }, async () => {

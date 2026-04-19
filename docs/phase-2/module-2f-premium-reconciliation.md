@@ -41,6 +41,11 @@ The standalone service exposes:
 
 The OpenAPI contract is maintained in `services/premium-reconciliation-service/openapi.yaml`.
 
+The standalone runtime uses `PremiumReconciliationFileRepository` by default. State is stored at
+`PREMIUM_RECONCILIATION_STATE_FILE` when set, otherwise at
+`services/premium-reconciliation-service/.data/premium-reconciliation-state.json`.
+`PremiumReconciliationMemoryRepository` remains available for isolated tests and local demo/bootstrap wiring, but it is no longer the normal service runtime persistence path.
+
 ## Employer Portal Routes
 
 Employer finance users use:
@@ -84,6 +89,7 @@ Premium exposure stores claims paid, optional claims reserved, premium rate, exp
 
 ## Known Technical Debt
 
-- The service runtime currently uses an in-memory repository adapter for local/test execution. SQL schema exists, but a production persistence adapter is still required.
+- Runtime persistence is durable and file-backed for local service execution, but it is not yet a database-backed adapter. A PostgreSQL adapter and migration-runner integration remain future release-hardening work.
+- File-backed writes are intentionally simple and do not provide cross-process locking. They are suitable for local/testing runtime settlement, not multi-instance production deployment.
 - Employer portal premium workflow is implemented as one finance page. It can be split into separate detail routes later if UX complexity grows.
 - Upstream people-service and benefit-engine integration is represented by explicit input contracts in this slice. Live service-to-service reads remain future hardening.

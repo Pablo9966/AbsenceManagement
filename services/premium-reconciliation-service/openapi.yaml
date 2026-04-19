@@ -2,33 +2,536 @@ openapi: 3.1.0
 info:
   title: Premium Reconciliation Service
   version: 0.1.0
+  description: Phase 2F service API for salary mass reporting, premium adjustment, settlement recommendations, installment visibility, employer premium dashboards, and audit events.
+servers:
+  - url: http://127.0.0.1:4050
 paths:
   /v1/premium/periods:
-    get: { summary: List reporting periods, responses: { "200": { description: Reporting periods } } }
-    post: { summary: Create reporting period, responses: { "200": { description: Reporting period } } }
+    get:
+      summary: List reporting periods
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Tenant-scoped premium reporting periods.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PremiumReportingPeriod"
+    post:
+      summary: Create reporting period
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReportingPeriodRequest"
+      responses:
+        "200":
+          description: Created reporting period.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PremiumReportingPeriod"
   /v1/premium/salary-mass-reports:
-    get: { summary: List salary mass reports, responses: { "200": { description: Salary mass reports } } }
-    post: { summary: Create draft salary mass report, responses: { "200": { description: Salary mass report } } }
+    get:
+      summary: List salary mass reports
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: periodId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tenant-scoped salary mass reports.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SalaryMassReport"
+    post:
+      summary: Create draft salary mass report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSalaryMassReportRequest"
+      responses:
+        "200":
+          description: Created salary mass report.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SalaryMassReport"
   /v1/premium/salary-mass-reports/{reportId}:
-    get: { summary: Get salary mass report detail, responses: { "200": { description: Report detail } } }
+    get:
+      summary: Get salary mass report detail
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ReportId"
+      responses:
+        "200":
+          description: Salary mass report with optional line detail, or null when not found for tenant.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/SalaryMassReportDetail"
+                  - type: "null"
   /v1/premium/salary-mass-reports/{reportId}/submit:
-    post: { summary: Submit salary mass report, responses: { "200": { description: Submitted report } } }
+    post:
+      summary: Submit salary mass report
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ReportId"
+      responses:
+        "200":
+          description: Submitted salary mass report.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SalaryMassReport"
   /v1/premium/adjustments/calculate:
-    post: { summary: Calculate premium adjustment from salary mass and exposure inputs, responses: { "200": { description: Adjustment calculation } } }
+    post:
+      summary: Calculate premium adjustment
+      description: Calculates refund, additional invoice, or no-adjustment outcome from submitted salary mass and explicit upstream exposure inputs.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CalculatePremiumAdjustmentRequest"
+      responses:
+        "200":
+          description: Premium adjustment calculation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PremiumAdjustmentCalculation"
   /v1/premium/adjustments:
-    get: { summary: List premium adjustment calculations, responses: { "200": { description: Adjustment calculations } } }
+    get:
+      summary: List premium adjustment calculations
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: periodId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tenant-scoped adjustment calculations.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PremiumAdjustmentCalculation"
   /v1/premium/adjustments/{calculationId}:
-    get: { summary: Get premium adjustment calculation detail, responses: { "200": { description: Adjustment calculation } } }
+    get:
+      summary: Get premium adjustment calculation detail
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CalculationId"
+      responses:
+        "200":
+          description: Premium adjustment calculation, or null when not found for tenant.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/PremiumAdjustmentCalculation"
+                  - type: "null"
   /v1/premium/adjustments/{calculationId}/recommendation:
-    post: { summary: Generate refund/additional invoice/carry-forward recommendation, responses: { "200": { description: Settlement recommendation } } }
+    post:
+      summary: Generate settlement recommendation
+      description: Generates refund, invoice, or carry-forward recommendation from a calculated premium adjustment.
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/CalculationId"
+      responses:
+        "200":
+          description: Settlement recommendation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PremiumSettlementRecommendation"
   /v1/premium/recommendations/{recommendationId}:
-    get: { summary: Get settlement recommendation detail, responses: { "200": { description: Settlement recommendation } } }
+    get:
+      summary: Get settlement recommendation detail
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/RecommendationId"
+      responses:
+        "200":
+          description: Settlement recommendation, or null when not found for tenant.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/PremiumSettlementRecommendation"
+                  - type: "null"
   /v1/premium/installment-plans:
-    get: { summary: List installment plans, responses: { "200": { description: Installment plans } } }
-    post: { summary: Create installment plan, responses: { "200": { description: Installment plan and items } } }
+    get:
+      summary: List installment plans
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: periodId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tenant-scoped installment plans.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PremiumInstallmentPlan"
+    post:
+      summary: Create installment plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInstallmentPlanRequest"
+      responses:
+        "200":
+          description: Installment plan with schedule items.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PremiumInstallmentPlanDetail"
   /v1/premium/installment-plans/{planId}:
-    get: { summary: Get installment plan detail, responses: { "200": { description: Installment plan detail } } }
+    get:
+      summary: Get installment plan detail
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PlanId"
+      responses:
+        "200":
+          description: Installment plan with items, or null when not found for tenant.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/PremiumInstallmentPlanDetail"
+                  - type: "null"
   /v1/premium/dashboard:
-    get: { summary: Get employer premium dashboard snapshot, responses: { "200": { description: Premium dashboard read model } } }
+    get:
+      summary: Get employer premium dashboard
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: periodId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Employer finance dashboard read model, or null when no period exists.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/EmployerPremiumDashboard"
+                  - type: "null"
   /v1/premium/audit-events:
-    get: { summary: List premium reconciliation audit events, responses: { "200": { description: Audit events } } }
+    get:
+      summary: List premium reconciliation audit events
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: periodId
+          in: query
+          schema:
+            type: string
+        - name: reportId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tenant-scoped premium reconciliation audit events.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PremiumReconciliationAuditEvent"
+components:
+  parameters:
+    TenantId:
+      name: tenantId
+      in: query
+      required: true
+      schema:
+        type: string
+    ReportId:
+      name: reportId
+      in: path
+      required: true
+      schema:
+        type: string
+    CalculationId:
+      name: calculationId
+      in: path
+      required: true
+      schema:
+        type: string
+    RecommendationId:
+      name: recommendationId
+      in: path
+      required: true
+      schema:
+        type: string
+    PlanId:
+      name: planId
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    CreateReportingPeriodRequest:
+      type: object
+      required: [tenantId, periodStart, periodEnd, reportingYear, periodType]
+      properties:
+        tenantId: { type: string }
+        periodStart: { type: string, format: date }
+        periodEnd: { type: string, format: date }
+        reportingYear: { type: integer }
+        reportingMonth: { type: integer, minimum: 1, maximum: 12 }
+        periodType: { $ref: "#/components/schemas/PremiumPeriodType" }
+    CreateSalaryMassReportRequest:
+      type: object
+      required: [tenantId, premiumReportingPeriodId, annualSalaryMassChf, insuredSalaryMassChf, employeeCount, submissionSource, submittedBy]
+      properties:
+        tenantId: { type: string }
+        premiumReportingPeriodId: { type: string }
+        currency: { const: CHF }
+        annualSalaryMassChf: { type: number }
+        insuredSalaryMassChf: { type: number }
+        employeeCount: { type: integer }
+        submissionSource: { type: string }
+        submittedBy: { type: string }
+        notes: { type: string }
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/SalaryMassReportLineInput"
+    CalculatePremiumAdjustmentRequest:
+      type: object
+      required: [tenantId, premiumReportingPeriodId, salaryMassReportId, priorPremiumChf, premiumRate, claimsPaidChf, exposureBasis]
+      properties:
+        tenantId: { type: string }
+        premiumReportingPeriodId: { type: string }
+        salaryMassReportId: { type: string }
+        priorPremiumChf: { type: number }
+        premiumRate: { type: number }
+        claimsPaidChf: { type: number }
+        claimsReservedChf: { type: number }
+        exposureBasis: { type: string }
+    CreateInstallmentPlanRequest:
+      type: object
+      required: [tenantId, premiumReportingPeriodId, totalAmountChf, installmentCount, startDate]
+      properties:
+        tenantId: { type: string }
+        premiumReportingPeriodId: { type: string }
+        totalAmountChf: { type: number }
+        installmentCount: { type: integer, minimum: 1 }
+        startDate: { type: string, format: date }
+    PremiumReportingPeriod:
+      type: object
+      required: [id, tenantId, periodStart, periodEnd, reportingYear, periodType, reportingStatus, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        periodStart: { type: string, format: date }
+        periodEnd: { type: string, format: date }
+        reportingYear: { type: integer }
+        reportingMonth: { type: integer }
+        periodType: { $ref: "#/components/schemas/PremiumPeriodType" }
+        reportingStatus: { enum: [draft, submitted, under_review, reconciled, closed] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        submittedAt: { type: string, format: date-time }
+        submittedBy: { type: string }
+    SalaryMassReport:
+      type: object
+      required: [id, tenantId, premiumReportingPeriodId, reportStatus, currency, annualSalaryMassChf, insuredSalaryMassChf, employeeCount, submissionSource, submittedAt, submittedBy]
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        premiumReportingPeriodId: { type: string }
+        reportStatus: { enum: [draft, submitted, validated, rejected] }
+        currency: { const: CHF }
+        annualSalaryMassChf: { type: number }
+        insuredSalaryMassChf: { type: number }
+        employeeCount: { type: integer }
+        submissionSource: { type: string }
+        submittedAt: { type: string, format: date-time }
+        submittedBy: { type: string }
+        notes: { type: string }
+    SalaryMassReportLineInput:
+      type: object
+      required: [employeeReference, employmentPercentage, annualSalaryChf, insuredSalaryChf, salaryCategory, lineStatus]
+      properties:
+        employeeReference: { type: string }
+        contractReference: { type: string }
+        employmentPercentage: { type: number }
+        annualSalaryChf: { type: number }
+        insuredSalaryChf: { type: number }
+        salaryCategory: { type: string }
+        lineStatus: { enum: [valid, warning, rejected] }
+        validationNotes: { type: string }
+    SalaryMassReportLine:
+      allOf:
+        - $ref: "#/components/schemas/SalaryMassReportLineInput"
+        - type: object
+          required: [id, tenantId, salaryMassReportId]
+          properties:
+            id: { type: string }
+            tenantId: { type: string }
+            salaryMassReportId: { type: string }
+    SalaryMassReportDetail:
+      allOf:
+        - $ref: "#/components/schemas/SalaryMassReport"
+        - type: object
+          required: [lines]
+          properties:
+            lines:
+              type: array
+              items:
+                $ref: "#/components/schemas/SalaryMassReportLine"
+    PremiumExposureSnapshot:
+      type: object
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        premiumReportingPeriodId: { type: string }
+        exposureBasis: { type: string }
+        insuredSalaryMassChf: { type: number }
+        claimsPaidChf: { type: number }
+        claimsReservedChf: { type: number }
+        claimsRatio: { type: number }
+        premiumRateApplied: { type: number }
+        expectedPremiumChf: { type: number }
+        snapshotStatus: { enum: [draft, calculated, published] }
+        createdAt: { type: string, format: date-time }
+    PremiumAdjustmentCalculation:
+      type: object
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        premiumReportingPeriodId: { type: string }
+        salaryMassReportId: { type: string }
+        adjustmentStatus: { enum: [draft, calculated, approved, superseded] }
+        priorPremiumChf: { type: number }
+        recalculatedPremiumChf: { type: number }
+        deltaAmountChf: { type: number }
+        adjustmentType: { enum: [refund, additional_invoice, no_adjustment] }
+        formula: { type: string }
+        inputsJson: { type: object, additionalProperties: true }
+        calculatedAt: { type: string, format: date-time }
+    PremiumSettlementRecommendation:
+      type: object
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        premiumAdjustmentCalculationId: { type: string }
+        recommendationType: { enum: [refund, invoice, carry_forward] }
+        grossAmountChf: { type: number }
+        netAmountChf: { type: number }
+        vatAmountChf: { type: number }
+        settlementReason: { type: string }
+        installmentEligibleFlag: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    PremiumInstallmentPlan:
+      type: object
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        premiumReportingPeriodId: { type: string }
+        planStatus: { enum: [draft, active, completed, cancelled] }
+        installmentCount: { type: integer }
+        totalAmountChf: { type: number }
+        startDate: { type: string, format: date }
+        endDate: { type: string, format: date }
+        createdAt: { type: string, format: date-time }
+    PremiumInstallmentItem:
+      type: object
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        premiumInstallmentPlanId: { type: string }
+        dueDate: { type: string, format: date }
+        amountChf: { type: number }
+        installmentStatus: { enum: [scheduled, due, paid, overdue, cancelled] }
+        paidAt: { type: string, format: date-time }
+        reference: { type: string }
+    PremiumInstallmentPlanDetail:
+      allOf:
+        - $ref: "#/components/schemas/PremiumInstallmentPlan"
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/PremiumInstallmentItem"
+    EmployerPremiumDashboard:
+      type: object
+      required: [period, reports, calculations, plans, exposures]
+      properties:
+        period:
+          $ref: "#/components/schemas/PremiumReportingPeriod"
+        snapshot:
+          $ref: "#/components/schemas/EmployerPremiumDashboardSnapshot"
+        reports:
+          type: array
+          items:
+            $ref: "#/components/schemas/SalaryMassReport"
+        calculations:
+          type: array
+          items:
+            $ref: "#/components/schemas/PremiumAdjustmentCalculation"
+        plans:
+          type: array
+          items:
+            $ref: "#/components/schemas/PremiumInstallmentPlan"
+        exposures:
+          type: array
+          items:
+            $ref: "#/components/schemas/PremiumExposureSnapshot"
+    EmployerPremiumDashboardSnapshot:
+      type: object
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        premiumReportingPeriodId: { type: string }
+        exposureStatus: { type: string }
+        claimsRatio: { type: number }
+        expectedPremiumChf: { type: number }
+        adjustmentDeltaChf: { type: number }
+        openInstallmentAmountChf: { type: number }
+        snapshotPayloadJson: { type: object, additionalProperties: true }
+        createdAt: { type: string, format: date-time }
+    PremiumReconciliationAuditEvent:
+      type: object
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        premiumReportingPeriodId: { type: string }
+        salaryMassReportId: { type: string }
+        eventType: { type: string }
+        occurredAt: { type: string, format: date-time }
+        actorId: { type: string }
+        actorRole: { enum: [employer_finance, hr_manager, system] }
+        correlationId: { type: string }
+        payload: { type: object, additionalProperties: true }
+    PremiumPeriodType:
+      enum: [annual, monthly, correction]

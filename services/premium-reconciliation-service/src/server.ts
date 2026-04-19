@@ -1,14 +1,16 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { URL } from "node:url";
 import {
-  PremiumReconciliationMemoryRepository,
+  PremiumReconciliationFileRepository,
   PremiumReconciliationService,
   type PremiumActorContext,
-  type PremiumPeriodType,
 } from "./index.js";
 
 const PORT = Number(process.env.PREMIUM_RECONCILIATION_SERVICE_PORT ?? "4050");
-const repository = new PremiumReconciliationMemoryRepository();
+const stateFilePath =
+  process.env.PREMIUM_RECONCILIATION_STATE_FILE ??
+  new URL("../.data/premium-reconciliation-state.json", import.meta.url).pathname;
+const repository = new PremiumReconciliationFileRepository(stateFilePath);
 const service = new PremiumReconciliationService(repository);
 
 const writeJson = (response: ServerResponse, statusCode: number, body: unknown): void => {

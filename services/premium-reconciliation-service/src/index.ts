@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
 
 export type PremiumPeriodType = "annual" | "monthly" | "correction";
 export type PremiumReportingStatus = "draft" | "submitted" | "under_review" | "reconciled" | "closed";
@@ -190,60 +192,145 @@ const replaceById = <T extends { id: string }>(items: T[], next: T): T => {
   return next;
 };
 
+export interface PremiumReconciliationRepositoryState {
+  periods: PremiumReportingPeriod[];
+  reports: SalaryMassReport[];
+  reportLines: SalaryMassReportLine[];
+  exposureSnapshots: PremiumExposureSnapshot[];
+  calculations: PremiumAdjustmentCalculation[];
+  recommendations: PremiumSettlementRecommendation[];
+  plans: PremiumInstallmentPlan[];
+  planItems: PremiumInstallmentItem[];
+  dashboardSnapshots: EmployerPremiumDashboardSnapshot[];
+  auditEvents: PremiumReconciliationAuditEvent[];
+}
+
+const createEmptyPremiumReconciliationState = (): PremiumReconciliationRepositoryState => ({
+  periods: [],
+  reports: [],
+  reportLines: [],
+  exposureSnapshots: [],
+  calculations: [],
+  recommendations: [],
+  plans: [],
+  planItems: [],
+  dashboardSnapshots: [],
+  auditEvents: [],
+});
+
+const applyPremiumReconciliationState = (
+  target: PremiumReconciliationRepositoryState,
+  source: Partial<PremiumReconciliationRepositoryState>,
+): void => {
+  const empty = createEmptyPremiumReconciliationState();
+  target.periods = source.periods ?? empty.periods;
+  target.reports = source.reports ?? empty.reports;
+  target.reportLines = source.reportLines ?? empty.reportLines;
+  target.exposureSnapshots = source.exposureSnapshots ?? empty.exposureSnapshots;
+  target.calculations = source.calculations ?? empty.calculations;
+  target.recommendations = source.recommendations ?? empty.recommendations;
+  target.plans = source.plans ?? empty.plans;
+  target.planItems = source.planItems ?? empty.planItems;
+  target.dashboardSnapshots = source.dashboardSnapshots ?? empty.dashboardSnapshots;
+  target.auditEvents = source.auditEvents ?? empty.auditEvents;
+};
+
 export class PremiumReconciliationMemoryRepository implements PremiumRepository {
-  constructor(
-    private readonly periods: PremiumReportingPeriod[] = [],
-    private readonly reports: SalaryMassReport[] = [],
-    private readonly reportLines: SalaryMassReportLine[] = [],
-    private readonly exposureSnapshots: PremiumExposureSnapshot[] = [],
-    private readonly calculations: PremiumAdjustmentCalculation[] = [],
-    private readonly recommendations: PremiumSettlementRecommendation[] = [],
-    private readonly plans: PremiumInstallmentPlan[] = [],
-    private readonly planItems: PremiumInstallmentItem[] = [],
-    private readonly dashboardSnapshots: EmployerPremiumDashboardSnapshot[] = [],
-    private readonly auditEvents: PremiumReconciliationAuditEvent[] = [],
-  ) {}
+  protected readonly state: PremiumReconciliationRepositoryState;
+
+  constructor(state: Partial<PremiumReconciliationRepositoryState> = {}) {
+    this.state = createEmptyPremiumReconciliationState();
+    applyPremiumReconciliationState(this.state, state);
+  }
 
   async withTransaction<T>(operation: (repository: PremiumRepository) => Promise<T>): Promise<T> {
     return operation(this);
   }
 
-  async upsertReportingPeriod(value: PremiumReportingPeriod) { return replaceById(this.periods, value); }
-  async getReportingPeriod(tenantId: string, periodId: string) { return this.periods.find((p) => p.tenantId === tenantId && p.id === periodId) ?? null; }
-  async listReportingPeriods(tenantId: string) { return this.periods.filter((p) => p.tenantId === tenantId).sort((a, b) => b.periodStart.localeCompare(a.periodStart)); }
-  async upsertSalaryMassReport(value: SalaryMassReport) { return replaceById(this.reports, value); }
-  async getSalaryMassReport(tenantId: string, reportId: string) { return this.reports.find((r) => r.tenantId === tenantId && r.id === reportId) ?? null; }
-  async listSalaryMassReports(tenantId: string, periodId?: string) { return this.reports.filter((r) => r.tenantId === tenantId && (!periodId || r.premiumReportingPeriodId === periodId)); }
+  async upsertReportingPeriod(value: PremiumReportingPeriod) { return replaceById(this.state.periods, value); }
+  async getReportingPeriod(tenantId: string, periodId: string) { return this.state.periods.find((p) => p.tenantId === tenantId && p.id === periodId) ?? null; }
+  async listReportingPeriods(tenantId: string) { return this.state.periods.filter((p) => p.tenantId === tenantId).sort((a, b) => b.periodStart.localeCompare(a.periodStart)); }
+  async upsertSalaryMassReport(value: SalaryMassReport) { return replaceById(this.state.reports, value); }
+  async getSalaryMassReport(tenantId: string, reportId: string) { return this.state.reports.find((r) => r.tenantId === tenantId && r.id === reportId) ?? null; }
+  async listSalaryMassReports(tenantId: string, periodId?: string) { return this.state.reports.filter((r) => r.tenantId === tenantId && (!periodId || r.premiumReportingPeriodId === periodId)); }
   async replaceSalaryMassReportLines(reportId: string, lines: SalaryMassReportLine[]) {
-    for (let index = this.reportLines.length - 1; index >= 0; index -= 1) if (this.reportLines[index]?.salaryMassReportId === reportId) this.reportLines.splice(index, 1);
-    this.reportLines.push(...lines);
+    for (let index = this.state.reportLines.length - 1; index >= 0; index -= 1) if (this.state.reportLines[index]?.salaryMassReportId === reportId) this.state.reportLines.splice(index, 1);
+    this.state.reportLines.push(...lines);
     return lines;
   }
-  async listSalaryMassReportLines(tenantId: string, reportId: string) { return this.reportLines.filter((line) => line.tenantId === tenantId && line.salaryMassReportId === reportId); }
-  async upsertExposureSnapshot(value: PremiumExposureSnapshot) { return replaceById(this.exposureSnapshots, value); }
-  async listExposureSnapshots(tenantId: string, periodId: string) { return this.exposureSnapshots.filter((s) => s.tenantId === tenantId && s.premiumReportingPeriodId === periodId); }
-  async upsertAdjustmentCalculation(value: PremiumAdjustmentCalculation) { return replaceById(this.calculations, value); }
-  async getAdjustmentCalculation(tenantId: string, calculationId: string) { return this.calculations.find((c) => c.tenantId === tenantId && c.id === calculationId) ?? null; }
-  async listAdjustmentCalculations(tenantId: string, periodId?: string) { return this.calculations.filter((c) => c.tenantId === tenantId && (!periodId || c.premiumReportingPeriodId === periodId)); }
-  async upsertSettlementRecommendation(value: PremiumSettlementRecommendation) { return replaceById(this.recommendations, value); }
-  async getSettlementRecommendation(tenantId: string, recommendationId: string) { return this.recommendations.find((r) => r.tenantId === tenantId && r.id === recommendationId) ?? null; }
-  async listSettlementRecommendationsByCalculation(tenantId: string, calculationId: string) { return this.recommendations.filter((r) => r.tenantId === tenantId && r.premiumAdjustmentCalculationId === calculationId); }
-  async upsertInstallmentPlan(value: PremiumInstallmentPlan) { return replaceById(this.plans, value); }
-  async getInstallmentPlan(tenantId: string, planId: string) { return this.plans.find((p) => p.tenantId === tenantId && p.id === planId) ?? null; }
-  async listInstallmentPlans(tenantId: string, periodId?: string) { return this.plans.filter((p) => p.tenantId === tenantId && (!periodId || p.premiumReportingPeriodId === periodId)); }
+  async listSalaryMassReportLines(tenantId: string, reportId: string) { return this.state.reportLines.filter((line) => line.tenantId === tenantId && line.salaryMassReportId === reportId); }
+  async upsertExposureSnapshot(value: PremiumExposureSnapshot) { return replaceById(this.state.exposureSnapshots, value); }
+  async listExposureSnapshots(tenantId: string, periodId: string) { return this.state.exposureSnapshots.filter((s) => s.tenantId === tenantId && s.premiumReportingPeriodId === periodId); }
+  async upsertAdjustmentCalculation(value: PremiumAdjustmentCalculation) { return replaceById(this.state.calculations, value); }
+  async getAdjustmentCalculation(tenantId: string, calculationId: string) { return this.state.calculations.find((c) => c.tenantId === tenantId && c.id === calculationId) ?? null; }
+  async listAdjustmentCalculations(tenantId: string, periodId?: string) { return this.state.calculations.filter((c) => c.tenantId === tenantId && (!periodId || c.premiumReportingPeriodId === periodId)); }
+  async upsertSettlementRecommendation(value: PremiumSettlementRecommendation) { return replaceById(this.state.recommendations, value); }
+  async getSettlementRecommendation(tenantId: string, recommendationId: string) { return this.state.recommendations.find((r) => r.tenantId === tenantId && r.id === recommendationId) ?? null; }
+  async listSettlementRecommendationsByCalculation(tenantId: string, calculationId: string) { return this.state.recommendations.filter((r) => r.tenantId === tenantId && r.premiumAdjustmentCalculationId === calculationId); }
+  async upsertInstallmentPlan(value: PremiumInstallmentPlan) { return replaceById(this.state.plans, value); }
+  async getInstallmentPlan(tenantId: string, planId: string) { return this.state.plans.find((p) => p.tenantId === tenantId && p.id === planId) ?? null; }
+  async listInstallmentPlans(tenantId: string, periodId?: string) { return this.state.plans.filter((p) => p.tenantId === tenantId && (!periodId || p.premiumReportingPeriodId === periodId)); }
   async replaceInstallmentItems(planId: string, items: PremiumInstallmentItem[]) {
-    for (let index = this.planItems.length - 1; index >= 0; index -= 1) if (this.planItems[index]?.premiumInstallmentPlanId === planId) this.planItems.splice(index, 1);
-    this.planItems.push(...items);
+    for (let index = this.state.planItems.length - 1; index >= 0; index -= 1) if (this.state.planItems[index]?.premiumInstallmentPlanId === planId) this.state.planItems.splice(index, 1);
+    this.state.planItems.push(...items);
     return items;
   }
-  async listInstallmentItems(tenantId: string, planId: string) { return this.planItems.filter((item) => item.tenantId === tenantId && item.premiumInstallmentPlanId === planId); }
-  async upsertDashboardSnapshot(value: EmployerPremiumDashboardSnapshot) { return replaceById(this.dashboardSnapshots, value); }
+  async listInstallmentItems(tenantId: string, planId: string) { return this.state.planItems.filter((item) => item.tenantId === tenantId && item.premiumInstallmentPlanId === planId); }
+  async upsertDashboardSnapshot(value: EmployerPremiumDashboardSnapshot) { return replaceById(this.state.dashboardSnapshots, value); }
   async getLatestDashboardSnapshot(tenantId: string, periodId: string) {
-    return this.dashboardSnapshots.filter((s) => s.tenantId === tenantId && s.premiumReportingPeriodId === periodId).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0] ?? null;
+    return this.state.dashboardSnapshots.filter((s) => s.tenantId === tenantId && s.premiumReportingPeriodId === periodId).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0] ?? null;
   }
-  async createAuditEvent(value: PremiumReconciliationAuditEvent) { this.auditEvents.push(value); return value; }
+  async createAuditEvent(value: PremiumReconciliationAuditEvent) { this.state.auditEvents.push(value); return value; }
   async listAuditEvents(tenantId: string, filters?: { periodId?: string; reportId?: string }) {
-    return this.auditEvents.filter((e) => e.tenantId === tenantId && (!filters?.periodId || e.premiumReportingPeriodId === filters.periodId) && (!filters?.reportId || e.salaryMassReportId === filters.reportId)).sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
+    return this.state.auditEvents.filter((e) => e.tenantId === tenantId && (!filters?.periodId || e.premiumReportingPeriodId === filters.periodId) && (!filters?.reportId || e.salaryMassReportId === filters.reportId)).sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
+  }
+}
+
+export class PremiumReconciliationFileRepository extends PremiumReconciliationMemoryRepository {
+  private loaded = false;
+
+  constructor(private readonly filePath: string) {
+    super();
+  }
+
+  override async withTransaction<T>(operation: (repository: PremiumRepository) => Promise<T>): Promise<T> {
+    await this.load();
+    const result = await operation(this);
+    await this.save();
+    return result;
+  }
+
+  override async getReportingPeriod(tenantId: string, periodId: string) { await this.load(); return super.getReportingPeriod(tenantId, periodId); }
+  override async listReportingPeriods(tenantId: string) { await this.load(); return super.listReportingPeriods(tenantId); }
+  override async getSalaryMassReport(tenantId: string, reportId: string) { await this.load(); return super.getSalaryMassReport(tenantId, reportId); }
+  override async listSalaryMassReports(tenantId: string, periodId?: string) { await this.load(); return super.listSalaryMassReports(tenantId, periodId); }
+  override async listSalaryMassReportLines(tenantId: string, reportId: string) { await this.load(); return super.listSalaryMassReportLines(tenantId, reportId); }
+  override async listExposureSnapshots(tenantId: string, periodId: string) { await this.load(); return super.listExposureSnapshots(tenantId, periodId); }
+  override async getAdjustmentCalculation(tenantId: string, calculationId: string) { await this.load(); return super.getAdjustmentCalculation(tenantId, calculationId); }
+  override async listAdjustmentCalculations(tenantId: string, periodId?: string) { await this.load(); return super.listAdjustmentCalculations(tenantId, periodId); }
+  override async getSettlementRecommendation(tenantId: string, recommendationId: string) { await this.load(); return super.getSettlementRecommendation(tenantId, recommendationId); }
+  override async listSettlementRecommendationsByCalculation(tenantId: string, calculationId: string) { await this.load(); return super.listSettlementRecommendationsByCalculation(tenantId, calculationId); }
+  override async getInstallmentPlan(tenantId: string, planId: string) { await this.load(); return super.getInstallmentPlan(tenantId, planId); }
+  override async listInstallmentPlans(tenantId: string, periodId?: string) { await this.load(); return super.listInstallmentPlans(tenantId, periodId); }
+  override async listInstallmentItems(tenantId: string, planId: string) { await this.load(); return super.listInstallmentItems(tenantId, planId); }
+  override async getLatestDashboardSnapshot(tenantId: string, periodId: string) { await this.load(); return super.getLatestDashboardSnapshot(tenantId, periodId); }
+  override async listAuditEvents(tenantId: string, filters?: { periodId?: string; reportId?: string }) { await this.load(); return super.listAuditEvents(tenantId, filters); }
+
+  private async load(): Promise<void> {
+    if (this.loaded) return;
+    try {
+      const raw = await readFile(this.filePath, "utf-8");
+      applyPremiumReconciliationState(this.state, JSON.parse(raw) as Partial<PremiumReconciliationRepositoryState>);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      applyPremiumReconciliationState(this.state, {});
+    }
+    this.loaded = true;
+  }
+
+  private async save(): Promise<void> {
+    await mkdir(dirname(this.filePath), { recursive: true });
+    await writeFile(this.filePath, `${JSON.stringify(this.state, null, 2)}\n`);
   }
 }
 
