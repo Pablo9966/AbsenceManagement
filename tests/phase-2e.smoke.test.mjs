@@ -10,6 +10,104 @@ const executeRequest = async (requestPath, options) => {
   return executePortalWorkflowRequest(requestPath, options);
 };
 
+const executeUvgRuntimeRequest = async (requestPath, options) => {
+  const { executeUvgCaseRequest } = await import("../services/uvg-case-service/src/server.ts");
+  return executeUvgCaseRequest(requestPath, options);
+};
+
+test("uvg-case-service runtime exposes direct case commands through artifact generation", { concurrency: false }, async () => {
+  const createResponse = await executeUvgRuntimeRequest("/v1/uvg-cases", {
+    method: "POST",
+    headers: {
+      "x-actor-id": "user-employer-admin",
+      "x-actor-role": "employer_user",
+    },
+    body: {
+      tenantId: "tenant-employer-demo",
+      employeeId: "employee-0001",
+      policyId: "policy-uvg-001",
+      uvgCaseType: "bu",
+      reporterRole: "employer",
+      reporterUserId: "user-employer-admin",
+      accidentDate: "2026-04-21",
+      accidentTime: "10:30",
+      accidentPlace: "Zurich office stairs",
+      occupationalContext: "occupational",
+      accidentDescription: "Employee slipped on office stairs during work.",
+      policeInvolvedFlag: false,
+      ktgCaseId: "case-2001",
+    },
+  });
+  assert.equal(createResponse.statusCode, 200);
+  assert.equal(createResponse.body.data.uvgCaseType, "bu");
+  const caseId = createResponse.body.data.id;
+
+  const statusResponse = await executeUvgRuntimeRequest(`/v1/uvg-cases/${caseId}/status?tenantId=tenant-employer-demo`, {
+    method: "POST",
+    headers: {
+      "x-actor-id": "user-internal-claims",
+      "x-actor-role": "claims_handler",
+    },
+    body: { caseStatus: "under_review" },
+  });
+  assert.equal(statusResponse.statusCode, 200);
+  assert.equal(statusResponse.body.data.caseStatus, "under_review");
+
+  const injuryResponse = await executeUvgRuntimeRequest(`/v1/uvg-cases/${caseId}/injuries`, {
+    method: "POST",
+    headers: {
+      "x-actor-id": "user-internal-claims",
+      "x-actor-role": "claims_handler",
+    },
+    body: {
+      tenantId: "tenant-employer-demo",
+      injuryType: "sprain",
+      bodyPart: "ankle",
+      severity: "moderate",
+      medicalTreatmentFlag: true,
+      hospitalizedFlag: false,
+    },
+  });
+  assert.equal(injuryResponse.statusCode, 200);
+  assert.equal(injuryResponse.body.data.bodyPart, "ankle");
+
+  const coordinationResponse = await executeUvgRuntimeRequest(`/v1/uvg-cases/${caseId}/coordination`, {
+    method: "POST",
+    headers: {
+      "x-actor-id": "user-internal-claims",
+      "x-actor-role": "claims_handler",
+    },
+    body: {
+      tenantId: "tenant-employer-demo",
+      coordinationType: "ktg_overlap",
+      relatedKtgCaseId: "case-2001",
+      overlapStart: "2026-04-21",
+      overlapEnd: "2026-04-30",
+      coordinationStatus: "in_review",
+      benefitOverlapFlag: true,
+      notes: "Direct runtime overlap review.",
+    },
+  });
+  assert.equal(coordinationResponse.statusCode, 200);
+  assert.equal(coordinationResponse.body.data.coordinationStatus, "in_review");
+
+  const artifactResponse = await executeUvgRuntimeRequest(`/v1/uvg-cases/${caseId}/report-artifact?tenantId=tenant-employer-demo`, {
+    method: "POST",
+    headers: {
+      "x-actor-id": "user-internal-claims",
+      "x-actor-role": "claims_handler",
+    },
+  });
+  assert.equal(artifactResponse.statusCode, 200);
+  assert.equal(artifactResponse.body.data.reportType, "accident_report_pdf");
+  assert.ok(artifactResponse.body.data.pdfBase64.length > 0);
+  assert.ok(artifactResponse.body.data.pdfSizeBytes > 0);
+
+  const auditResponse = await executeUvgRuntimeRequest(`/v1/uvg-cases/${caseId}/audit-events?tenantId=tenant-employer-demo`);
+  assert.equal(auditResponse.statusCode, 200);
+  assert.ok(auditResponse.body.some((event) => event.eventType === "uvg_accident_report_generated"));
+});
+
 test("employer can submit BU and NBU UVG accident reports and view own UVG cases", { concurrency: false }, async () => {
   const buResponse = await executeRequest("/v1/employer/uvg-cases/report", {
     method: "POST",
@@ -80,7 +178,7 @@ test("employer can submit BU and NBU UVG accident reports and view own UVG cases
   assert.ok(artifactResponse.body.data.pdfSizeBytes > 0);
 });
 
-test("internal teams can process UVG cases, record injury, coordination, and decision", { concurrency: false }, async () => {
+test("internal teams can process UVG cases, record injury, circumstance, document linkage, coordination, and decision", { concurrency: false }, async () => {
   const listResponse = await executeRequest(
     "/v1/internal/uvg-cases?tenantId=tenant-internal-demo&locale=de-CH&page=1&pageSize=20",
   );

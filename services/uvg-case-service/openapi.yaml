@@ -2,29 +2,38 @@ openapi: 3.1.0
 info:
   title: UVG Case Service
   version: 0.1.0
+  description: Native UVG accident case lifecycle service for BU/NBU reporting, internal case processing, coordination, decisions, report artifacts, and audit events.
 paths:
   /v1/uvg-cases:
     get:
       summary: List tenant-scoped UVG cases
       parameters:
-        - name: tenantId
-          in: query
-          required: true
-          schema: { type: string }
+        - $ref: "#/components/parameters/TenantId"
         - name: status
           in: query
-          schema: { type: string }
+          schema: { $ref: "#/components/schemas/UvgCaseStatus" }
         - name: type
           in: query
-          schema: { type: string, enum: [bu, nbu] }
+          schema: { $ref: "#/components/schemas/UvgCaseType" }
         - name: employeeId
           in: query
           schema: { type: string }
       responses:
         "200":
           description: UVG cases
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/UvgCase" }
     post:
       summary: Create employer-origin UVG accident report
+      description: Creates the UVG case, accident intake payload, initial audit event, and optional KTG overlap coordination record.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateAccidentReportRequest" }
       responses:
         "200":
           description: Created UVG case detail or validation issues
@@ -32,26 +41,234 @@ paths:
     get:
       summary: Get UVG case detail
       parameters:
-        - name: caseId
-          in: path
-          required: true
-          schema: { type: string }
-        - name: tenantId
-          in: query
-          required: true
-          schema: { type: string }
+        - $ref: "#/components/parameters/CaseId"
+        - $ref: "#/components/parameters/TenantId"
       responses:
         "200":
           description: UVG case detail
   /v1/uvg-cases/{caseId}/status:
     post:
-      summary: Update UVG case status and create audit event
+      summary: Update UVG case status
+      description: Applies a validated status transition and creates an audit event.
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [caseStatus]
+              properties:
+                caseStatus: { $ref: "#/components/schemas/UvgCaseStatus" }
       responses:
         "200":
           description: Updated status or validation issues
+  /v1/uvg-cases/{caseId}/injuries:
+    post:
+      summary: Record injury data
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RecordInjuryRequest" }
+      responses:
+        "200":
+          description: Injury record or validation issues
+  /v1/uvg-cases/{caseId}/circumstances:
+    post:
+      summary: Record structured accident circumstances
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RecordCircumstanceRequest" }
+      responses:
+        "200":
+          description: Circumstance record or validation issues
+  /v1/uvg-cases/{caseId}/documents:
+    post:
+      summary: Link an existing document-service document to a UVG case
+      description: Stores only UVG document linkage metadata; document truth remains in document-service.
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LinkDocumentRequest" }
+      responses:
+        "200":
+          description: UVG document reference or validation issues
+  /v1/uvg-cases/{caseId}/coordination:
+    post:
+      summary: Create or update UVG coordination record
+      description: Supports explicit complementary UVG/KTG and benefit-overlap handling.
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpsertCoordinationRequest" }
+      responses:
+        "200":
+          description: Coordination record or validation issues
+  /v1/uvg-cases/{caseId}/decisions:
+    post:
+      summary: Create or update a formal UVG case decision
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpsertDecisionRequest" }
+      responses:
+        "200":
+          description: Decision record or validation issues
   /v1/uvg-cases/{caseId}/report-artifact:
     post:
       summary: Generate a reproducible UVG accident report artifact
+      description: Persists artifact metadata and returns PDF bytes as base64 plus byte size for local/runtime verification.
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+        - $ref: "#/components/parameters/TenantId"
       responses:
         "200":
           description: Accident report artifact metadata and generated PDF metadata
+  /v1/uvg-cases/{caseId}/audit-events:
+    get:
+      summary: List UVG audit events for a case
+      parameters:
+        - $ref: "#/components/parameters/CaseId"
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Audit events ordered newest first
+components:
+  parameters:
+    TenantId:
+      name: tenantId
+      in: query
+      required: true
+      schema: { type: string }
+    CaseId:
+      name: caseId
+      in: path
+      required: true
+      schema: { type: string }
+  schemas:
+    UvgCaseType:
+      type: string
+      enum: [bu, nbu]
+    UvgCaseStatus:
+      type: string
+      enum: [reported, intake_in_progress, under_review, awaiting_documents, coordinating, approved, rejected, closed]
+    OccupationalContext:
+      type: string
+      enum: [occupational, non_occupational, unknown]
+    CoordinationType:
+      type: string
+      enum: [ktg_overlap, complementary_uvg, benefit_overlap_review]
+    CoordinationStatus:
+      type: string
+      enum: [not_required, open, in_review, resolved]
+    DecisionStatus:
+      type: string
+      enum: [pending, approved, rejected, partially_approved]
+    UvgCase:
+      type: object
+      required: [id, tenantId, employeeId, policyId, caseNumber, uvgCaseType, caseStatus, accidentDate, reportedAt, reportedBy, incidentLocation, incidentSummary, createdAt, updatedAt, coordinationStatus]
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        employeeId: { type: string }
+        policyId: { type: string }
+        caseNumber: { type: string }
+        uvgCaseType: { $ref: "#/components/schemas/UvgCaseType" }
+        caseStatus: { $ref: "#/components/schemas/UvgCaseStatus" }
+        accidentDate: { type: string, format: date }
+        reportedAt: { type: string, format: date-time }
+        reportedBy: { type: string }
+        incidentLocation: { type: string }
+        incidentSummary: { type: string }
+        ktgCaseId: { type: string }
+        coordinationStatus: { $ref: "#/components/schemas/CoordinationStatus" }
+        coordinationNotes: { type: string }
+    CreateAccidentReportRequest:
+      type: object
+      required: [tenantId, employeeId, policyId, uvgCaseType, reporterRole, accidentDate, accidentPlace, occupationalContext, accidentDescription, policeInvolvedFlag]
+      properties:
+        tenantId: { type: string }
+        employeeId: { type: string }
+        policyId: { type: string }
+        uvgCaseType: { $ref: "#/components/schemas/UvgCaseType" }
+        reporterRole: { type: string, enum: [employer, employee, claims_handler, system] }
+        reporterUserId: { type: string }
+        employerReference: { type: string }
+        accidentDate: { type: string, format: date }
+        accidentTime: { type: string }
+        accidentPlace: { type: string }
+        occupationalContext: { $ref: "#/components/schemas/OccupationalContext" }
+        accidentDescription: { type: string }
+        witnessDetails: { type: string }
+        policeInvolvedFlag: { type: boolean }
+        ktgCaseId: { type: string }
+    RecordInjuryRequest:
+      type: object
+      required: [tenantId, injuryType, bodyPart, severity, medicalTreatmentFlag, hospitalizedFlag]
+      properties:
+        tenantId: { type: string }
+        injuryType: { type: string }
+        bodyPart: { type: string }
+        severity: { type: string, enum: [minor, moderate, severe, critical] }
+        medicalTreatmentFlag: { type: boolean }
+        hospitalizedFlag: { type: boolean }
+        notes: { type: string }
+    RecordCircumstanceRequest:
+      type: object
+      required: [tenantId, causeCategory, activityContext, thirdPartyInvolvedFlag, vehicleInvolvedFlag, narrative]
+      properties:
+        tenantId: { type: string }
+        causeCategory: { type: string }
+        activityContext: { type: string }
+        thirdPartyInvolvedFlag: { type: boolean }
+        vehicleInvolvedFlag: { type: boolean }
+        narrative: { type: string }
+    LinkDocumentRequest:
+      type: object
+      required: [tenantId, documentId, documentRole]
+      properties:
+        tenantId: { type: string }
+        documentId: { type: string }
+        documentRole:
+          type: string
+          enum: [accident_report, medical_certificate, police_report, correspondence, other]
+    UpsertCoordinationRequest:
+      type: object
+      required: [tenantId, coordinationType, coordinationStatus, benefitOverlapFlag]
+      properties:
+        tenantId: { type: string }
+        coordinationType: { $ref: "#/components/schemas/CoordinationType" }
+        relatedKtgCaseId: { type: string }
+        overlapStart: { type: string, format: date }
+        overlapEnd: { type: string, format: date }
+        coordinationStatus: { $ref: "#/components/schemas/CoordinationStatus" }
+        benefitOverlapFlag: { type: boolean }
+        notes: { type: string }
+    UpsertDecisionRequest:
+      type: object
+      required: [tenantId, decisionStatus, decisionReason, effectiveFrom, decidedBy]
+      properties:
+        tenantId: { type: string }
+        decisionStatus: { $ref: "#/components/schemas/DecisionStatus" }
+        decisionReason: { type: string }
+        effectiveFrom: { type: string, format: date }
+        effectiveTo: { type: string, format: date }
+        decidedBy: { type: string }

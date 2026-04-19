@@ -3,7 +3,13 @@ import { URL } from "node:url";
 import { UvgCaseService } from "./application/uvg-case.service.js";
 import { UvgCaseMemoryRepository } from "./adapters/memory-repository.js";
 import type { ActorContext } from "./application/uvg-case.service.js";
-import type { UvgCaseStatus } from "./domain/types.js";
+import type {
+  UvgCaseStatus,
+  UvgCoordinationStatus,
+  UvgCoordinationType,
+  UvgDecisionStatus,
+  UvgDocumentRole,
+} from "./domain/types.js";
 
 const PORT = Number(process.env.UVG_CASE_SERVICE_PORT ?? "4040");
 
@@ -54,7 +60,7 @@ const requestHandler = async (request: IncomingMessage, response: ServerResponse
       writeJson(response, 200, await service.createAccidentReport(payload, actorFromRequest(request)));
       return;
     }
-    if (request.method === "GET" && pathname.startsWith("/v1/uvg-cases/")) {
+    if (request.method === "GET" && pathname.match(/^\/v1\/uvg-cases\/[^/]+$/)) {
       writeJson(response, 200, await service.getCaseDetail(tenantId, pathname.split("/").at(-1) ?? ""));
       return;
     }
@@ -64,9 +70,119 @@ const requestHandler = async (request: IncomingMessage, response: ServerResponse
       writeJson(response, 200, await service.updateCaseStatus(tenantId, caseId, payload.caseStatus, actorFromRequest(request)));
       return;
     }
+    if (request.method === "POST" && pathname.match(/^\/v1\/uvg-cases\/[^/]+\/injuries$/)) {
+      const caseId = pathname.split("/").at(-2) ?? "";
+      const payload = await readBody<{
+        tenantId: string;
+        injuryType: string;
+        bodyPart: string;
+        severity: "minor" | "moderate" | "severe" | "critical";
+        medicalTreatmentFlag: boolean;
+        hospitalizedFlag: boolean;
+        notes?: string;
+      }>(request);
+      writeJson(response, 200, await service.recordInjury({
+        tenantId: payload.tenantId,
+        uvgCaseId: caseId,
+        injuryType: payload.injuryType,
+        bodyPart: payload.bodyPart,
+        severity: payload.severity,
+        medicalTreatmentFlag: payload.medicalTreatmentFlag,
+        hospitalizedFlag: payload.hospitalizedFlag,
+        notes: payload.notes,
+      }, actorFromRequest(request)));
+      return;
+    }
+    if (request.method === "POST" && pathname.match(/^\/v1\/uvg-cases\/[^/]+\/circumstances$/)) {
+      const caseId = pathname.split("/").at(-2) ?? "";
+      const payload = await readBody<{
+        tenantId: string;
+        causeCategory: string;
+        activityContext: string;
+        thirdPartyInvolvedFlag: boolean;
+        vehicleInvolvedFlag: boolean;
+        narrative: string;
+      }>(request);
+      writeJson(response, 200, await service.recordCircumstance({
+        tenantId: payload.tenantId,
+        uvgCaseId: caseId,
+        causeCategory: payload.causeCategory,
+        activityContext: payload.activityContext,
+        thirdPartyInvolvedFlag: payload.thirdPartyInvolvedFlag,
+        vehicleInvolvedFlag: payload.vehicleInvolvedFlag,
+        narrative: payload.narrative,
+      }, actorFromRequest(request)));
+      return;
+    }
+    if (request.method === "POST" && pathname.match(/^\/v1\/uvg-cases\/[^/]+\/documents$/)) {
+      const caseId = pathname.split("/").at(-2) ?? "";
+      const payload = await readBody<{
+        tenantId: string;
+        documentId: string;
+        documentRole: UvgDocumentRole;
+      }>(request);
+      writeJson(response, 200, await service.linkDocument({
+        tenantId: payload.tenantId,
+        uvgCaseId: caseId,
+        documentId: payload.documentId,
+        documentRole: payload.documentRole,
+      }, actorFromRequest(request)));
+      return;
+    }
+    if (request.method === "POST" && pathname.match(/^\/v1\/uvg-cases\/[^/]+\/coordination$/)) {
+      const caseId = pathname.split("/").at(-2) ?? "";
+      const payload = await readBody<{
+        tenantId: string;
+        coordinationType: UvgCoordinationType;
+        relatedKtgCaseId?: string;
+        overlapStart?: string;
+        overlapEnd?: string;
+        coordinationStatus: UvgCoordinationStatus;
+        benefitOverlapFlag: boolean;
+        notes?: string;
+      }>(request);
+      writeJson(response, 200, await service.upsertCoordination({
+        tenantId: payload.tenantId,
+        uvgCaseId: caseId,
+        coordinationType: payload.coordinationType,
+        relatedKtgCaseId: payload.relatedKtgCaseId,
+        overlapStart: payload.overlapStart,
+        overlapEnd: payload.overlapEnd,
+        coordinationStatus: payload.coordinationStatus,
+        benefitOverlapFlag: payload.benefitOverlapFlag,
+        notes: payload.notes,
+      }, actorFromRequest(request)));
+      return;
+    }
+    if (request.method === "POST" && pathname.match(/^\/v1\/uvg-cases\/[^/]+\/decisions$/)) {
+      const caseId = pathname.split("/").at(-2) ?? "";
+      const payload = await readBody<{
+        tenantId: string;
+        decisionStatus: UvgDecisionStatus;
+        decisionReason: string;
+        effectiveFrom: string;
+        effectiveTo?: string;
+        decidedBy: string;
+      }>(request);
+      writeJson(response, 200, await service.upsertDecision({
+        tenantId: payload.tenantId,
+        uvgCaseId: caseId,
+        decisionStatus: payload.decisionStatus,
+        decisionReason: payload.decisionReason,
+        effectiveFrom: payload.effectiveFrom,
+        effectiveTo: payload.effectiveTo,
+        decidedBy: payload.decidedBy,
+      }, actorFromRequest(request)));
+      return;
+    }
     if (request.method === "POST" && pathname.match(/^\/v1\/uvg-cases\/[^/]+\/report-artifact$/)) {
       const caseId = pathname.split("/").at(-2) ?? "";
       writeJson(response, 200, await service.generateAccidentReport(tenantId, caseId, actorFromRequest(request)));
+      return;
+    }
+    if (request.method === "GET" && pathname.match(/^\/v1\/uvg-cases\/[^/]+\/audit-events$/)) {
+      const caseId = pathname.split("/").at(-2) ?? "";
+      writeJson(response, 200, await service.listAuditEvents(tenantId, caseId));
       return;
     }
     writeJson(response, 404, { error: "Not found." });
@@ -76,6 +192,45 @@ const requestHandler = async (request: IncomingMessage, response: ServerResponse
 };
 
 export const createUvgCaseHttpServer = () => createServer(requestHandler);
+
+export const executeUvgCaseRequest = async (
+  requestPath: string,
+  input?: { method?: "GET" | "POST"; body?: unknown; headers?: Record<string, string> },
+): Promise<{ statusCode: number; body: unknown }> => {
+  let statusCode = 200;
+  let body;
+
+  const response = {
+    set statusCode(value: number) {
+      statusCode = value;
+    },
+    get statusCode() {
+      return statusCode;
+    },
+    setHeader() {
+      return undefined;
+    },
+    end(payload?: string) {
+      body = payload ? JSON.parse(payload) : undefined;
+    },
+  } as unknown as ServerResponse;
+
+  await requestHandler(
+    {
+      method: input?.method ?? "GET",
+      url: requestPath,
+      headers: input?.headers ?? {},
+      async *[Symbol.asyncIterator]() {
+        if (input?.body !== undefined) {
+          yield Buffer.from(JSON.stringify(input.body));
+        }
+      },
+    } as IncomingMessage,
+    response,
+  );
+
+  return { statusCode, body };
+};
 
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1])) {
   createUvgCaseHttpServer().listen(PORT, () => {
