@@ -61,7 +61,8 @@ export const LanguageSwitcher = (props: {
   label: string;
 }) => (
   <div className="header-action-item">
-    {props.label}: <strong>{props.locale}</strong>
+    <span>{props.label}</span>
+    <strong>{props.locale}</strong>
   </div>
 );
 
@@ -70,7 +71,8 @@ export const TenantSwitcher = (props: {
   label: string;
 }) => (
   <div className="header-action-item">
-    {props.label}: <strong>{props.tenantName}</strong>
+    <span>{props.label}</span>
+    <strong>{props.tenantName}</strong>
   </div>
 );
 
@@ -78,9 +80,40 @@ export const PermissionDeniedState = (props: {
   title: string;
   message?: string;
 }) => (
-  <section className="surface-card" style={{ padding: "2rem" }} role="alert" aria-live="polite">
-    <h1>{props.title}</h1>
-    <p>{props.message ?? "You do not have access to this route."}</p>
+  <section
+    className="surface-card"
+    style={{ padding: "2.5rem", maxWidth: "520px", marginTop: "2rem" }}
+    role="alert"
+    aria-live="polite"
+  >
+    <p
+      style={{
+        fontSize: "0.6875rem",
+        fontWeight: 500,
+        letterSpacing: "0.16em",
+        textTransform: "uppercase",
+        color: "rgba(201, 123, 75, 0.8)",
+        marginBottom: "0.75rem",
+      }}
+    >
+      Access
+    </p>
+    <h1
+      style={{
+        fontFamily: "var(--font-display, 'Playfair Display', Georgia, serif)",
+        fontSize: "1.75rem",
+        fontWeight: 400,
+        letterSpacing: "-0.02em",
+        color: "var(--text-primary, #fff)",
+        marginBottom: "0.75rem",
+        lineHeight: 1.2,
+      }}
+    >
+      {props.title}
+    </h1>
+    <p style={{ fontSize: "0.9375rem", color: "var(--text-secondary, rgba(255,255,255,0.72))", lineHeight: 1.65 }}>
+      {props.message ?? "You do not have access to this route."}
+    </p>
   </section>
 );
 
@@ -89,10 +122,41 @@ export const RedirectDashboardState = (props: {
   message?: string;
   dashboardHref?: string;
 }) => (
-  <section>
-    <h1>{props.title}</h1>
-    <p>{props.message ?? "This route redirects to the dashboard for your role."}</p>
-    {props.dashboardHref ? <p>Dashboard: {props.dashboardHref}</p> : null}
+  <section
+    className="surface-card"
+    style={{ padding: "2.5rem", maxWidth: "520px", marginTop: "2rem" }}
+  >
+    <p
+      style={{
+        fontSize: "0.6875rem",
+        fontWeight: 500,
+        letterSpacing: "0.16em",
+        textTransform: "uppercase",
+        color: "rgba(99, 102, 241, 0.8)",
+        marginBottom: "0.75rem",
+      }}
+    >
+      Redirect
+    </p>
+    <h1
+      style={{
+        fontFamily: "var(--font-display, 'Playfair Display', Georgia, serif)",
+        fontSize: "1.75rem",
+        fontWeight: 400,
+        letterSpacing: "-0.02em",
+        color: "var(--text-primary, #fff)",
+        marginBottom: "0.75rem",
+        lineHeight: 1.2,
+      }}
+    >
+      {props.title}
+    </h1>
+    <p style={{ fontSize: "0.9375rem", color: "var(--text-secondary, rgba(255,255,255,0.72))", lineHeight: 1.65, marginBottom: "1.25rem" }}>
+      {props.message ?? "This route redirects to the dashboard for your role."}
+    </p>
+    {props.dashboardHref
+      ? <a href={props.dashboardHref} className="btn-primary" style={{ display: "inline-flex" }}>Go to Dashboard</a>
+      : null}
   </section>
 );
 
@@ -102,11 +166,15 @@ export const PlaceholderPageState = (props: {
   description: string;
   identifier?: string;
 }) => (
-  <section className="surface-card" aria-labelledby="placeholder-page-title">
+  <section className="surface-card" aria-labelledby="placeholder-page-title" style={{ padding: "2.5rem" }}>
     <p className="page-eyebrow">{props.eyebrow}</p>
     <h1 id="placeholder-page-title" className="page-title">{props.title}</h1>
     <p className="page-description">{props.description}</p>
-    {props.identifier ? <p>Reference: <code>{props.identifier}</code></p> : null}
+    {props.identifier
+      ? <p style={{ marginTop: "1rem", fontSize: "0.8125rem", color: "var(--text-tertiary)" }}>
+          Reference: <code>{props.identifier}</code>
+        </p>
+      : null}
   </section>
 );
 
