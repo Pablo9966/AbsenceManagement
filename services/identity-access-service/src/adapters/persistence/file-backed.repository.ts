@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { assertPersistenceModeAllowed } from "../../../../../packages/runtime-baseline/src/index.js";
 import { IdentityAccessService } from "../../application/identity-access.service.js";
 import {
   createPhase2AReferenceData,
@@ -27,7 +28,9 @@ const defaultStatePath = (): string =>
 export class FileBackedIdentityAccessRepositoryAdapter {
   private readonly repository = new InMemoryIdentityAccessRepository();
 
-  constructor(private readonly stateFilePath: string = defaultStatePath()) {}
+  constructor(private readonly stateFilePath: string = defaultStatePath()) {
+    assertPersistenceModeAllowed("identity-access-service", "file", { stateFilePath });
+  }
 
   getRepository(): InMemoryIdentityAccessRepository {
     return this.repository;

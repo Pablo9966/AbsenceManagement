@@ -1,7 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const content = fs.readFileSync('/Users/pascalstrahm/Documents/Codex/services/portal-workflow-service/src/service-context.ts', 'utf8');
+const serviceDir = __dirname;
+const content = fs.readFileSync(path.join(serviceDir, 'service-context.ts'), 'utf8');
 const lines = content.split('\n');
 
 const imports = lines.slice(21, 49);
@@ -26,7 +27,7 @@ const extracted = [
     ...cloneAndCreate
 ].join('\n');
 
-const outDir = '/Users/pascalstrahm/Documents/Codex/services/portal-workflow-service/src/bootstrap';
+const outDir = path.join(serviceDir, 'bootstrap');
 if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir, { recursive: true });
 }

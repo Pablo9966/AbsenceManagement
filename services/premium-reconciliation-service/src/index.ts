@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
+import { assertPersistenceModeAllowed } from "../../../packages/runtime-baseline/src/index.js";
 
 export type PremiumPeriodType = "annual" | "monthly" | "correction";
 export type PremiumReportingStatus = "draft" | "submitted" | "under_review" | "reconciled" | "closed";
@@ -291,6 +292,7 @@ export class PremiumReconciliationFileRepository extends PremiumReconciliationMe
 
   constructor(private readonly filePath: string) {
     super();
+    assertPersistenceModeAllowed("premium-reconciliation-service", "file", { stateFilePath: filePath });
   }
 
   override async withTransaction<T>(operation: (repository: PremiumRepository) => Promise<T>): Promise<T> {

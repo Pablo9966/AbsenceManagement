@@ -1,6 +1,8 @@
 const fs = require('fs');
+const path = require('path');
 
-let content = fs.readFileSync('/Users/pascalstrahm/Documents/Codex/services/portal-workflow-service/src/service-context.ts', 'utf8');
+const serviceContextPath = path.join(__dirname, 'service-context.ts');
+let content = fs.readFileSync(serviceContextPath, 'utf8');
 const lines = content.split('\n');
 
 const imports = lines.slice(0, 50);
@@ -90,5 +92,5 @@ for (const method of internalDetailMethods) {
 
 newContent = newContent.replace(/if \(!detail\) \{\n\s*return null;\n\s*\}/g, 'if (!detail) {\n    throw new WorkflowNotFoundError();\n  }');
 
-fs.writeFileSync('/Users/pascalstrahm/Documents/Codex/services/portal-workflow-service/src/service-context.ts', newContent);
+fs.writeFileSync(serviceContextPath, newContent);
 console.log('Successfully updated service-context.ts');

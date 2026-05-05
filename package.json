@@ -11,10 +11,11 @@
     "typecheck": "tsc -b",
     "tsc:build": "tsc -b",
     "lint": "echo \"lint configuration pending\"",
+    "release:guard": "node ./tools/release-guard.mjs",
     "migrations:validate": "node ./tools/migrations.mjs validate",
     "migrations:plan": "node ./tools/migrations.mjs plan",
     "test:smoke": "npm run typecheck && node --experimental-transform-types --loader ./tests/ts-source-loader.mjs --test tests/phase-2b.smoke.test.mjs tests/phase-2c.smoke.test.mjs tests/phase-2d.smoke.test.mjs tests/phase-2e.smoke.test.mjs tests/phase-2f.smoke.test.mjs tests/phase-2g.smoke.test.mjs",
-    "test:integration": "npm run typecheck && node --experimental-transform-types --loader ./tests/ts-source-loader.mjs --test tests/phase-2h.integration.test.mjs"
+    "test:integration": "npm run typecheck && node --experimental-transform-types --loader ./tests/ts-source-loader.mjs --test tests/release-guard.test.mjs tests/phase-2h.integration.test.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.7.2",

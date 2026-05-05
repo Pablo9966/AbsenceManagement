@@ -146,6 +146,7 @@ let workflowContext: PortalWorkflowContext | null = null;
 export const initializeWorkflowContext = (context: PortalWorkflowContext) => {
   workflowContext = context;
 };
+export const isWorkflowContextInitialized = (): boolean => workflowContext !== null;
 export const getPortalWorkflowServices = (): PortalWorkflowContext => {
   if (!workflowContext) throw new Error("Workflow context not initialized");
   return workflowContext;

@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { assertPersistenceModeAllowed } from "../../../../../packages/runtime-baseline/src/index.js";
 import {
   createPhase2CReferenceData,
   type Phase2CReferenceData,
@@ -20,7 +21,9 @@ const defaultStatePath = (): string =>
 export class FileBackedPaymentOperationsRepositoryAdapter {
   private readonly repository = new InMemoryPaymentOperationsRepository();
 
-  constructor(private readonly stateFilePath: string = defaultStatePath()) {}
+  constructor(private readonly stateFilePath: string = defaultStatePath()) {
+    assertPersistenceModeAllowed("payment-operations-service", "file", { stateFilePath });
+  }
 
   getRepository(): InMemoryPaymentOperationsRepository {
     return this.repository;

@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { URL } from "node:url";
 import {
+  assertPersistenceModeAllowed,
   createRuntimeRequestContext,
   handleRuntimeError,
   logRuntimeEvent,
@@ -21,6 +22,7 @@ import type {
 
 const PORT = Number(process.env.UVG_CASE_SERVICE_PORT ?? "4040");
 
+assertPersistenceModeAllowed("uvg-case-service", "memory");
 const repository = new UvgCaseMemoryRepository();
 const service = new UvgCaseService(repository);
 

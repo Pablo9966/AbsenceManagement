@@ -1,12 +1,10 @@
 import { WorkflowForbiddenError, WorkflowNotFoundError } from "./errors.js";
-import { initializeWorkflowContext } from "./service-context.js";
-import { createServices } from "./bootstrap/demo-wiring.js";
-
-initializeWorkflowContext(createServices());
+import { initializeWorkflowContext, isWorkflowContextInitialized } from "./service-context.js";
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { URL } from "node:url";
 import {
+  assertLocalRuntimeOnly,
   createRuntimeRequestContext,
   handleRuntimeError,
   logRuntimeEvent,
@@ -70,6 +68,25 @@ import {
 } from "./service-context.js";
 
 const PORT = Number(process.env.PORTAL_WORKFLOW_SERVICE_PORT ?? "4020");
+const DEMO_BOOTSTRAP = "demo-wiring";
+let workflowContextPromise: Promise<void> | null = null;
+
+const ensureWorkflowContextInitialized = async (): Promise<void> => {
+  if (isWorkflowContextInitialized()) {
+    return;
+  }
+  workflowContextPromise ??= (async () => {
+    assertLocalRuntimeOnly("portal-workflow-service", "demo workflow wiring", { bootstrap: DEMO_BOOTSTRAP });
+    const { createServices } = await import("./bootstrap/demo-wiring.js");
+    initializeWorkflowContext(createServices());
+  })();
+  try {
+    await workflowContextPromise;
+  } catch (error) {
+    workflowContextPromise = null;
+    throw error;
+  }
+};
 
 const writeJson = (response: ServerResponse, statusCode: number, body: unknown): void => {
   response.statusCode = statusCode;
@@ -508,11 +525,13 @@ const requestHandler = async (request: IncomingMessage, response: ServerResponse
         service: "portal-workflow-service",
         persistenceMode: "composed-runtime",
         details: {
-          bootstrap: "demo-wiring",
+          bootstrap: DEMO_BOOTSTRAP,
         },
       });
       return;
     }
+
+    await ensureWorkflowContextInitialized();
 
     if (await handleEmployeeRoutes(pathname, requestUrl, request, response)) {
       return;
@@ -540,7 +559,10 @@ const requestHandler = async (request: IncomingMessage, response: ServerResponse
   }
 };
 
-export const createPortalWorkflowHttpServer = () => createServer(requestHandler);
+export const createPortalWorkflowHttpServer = () => {
+  assertLocalRuntimeOnly("portal-workflow-service", "demo workflow wiring", { bootstrap: DEMO_BOOTSTRAP });
+  return createServer(requestHandler);
+};
 
 export const executePortalWorkflowRequest = async (
   requestPath: string,
@@ -587,7 +609,7 @@ if (process.argv[1] && import.meta.url.endsWith(process.argv[1])) {
   createPortalWorkflowHttpServer().listen(PORT, () => {
     logRuntimeEvent("portal-workflow-service", "info", "startup", {
       port: PORT,
-      bootstrap: "demo-wiring",
+      bootstrap: DEMO_BOOTSTRAP,
     });
   });
 }

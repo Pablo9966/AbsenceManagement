@@ -286,18 +286,9 @@ export const DetailList = (props: {
   items: Array<{ label: string; value: any }>;
 }) => (
   <dl className="detail-list">
-    {props.items.map((item) => (
-      <FragmentRow key={item.label} label={item.label} value={item.value} />
-    ))}
+    {props.items.flatMap((item) => [
+      <dt key={`${item.label}-label`}>{item.label}</dt>,
+      <dd key={`${item.label}-value`}>{item.value}</dd>,
+    ])}
   </dl>
-);
-
-const FragmentRow = (props: {
-  label: string;
-  value: any;
-}) => (
-  <>
-    <dt>{props.label}</dt>
-    <dd>{props.value}</dd>
-  </>
 );

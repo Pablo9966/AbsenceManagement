@@ -1,6 +1,8 @@
 const fs = require('fs');
+const path = require('path');
 
-let content = fs.readFileSync('/Users/pascalstrahm/Documents/Codex/services/portal-workflow-service/src/server.ts', 'utf8');
+const serverPath = path.join(__dirname, 'server.ts');
+let content = fs.readFileSync(serverPath, 'utf8');
 
 // 1. Add imports
 content = content.replace(
@@ -29,5 +31,5 @@ content = content.replace(
   }`
 );
 
-fs.writeFileSync('/Users/pascalstrahm/Documents/Codex/services/portal-workflow-service/src/server.ts', content);
+fs.writeFileSync(serverPath, content);
 console.log('Updated server.ts');

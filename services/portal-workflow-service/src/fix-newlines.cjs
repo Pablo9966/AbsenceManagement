@@ -1,4 +1,7 @@
 const fs = require('fs');
-let content = fs.readFileSync('/Users/pascalstrahm/Documents/Codex/services/portal-workflow-service/src/service-context.ts', 'utf8');
+const path = require('path');
+
+const serviceContextPath = path.join(__dirname, 'service-context.ts');
+let content = fs.readFileSync(serviceContextPath, 'utf8');
 content = content.replace(/\\n/g, '\n');
-fs.writeFileSync('/Users/pascalstrahm/Documents/Codex/services/portal-workflow-service/src/service-context.ts', content);
+fs.writeFileSync(serviceContextPath, content);

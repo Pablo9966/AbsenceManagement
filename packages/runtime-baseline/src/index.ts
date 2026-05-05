@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 
+export type AppRuntimeEnvironment = "local" | "test" | "staging" | "production";
+export type RuntimePersistenceMode = "memory" | "file" | "postgres" | "composed-runtime";
+
 export type RuntimeErrorCode =
   | "validation_error"
   | "unauthorized"
@@ -23,6 +26,7 @@ export interface RuntimeHealthPayload {
   status: "ok";
   timestamp: string;
   version: string;
+  environment?: AppRuntimeEnvironment;
   persistenceMode?: string;
   details?: Record<string, unknown>;
 }
@@ -48,6 +52,62 @@ export class HttpRuntimeError extends Error {
     this.name = "HttpRuntimeError";
   }
 }
+
+export class RuntimeConfigurationError extends Error {
+  constructor(message: string, public readonly details?: Record<string, unknown>) {
+    super(message);
+    this.name = "RuntimeConfigurationError";
+  }
+}
+
+export const getRuntimeEnvironment = (): AppRuntimeEnvironment => {
+  const raw = (process.env.APP_ENV ?? process.env.NODE_ENV ?? "local").toLowerCase();
+  switch (raw) {
+    case "production":
+    case "prod":
+      return "production";
+    case "staging":
+    case "stage":
+      return "staging";
+    case "test":
+    case "ci":
+      return "test";
+    case "development":
+    case "dev":
+    case "local":
+    default:
+      return "local";
+  }
+};
+
+export const isLocalRuntimeEnvironment = (environment: AppRuntimeEnvironment = getRuntimeEnvironment()): boolean =>
+  environment === "local" || environment === "test";
+
+export const assertLocalRuntimeOnly = (
+  serviceName: string,
+  featureName: string,
+  details?: Record<string, unknown>,
+): void => {
+  const environment = getRuntimeEnvironment();
+  if (isLocalRuntimeEnvironment(environment)) {
+    return;
+  }
+  throw new RuntimeConfigurationError(
+    `${serviceName} cannot start ${featureName} when APP_ENV=${environment}. Configure production-safe adapters instead.`,
+    { serviceName, featureName, environment, ...details },
+  );
+};
+
+export const assertPersistenceModeAllowed = (
+  serviceName: string,
+  persistenceMode: RuntimePersistenceMode,
+  details?: Record<string, unknown>,
+): void => {
+  if (persistenceMode === "postgres") {
+    return;
+  }
+  assertLocalRuntimeOnly(serviceName, `${persistenceMode} persistence`, details);
+};
 
 const getHeader = (request: IncomingMessage, key: string): string | undefined => {
   if (!request.headers) {
@@ -105,6 +165,7 @@ export const writeHealth = (
       status: "ok",
       timestamp: new Date().toISOString(),
       version: process.env.APP_VERSION ?? "0.1.0",
+      environment: getRuntimeEnvironment(),
       persistenceMode: payload.persistenceMode,
       details: payload.details,
     } satisfies RuntimeHealthPayload,
