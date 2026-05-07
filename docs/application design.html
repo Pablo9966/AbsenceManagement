@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude × Apple — B2B PWA Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:          #FAF7F2;
+  --bg-2:        #F5EFE6;
+  --bg-3:        #EDE4D8;
+  --surface:     #FFFFFF;
+  --terracotta:  #C47B5A;
+  --terracotta-l:#F0C9B0;
+  --terracotta-xl:#FBF0E8;
+  --sage:        #7A9E8E;
+  --sage-l:      #C4DDD4;
+  --sage-xl:     #EAF4F0;
+  --mauve:       #9B7EA8;
+  --mauve-l:     #D9C8E3;
+  --mauve-xl:    #F4EEF8;
+  --sky:         #6A9FC0;
+  --sky-l:       #BBDAED;
+  --sky-xl:      #EAF4FB;
+  --amber:       #D4A24C;
+  --amber-l:     #F0D9A8;
+  --amber-xl:    #FBF5E6;
+  --ink:         #2C2420;
+  --ink-2:       #5C4E47;
+  --ink-3:       #8C7E78;
+  --ink-4:       #B8ADA8;
+  --border:      rgba(44,36,32,0.1);
+  --border-2:    rgba(44,36,32,0.06);
+  --shadow-sm:   0 1px 4px rgba(44,36,32,0.07), 0 0 0 1px rgba(44,36,32,0.05);
+  --shadow-md:   0 4px 20px rgba(44,36,32,0.09), 0 0 0 1px rgba(44,36,32,0.05);
+  --shadow-lg:   0 12px 40px rgba(44,36,32,0.12), 0 0 0 1px rgba(44,36,32,0.06);
+  --r-sm: 12px; --r-md: 18px; --r-lg: 24px; --r-xl: 32px; --r-pill: 100px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: 'DM Sans', sans-serif; font-weight: 400;
+  line-height: 1.5; overflow-x: hidden;
+}
+body::before {
+  content:''; position:fixed; inset:0;
+  background:
+    radial-gradient(ellipse 70% 50% at 10% 0%, rgba(196,123,90,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 90% 100%, rgba(106,159,192,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 50% 50%, rgba(122,158,142,0.05) 0%, transparent 70%);
+  pointer-events:none; z-index:0;
+}
+.page { position:relative; z-index:1; max-width:1440px; margin:0 auto; }
+
+/* HEADER */
+.header {
+  padding:64px 64px 52px;
+  display:flex; align-items:flex-end; justify-content:space-between; gap:40px;
+  border-bottom:1px solid var(--border);
+}
+.header-eyebrow {
+  font-size:11px; font-weight:500; letter-spacing:0.2em; text-transform:uppercase;
+  color:var(--terracotta); margin-bottom:14px;
+  display:flex; align-items:center; gap:8px;
+}
+.header-eyebrow::before { content:''; width:20px; height:2px; background:var(--terracotta); border-radius:2px; }
+.header-title {
+  font-family:'Playfair Display',serif; font-size:clamp(38px,4vw,62px);
+  font-weight:400; line-height:1.08; letter-spacing:-0.02em; color:var(--ink);
+}
+.header-title em { font-style:italic; color:var(--terracotta); }
+.header-right { max-width:340px; text-align:right; }
+.header-desc { font-size:14px; color:var(--ink-2); line-height:1.75; margin-bottom:20px; }
+.header-tags { display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
+.tag { padding:5px 14px; border-radius:var(--r-pill); font-size:11px; font-weight:500; background:var(--surface); border:1px solid var(--border); color:var(--ink-2); }
+
+/* SECTION ROW */
+.section-row {
+  display:flex; align-items:center; gap:16px; padding:56px 64px 24px;
+}
+.section-row span { font-size:10px; font-weight:600; letter-spacing:0.2em; text-transform:uppercase; color:var(--ink-3); }
+.section-row::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* PALETTE */
+.palette-section { padding:0 64px 48px; }
+.palette-grid { display:flex; gap:14px; }
+.swatch { flex:1; display:flex; flex-direction:column; gap:8px; }
+.swatch-block { height:72px; border-radius:var(--r-md); box-shadow:var(--shadow-sm); }
+.swatch-name { font-size:12px; font-weight:500; color:var(--ink-2); }
+.swatch-hex { font-size:10px; color:var(--ink-3); font-family:'SF Mono',monospace; }
+
+/* TYPOGRAPHY */
+.type-section { padding:0 64px 48px; }
+.type-card { background:var(--surface); border-radius:var(--r-xl); padding:40px 48px; box-shadow:var(--shadow-md); }
+.type-row { display:flex; align-items:baseline; gap:32px; padding:22px 0; border-bottom:1px solid var(--border-2); }
+.type-row:last-child { border-bottom:none; }
+.type-meta { min-width:180px; font-size:10px; letter-spacing:0.1em; color:var(--ink-3); text-transform:uppercase; }
+.t-display { font-family:'Playfair Display',serif; font-size:52px; font-weight:400; letter-spacing:-0.02em; line-height:1; color:var(--ink); }
+.t-display em { font-style:italic; color:var(--terracotta); }
+.t-headline { font-size:26px; font-weight:300; color:var(--ink); letter-spacing:-0.01em; }
+.t-body { font-size:15px; color:var(--ink-2); line-height:1.7; max-width:520px; }
+.t-ui { font-size:13px; font-weight:500; color:var(--ink-2); }
+.t-mono { font-family:'SF Mono','Fira Code',monospace; font-size:12px; color:var(--terracotta); background:var(--terracotta-xl); padding:5px 10px; border-radius:8px; border:1px solid var(--terracotta-l); }
+
+/* ANALYTICS GRID */
+.analytics-grid { display:grid; grid-template-columns:2fr 1fr 1fr; gap:20px; padding:0 64px 24px; }
+.chart-card { background:var(--surface); border-radius:var(--r-xl); padding:28px 32px; box-shadow:var(--shadow-md); display:flex; flex-direction:column; gap:20px; }
+.chart-header { display:flex; align-items:flex-start; justify-content:space-between; }
+.chart-title { font-size:14px; font-weight:500; color:var(--ink); }
+.chart-sub { font-size:12px; color:var(--ink-3); margin-top:2px; }
+.chart-badge { padding:4px 10px; border-radius:var(--r-pill); font-size:11px; font-weight:500; }
+.badge-up { background:var(--sage-xl); color:var(--sage); border:1px solid var(--sage-l); }
+.badge-down { background:var(--terracotta-xl); color:var(--terracotta); border:1px solid var(--terracotta-l); }
+.badge-neutral { background:var(--amber-xl); color:var(--amber); border:1px solid var(--amber-l); }
+.big-number { font-family:'Playfair Display',serif; font-size:42px; font-weight:400; color:var(--ink); line-height:1; letter-spacing:-0.02em; }
+.big-number span { font-size:18px; color:var(--ink-3); font-family:'DM Sans',sans-serif; }
+.chart-area-wrap { position:relative; height:140px; }
+.chart-area-wrap svg { position:absolute; inset:0; height:100%; width:100%; }
+.axis-labels { display:flex; justify-content:space-between; margin-top:6px; }
+.axis-label { font-size:9px; color:var(--ink-4); letter-spacing:0.05em; }
+.bars-wrap { display:flex; align-items:flex-end; gap:10px; height:110px; }
+.bar-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.bar-fill { width:100%; border-radius:6px 6px 0 0; }
+.bar-label { font-size:9px; color:var(--ink-3); }
+.progress-group { display:flex; flex-direction:column; gap:12px; margin-top:8px; }
+.progress-item {}
+.progress-label-row { display:flex; justify-content:space-between; margin-bottom:5px; }
+.progress-name { font-size:12px; color:var(--ink-2); }
+.progress-pct { font-size:12px; font-weight:500; color:var(--ink); }
+.progress-track { height:7px; border-radius:10px; background:var(--bg-3); overflow:hidden; }
+.progress-fill { height:100%; border-radius:10px; }
+.donut-wrap { display:flex; align-items:center; gap:24px; }
+.donut-svg { flex-shrink:0; width:110px; height:110px; }
+.donut-legend { display:flex; flex-direction:column; gap:8px; flex:1; }
+.legend-item { display:flex; align-items:center; gap:8px; }
+.legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.legend-label { font-size:11px; color:var(--ink-2); flex:1; }
+.legend-val { font-size:11px; font-weight:500; color:var(--ink); }
+.spark-grid { display:flex; flex-direction:column; gap:14px; }
+.spark-row { display:flex; align-items:center; gap:12px; }
+.spark-info { flex:1; }
+.spark-name { font-size:12px; font-weight:500; color:var(--ink); }
+.spark-val { font-size:11px; color:var(--ink-3); }
+.spark-svg { width:80px; height:32px; flex-shrink:0; }
+.spark-change { font-size:11px; font-weight:500; min-width:36px; text-align:right; }
+.change-up { color:var(--sage); }
+.change-down { color:var(--terracotta); }
+
+/* PHONE SCREENS */
+.screens-section { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; padding:0 64px 48px; }
+.phone-outer { display:flex; flex-direction:column; align-items:center; gap:14px; }
+.phone-label { font-size:10px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:var(--ink-3); }
+.phone-frame {
+  width:100%; aspect-ratio:9/19;
+  border-radius:40px; border:1.5px solid var(--border);
+  background:var(--bg); overflow:hidden;
+  position:relative; display:flex; flex-direction:column;
+  box-shadow:var(--shadow-lg), 0 0 0 6px rgba(255,255,255,0.7);
+}
+.di { width:80px; height:26px; background:var(--ink); border-radius:18px; margin:12px auto 0; flex-shrink:0; z-index:10; }
+.sc { flex:1; padding:14px; display:flex; flex-direction:column; overflow:hidden; }
+
+/* Screen 1 */
+.sc1-greeting { font-family:'Playfair Display',serif; font-size:18px; font-style:italic; color:var(--ink); line-height:1.2; margin-bottom:3px; }
+.sc1-date { font-size:10px; color:var(--ink-3); margin-bottom:12px; }
+.sc1-kpi-row { display:flex; gap:6px; margin-bottom:10px; }
+.sc1-kpi { flex:1; background:var(--surface); border-radius:14px; padding:10px; box-shadow:var(--shadow-sm); }
+.sc1-kpi-dot { width:6px; height:6px; border-radius:50%; margin-bottom:5px; }
+.sc1-kpi-val { font-size:14px; font-weight:500; color:var(--ink); line-height:1; margin-bottom:2px; }
+.sc1-kpi-label { font-size:8px; color:var(--ink-3); }
+.sc1-chart-mini { background:var(--surface); border-radius:14px; padding:10px 12px; box-shadow:var(--shadow-sm); margin-bottom:8px; flex-shrink:0; }
+.sc1-chart-top { display:flex; justify-content:space-between; margin-bottom:6px; }
+.sc1-chart-title { font-size:10px; font-weight:500; color:var(--ink); }
+.sc1-chart-val { font-size:10px; color:var(--sage); font-weight:500; }
+.sc1-activity { display:flex; flex-direction:column; gap:5px; }
+.sc1-act-item { background:var(--surface); border-radius:10px; padding:7px 10px; display:flex; align-items:center; gap:7px; box-shadow:var(--shadow-sm); }
+.sc1-act-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.sc1-act-text { font-size:9.5px; color:var(--ink-2); flex:1; line-height:1.3; }
+.sc1-act-time { font-size:8.5px; color:var(--ink-4); }
+
+/* Screen 2 */
+.sc2-topbar { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+.sc2-icon { width:28px; height:28px; border-radius:9px; background:linear-gradient(135deg,var(--terracotta-l),var(--mauve-l)); display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
+.sc2-title { font-size:13px; font-weight:500; color:var(--ink); }
+.sc2-status { font-size:9px; color:var(--sage); }
+.sc2-bubbles { display:flex; flex-direction:column; gap:6px; flex:1; margin-bottom:8px; overflow:hidden; }
+.bubble { border-radius:16px; padding:8px 11px; font-size:10px; line-height:1.45; }
+.bubble.ai { background:var(--surface); border:1px solid var(--border); color:var(--ink-2); border-radius:16px 16px 16px 4px; margin-right:18%; box-shadow:var(--shadow-sm); }
+.bubble.user { background:linear-gradient(135deg,var(--terracotta),#B86A48); color:#fff; border-radius:16px 16px 4px 16px; margin-left:18%; }
+.bubble.typing { background:var(--surface); border:1px solid var(--border); margin-right:18%; padding:10px 14px; border-radius:16px 16px 16px 4px; box-shadow:var(--shadow-sm); display:flex; gap:3px; align-items:center; }
+.dot { width:5px; height:5px; border-radius:50%; background:var(--ink-4); animation:pulse 1.2s ease-in-out infinite; }
+.dot:nth-child(2) { animation-delay:0.2s; }
+.dot:nth-child(3) { animation-delay:0.4s; }
+@keyframes pulse { 0%,80%,100%{opacity:0.3;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
+.sc2-input { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:8px 10px 8px 12px; display:flex; align-items:center; justify-content:space-between; box-shadow:var(--shadow-sm); flex-shrink:0; }
+.sc2-placeholder { font-size:10px; color:var(--ink-4); }
+.sc2-send { width:24px; height:24px; border-radius:50%; background:var(--terracotta); display:flex; align-items:center; justify-content:center; }
+
+/* Screen 3 */
+.sc3-top { text-align:center; padding:8px 0 14px; }
+.sc3-avatar { width:48px; height:48px; border-radius:16px; background:linear-gradient(135deg,var(--terracotta-l),var(--mauve-l)); margin:0 auto 8px; display:flex; align-items:center; justify-content:center; font-size:20px; box-shadow:var(--shadow-sm); }
+.sc3-name { font-size:15px; font-weight:500; color:var(--ink); margin-bottom:2px; }
+.sc3-role { font-size:9px; color:var(--ink-3); }
+.sc3-sec { font-size:9px; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; color:var(--ink-3); margin:10px 0 5px; }
+.sc3-row { background:var(--surface); border-radius:11px; padding:8px 11px; display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; box-shadow:var(--shadow-sm); }
+.sc3-row-text { font-size:10.5px; color:var(--ink-2); }
+.ton { width:30px; height:17px; border-radius:9px; background:var(--terracotta); position:relative; flex-shrink:0; }
+.ton::after { content:''; position:absolute; width:13px; height:13px; background:#fff; border-radius:50%; top:2px; right:2px; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+.toff { width:30px; height:17px; border-radius:9px; background:var(--bg-3); position:relative; flex-shrink:0; }
+.toff::after { content:''; position:absolute; width:13px; height:13px; background:#fff; border-radius:50%; top:2px; left:2px; box-shadow:0 1px 3px rgba(0,0,0,0.15); }
+
+/* COMPONENTS */
+.components-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; padding:0 64px 48px; }
+.comp-card { background:var(--surface); border-radius:var(--r-lg); padding:24px; box-shadow:var(--shadow-md); display:flex; flex-direction:column; gap:16px; }
+.comp-label { font-size:10px; font-weight:600; letter-spacing:0.18em; text-transform:uppercase; color:var(--ink-3); }
+.btn-primary { display:inline-flex; align-items:center; justify-content:center; padding:11px 22px; border-radius:var(--r-pill); background:var(--terracotta); color:#fff; font-size:13px; font-weight:500; border:none; cursor:pointer; box-shadow:0 2px 12px rgba(196,123,90,0.35); font-family:'DM Sans',sans-serif; }
+.btn-secondary { display:inline-flex; align-items:center; justify-content:center; padding:11px 22px; border-radius:var(--r-pill); background:var(--surface); color:var(--ink); font-size:13px; font-weight:500; border:1.5px solid var(--border); cursor:pointer; font-family:'DM Sans',sans-serif; box-shadow:var(--shadow-sm); }
+.btn-ghost { display:inline-flex; align-items:center; gap:5px; padding:9px 16px; border-radius:var(--r-pill); background:var(--terracotta-xl); color:var(--terracotta); font-size:12px; font-weight:500; border:1px solid var(--terracotta-l); cursor:pointer; font-family:'DM Sans',sans-serif; }
+.btn-group { display:flex; flex-direction:column; gap:9px; }
+.field-group { display:flex; flex-direction:column; gap:8px; }
+.field-label { font-size:11px; font-weight:500; color:var(--ink-2); }
+.field-input { background:var(--bg); border:1.5px solid var(--border); border-radius:12px; padding:11px 14px; font-size:13px; color:var(--ink); font-family:'DM Sans',sans-serif; outline:none; width:100%; }
+.field-input.focused { border-color:var(--terracotta); background:var(--terracotta-xl); box-shadow:0 0 0 3px rgba(196,123,90,0.12); }
+.field-input::placeholder { color:var(--ink-4); }
+.badge-group { display:flex; flex-wrap:wrap; gap:7px; }
+.chip { padding:5px 12px; border-radius:var(--r-pill); font-size:11px; font-weight:500; }
+.chip-t { background:var(--terracotta-xl); color:var(--terracotta); border:1px solid var(--terracotta-l); }
+.chip-s { background:var(--sage-xl); color:var(--sage); border:1px solid var(--sage-l); }
+.chip-m { background:var(--mauve-xl); color:var(--mauve); border:1px solid var(--mauve-l); }
+.chip-k { background:var(--sky-xl); color:var(--sky); border:1px solid var(--sky-l); }
+.chip-a { background:var(--amber-xl); color:var(--amber); border:1px solid var(--amber-l); }
+.icon-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.icon-item { display:flex; flex-direction:column; align-items:center; gap:5px; }
+.icon-box { width:40px; height:40px; border-radius:12px; background:var(--bg); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow:var(--shadow-sm); }
+.icon-name { font-size:8.5px; color:var(--ink-3); text-align:center; }
+
+/* PRINCIPLES */
+.principles-section { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:0 64px 64px; }
+.principle-card { background:var(--surface); border-radius:var(--r-xl); padding:32px; box-shadow:var(--shadow-md); }
+.principle-num { font-family:'Playfair Display',serif; font-size:48px; font-weight:400; color:var(--bg-3); line-height:1; margin-bottom:16px; letter-spacing:-0.03em; }
+.principle-title { font-size:16px; font-weight:500; color:var(--ink); margin-bottom:10px; }
+.principle-body { font-size:13px; color:var(--ink-2); line-height:1.65; }
+.principle-tag { display:inline-block; margin-top:16px; padding:4px 12px; border-radius:var(--r-pill); font-size:10px; font-weight:500; }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+.page > * { animation:fadeUp 0.5s ease both; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- HEADER -->
+<header class="header">
+  <div>
+    <div class="header-eyebrow">Design System · PWA Identity</div>
+    <h1 class="header-title">Intelligence<br><em>meets</em> warmth.</h1>
+  </div>
+  <div class="header-right">
+    <p class="header-desc">A B2B design language blending Anthropic's conversational warmth with Apple's hardware-grade refinement. Built for professionals who expect both clarity and delight.</p>
+    <div class="header-tags">
+      <span class="tag">Claude × Apple</span>
+      <span class="tag">B2B · SaaS</span>
+      <span class="tag">PWA · 2025</span>
+    </div>
+  </div>
+</header>
+
+<!-- PALETTE -->
+<div class="section-row"><span>Color Palette</span></div>
+<div class="palette-section">
+  <div class="palette-grid">
+    <div class="swatch"><div class="swatch-block" style="background:linear-gradient(160deg,#F0C9B0,#C47B5A);"></div><div class="swatch-name">Terracotta</div><div class="swatch-hex">#C47B5A</div></div>
+    <div class="swatch"><div class="swatch-block" style="background:linear-gradient(160deg,#C4DDD4,#7A9E8E);"></div><div class="swatch-name">Sage</div><div class="swatch-hex">#7A9E8E</div></div>
+    <div class="swatch"><div class="swatch-block" style="background:linear-gradient(160deg,#D9C8E3,#9B7EA8);"></div><div class="swatch-name">Mauve</div><div class="swatch-hex">#9B7EA8</div></div>
+    <div class="swatch"><div class="swatch-block" style="background:linear-gradient(160deg,#BBDAED,#6A9FC0);"></div><div class="swatch-name">Sky</div><div class="swatch-hex">#6A9FC0</div></div>
+    <div class="swatch"><div class="swatch-block" style="background:linear-gradient(160deg,#F0D9A8,#D4A24C);"></div><div class="swatch-name">Amber</div><div class="swatch-hex">#D4A24C</div></div>
+    <div class="swatch"><div class="swatch-block" style="background:linear-gradient(160deg,#F5EFE6,#EDE4D8);border:1px solid rgba(44,36,32,0.08);"></div><div class="swatch-name">Linen</div><div class="swatch-hex">#FAF7F2</div></div>
+    <div class="swatch"><div class="swatch-block" style="background:linear-gradient(160deg,#5C4E47,#2C2420);"></div><div class="swatch-name">Ink</div><div class="swatch-hex">#2C2420</div></div>
+  </div>
+</div>
+
+<!-- TYPOGRAPHY -->
+<div class="section-row"><span>Typography</span></div>
+<div class="type-section">
+  <div class="type-card">
+    <div class="type-row"><div class="type-meta">Display · Playfair 52/400</div><div class="t-display">Insight, <em>delivered.</em></div></div>
+    <div class="type-row"><div class="type-meta">Headline · DM Sans 26/300</div><div class="t-headline">Your business intelligence, unified.</div></div>
+    <div class="type-row"><div class="type-meta">Body · DM Sans 15/400</div><div class="t-body">Decisions made with clarity. The interface steps back so the work steps forward — clean data, clear context, no friction between you and the insight you need.</div></div>
+    <div class="type-row"><div class="type-meta">UI Label · DM Sans 13/500</div><div class="t-ui">Revenue · Active Contracts · Retention Rate</div></div>
+    <div class="type-row"><div class="type-meta">Mono · SF Mono 12</div><div class="t-mono">GET /api/v2/analytics/summary</div></div>
+  </div>
+</div>
+
+<!-- ANALYTICS -->
+<div class="section-row"><span>Analytics · Chart Components</span></div>
+<div class="analytics-grid">
+
+  <!-- Area chart - MRR -->
+  <div class="chart-card" style="grid-column:span 2;">
+    <div class="chart-header">
+      <div><div class="chart-title">Monthly Recurring Revenue</div><div class="chart-sub">Last 12 months · CHF thousands</div></div>
+      <span class="chart-badge badge-up">↑ 18.4%</span>
+    </div>
+    <div class="big-number">842<span>k CHF</span></div>
+    <div class="chart-area-wrap">
+      <svg viewBox="0 0 560 140" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="ag1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#C47B5A" stop-opacity="0.2"/><stop offset="100%" stop-color="#C47B5A" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="ag2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#7A9E8E" stop-opacity="0.15"/><stop offset="100%" stop-color="#7A9E8E" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <line x1="0" y1="30" x2="560" y2="30" stroke="#EDE4D8" stroke-width="1"/>
+        <line x1="0" y1="70" x2="560" y2="70" stroke="#EDE4D8" stroke-width="1"/>
+        <line x1="0" y1="110" x2="560" y2="110" stroke="#EDE4D8" stroke-width="1"/>
+        <path d="M0,112 C40,102 70,96 95,88 C120,80 140,72 165,65 C190,58 210,60 235,52 C258,44 278,38 303,32 C328,26 348,20 373,18 C398,16 418,14 443,12 C463,10 493,9 523,8 L560,7 L560,140 L0,140 Z" fill="url(#ag1)"/>
+        <path d="M0,126 C40,121 70,116 95,109 C120,101 140,97 165,91 C190,85 210,83 235,77 C258,71 278,69 303,65 C328,61 348,59 373,56 C398,53 418,51 443,49 C463,47 493,45 523,43 L560,41 L560,140 L0,140 Z" fill="url(#ag2)"/>
+        <path d="M0,112 C40,102 70,96 95,88 C120,80 140,72 165,65 C190,58 210,60 235,52 C258,44 278,38 303,32 C328,26 348,20 373,18 C398,16 418,14 443,12 C463,10 493,9 523,8 L560,7" fill="none" stroke="#C47B5A" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M0,126 C40,121 70,116 95,109 C120,101 140,97 165,91 C190,85 210,83 235,77 C258,71 278,69 303,65 C328,61 348,59 373,56 C398,53 418,51 443,49 C463,47 493,45 523,43 L560,41" fill="none" stroke="#7A9E8E" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="443" cy="12" r="4" fill="#C47B5A"/>
+        <circle cx="443" cy="12" r="8" fill="#C47B5A" fill-opacity="0.15"/>
+      </svg>
+    </div>
+    <div class="axis-labels">
+      <span class="axis-label">MAY</span><span class="axis-label">JUN</span><span class="axis-label">JUL</span><span class="axis-label">AUG</span><span class="axis-label">SEP</span><span class="axis-label">OCT</span><span class="axis-label">NOV</span><span class="axis-label">DEC</span><span class="axis-label">JAN</span><span class="axis-label">FEB</span><span class="axis-label">MAR</span><span class="axis-label">APR</span>
+    </div>
+    <div style="display:flex;gap:16px;">
+      <div style="display:flex;align-items:center;gap:6px;"><div style="width:14px;height:3px;background:#C47B5A;border-radius:2px;"></div><span style="font-size:11px;color:var(--ink-2);">MRR</span></div>
+      <div style="display:flex;align-items:center;gap:6px;"><div style="width:14px;height:2px;background:#7A9E8E;border-radius:2px;"></div><span style="font-size:11px;color:var(--ink-2);">Target</span></div>
+    </div>
+  </div>
+
+  <!-- Contracts KPI -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <div><div class="chart-title">Active Contracts</div><div class="chart-sub">vs prior quarter</div></div>
+      <span class="chart-badge badge-up">↑ 12%</span>
+    </div>
+    <div class="big-number">2,847</div>
+    <div class="progress-group">
+      <div class="progress-item"><div class="progress-label-row"><span class="progress-name">Enterprise</span><span class="progress-pct">68%</span></div><div class="progress-track"><div class="progress-fill" style="width:68%;background:var(--terracotta);"></div></div></div>
+      <div class="progress-item"><div class="progress-label-row"><span class="progress-name">Mid-Market</span><span class="progress-pct">24%</span></div><div class="progress-track"><div class="progress-fill" style="width:24%;background:var(--sage);"></div></div></div>
+      <div class="progress-item"><div class="progress-label-row"><span class="progress-name">SMB</span><span class="progress-pct">8%</span></div><div class="progress-track"><div class="progress-fill" style="width:8%;background:var(--mauve);"></div></div></div>
+    </div>
+  </div>
+
+  <!-- Bar chart -->
+  <div class="chart-card" style="grid-column:span 2;">
+    <div class="chart-header">
+      <div><div class="chart-title">New Business Won</div><div class="chart-sub">Deals closed per month</div></div>
+      <span class="chart-badge badge-neutral">Q2 Target: 48</span>
+    </div>
+    <div class="bars-wrap">
+      <div class="bar-col"><div class="bar-fill" style="height:50%;background:var(--terracotta-l);"></div><div class="bar-label">NOV</div></div>
+      <div class="bar-col"><div class="bar-fill" style="height:62%;background:var(--terracotta-l);"></div><div class="bar-label">DEC</div></div>
+      <div class="bar-col"><div class="bar-fill" style="height:48%;background:var(--terracotta-l);"></div><div class="bar-label">JAN</div></div>
+      <div class="bar-col"><div class="bar-fill" style="height:70%;background:var(--terracotta-l);"></div><div class="bar-label">FEB</div></div>
+      <div class="bar-col"><div class="bar-fill" style="height:88%;background:var(--terracotta);box-shadow:0 4px 12px rgba(196,123,90,0.3);"></div><div class="bar-label" style="color:var(--terracotta);font-weight:600;">MAR</div></div>
+      <div class="bar-col"><div class="bar-fill" style="height:65%;background:var(--terracotta-l);"></div><div class="bar-label">APR</div></div>
+    </div>
+  </div>
+
+  <!-- Donut -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <div><div class="chart-title">Revenue Mix</div><div class="chart-sub">By product line</div></div>
+    </div>
+    <div class="donut-wrap">
+      <svg class="donut-svg" viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="55" cy="55" r="38" fill="none" stroke="#EDE4D8" stroke-width="14"/>
+        <circle cx="55" cy="55" r="38" fill="none" stroke="#C47B5A" stroke-width="14" stroke-dasharray="105 238.76" stroke-dashoffset="0" transform="rotate(-90 55 55)"/>
+        <circle cx="55" cy="55" r="38" fill="none" stroke="#7A9E8E" stroke-width="14" stroke-dasharray="66.85 238.76" stroke-dashoffset="-105" transform="rotate(-90 55 55)"/>
+        <circle cx="55" cy="55" r="38" fill="none" stroke="#9B7EA8" stroke-width="14" stroke-dasharray="42.98 238.76" stroke-dashoffset="-171.85" transform="rotate(-90 55 55)"/>
+        <circle cx="55" cy="55" r="38" fill="none" stroke="#6A9FC0" stroke-width="14" stroke-dasharray="23.88 238.76" stroke-dashoffset="-214.83" transform="rotate(-90 55 55)"/>
+        <text x="55" y="51" text-anchor="middle" font-family="Playfair Display,serif" font-size="15" fill="#2C2420">44%</text>
+        <text x="55" y="64" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="8" fill="#8C7E78">Recurring</text>
+      </svg>
+      <div class="donut-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#C47B5A;"></div><span class="legend-label">Recurring</span><span class="legend-val">44%</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#7A9E8E;"></div><span class="legend-label">Project</span><span class="legend-val">28%</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#9B7EA8;"></div><span class="legend-label">Advisory</span><span class="legend-val">18%</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#6A9FC0;"></div><span class="legend-label">Licensing</span><span class="legend-val">10%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sparklines -->
+  <div class="chart-card" style="grid-column:span 3;">
+    <div class="chart-header">
+      <div><div class="chart-title">Top Accounts · Performance Trend</div><div class="chart-sub">90-day revenue movement</div></div>
+      <span class="chart-badge badge-neutral">Q2 2025</span>
+    </div>
+    <div class="spark-grid">
+      <div class="spark-row"><div class="spark-info"><div class="spark-name">Helvetia Group</div><div class="spark-val">CHF 148k ARR</div></div><svg class="spark-svg" viewBox="0 0 80 32"><polyline points="0,22 10,20 20,18 30,14 40,12 50,8 60,6 70,4 80,3" fill="none" stroke="#7A9E8E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="spark-change change-up">+14%</div></div>
+      <div class="spark-row"><div class="spark-info"><div class="spark-name">Zurich Insurance</div><div class="spark-val">CHF 112k ARR</div></div><svg class="spark-svg" viewBox="0 0 80 32"><polyline points="0,8 10,10 20,9 30,12 40,14 50,13 60,16 70,14 80,15" fill="none" stroke="#C47B5A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="spark-change change-down">−3%</div></div>
+      <div class="spark-row"><div class="spark-info"><div class="spark-name">Swiss Re</div><div class="spark-val">CHF 94k ARR</div></div><svg class="spark-svg" viewBox="0 0 80 32"><polyline points="0,18 10,15 20,16 30,11 40,10 50,7 60,5 70,4 80,2" fill="none" stroke="#7A9E8E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="spark-change change-up">+22%</div></div>
+      <div class="spark-row"><div class="spark-info"><div class="spark-name">Baloise Group</div><div class="spark-val">CHF 76k ARR</div></div><svg class="spark-svg" viewBox="0 0 80 32"><polyline points="0,12 10,13 20,12 30,14 40,13 50,15 60,14 70,16 80,15" fill="none" stroke="#D4A24C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><div class="spark-change" style="color:var(--ink-3);">+1%</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PHONE SCREENS -->
+<div class="section-row"><span>Screen Compositions</span></div>
+<div class="screens-section">
+
+  <div class="phone-outer">
+    <div class="phone-frame">
+      <div class="di"></div>
+      <div class="sc">
+        <div class="sc1-greeting">Good morning,<br>Pascal.</div>
+        <div class="sc1-date">Monday, 19 April · Zurich</div>
+        <div class="sc1-kpi-row">
+          <div class="sc1-kpi"><div class="sc1-kpi-dot" style="background:var(--terracotta);"></div><div class="sc1-kpi-val">842k</div><div class="sc1-kpi-label">MRR (CHF)</div></div>
+          <div class="sc1-kpi"><div class="sc1-kpi-dot" style="background:var(--sage);"></div><div class="sc1-kpi-val">2,847</div><div class="sc1-kpi-label">Contracts</div></div>
+          <div class="sc1-kpi"><div class="sc1-kpi-dot" style="background:var(--mauve);"></div><div class="sc1-kpi-val">94.2%</div><div class="sc1-kpi-label">Retention</div></div>
+        </div>
+        <div class="sc1-chart-mini">
+          <div class="sc1-chart-top"><span class="sc1-chart-title">Revenue trend</span><span class="sc1-chart-val">↑ 18.4%</span></div>
+          <svg viewBox="0 0 220 44" style="width:100%;height:38px;">
+            <defs><linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#C47B5A" stop-opacity="0.18"/><stop offset="100%" stop-color="#C47B5A" stop-opacity="0"/></linearGradient></defs>
+            <path d="M0,40 C20,36 35,34 55,30 C70,26 90,24 110,20 C130,16 145,14 165,11 C180,8 200,6 220,4 L220,44 L0,44 Z" fill="url(#mg)"/>
+            <path d="M0,40 C20,36 35,34 55,30 C70,26 90,24 110,20 C130,16 145,14 165,11 C180,8 200,6 220,4" fill="none" stroke="#C47B5A" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="sc1-activity">
+          <div class="sc1-act-item"><div class="sc1-act-dot" style="background:var(--sage);"></div><div class="sc1-act-text">Helvetia renewal — CHF 148k</div><div class="sc1-act-time">2h</div></div>
+          <div class="sc1-act-item"><div class="sc1-act-dot" style="background:var(--amber);"></div><div class="sc1-act-text">Q2 board report due Friday</div><div class="sc1-act-time">4h</div></div>
+          <div class="sc1-act-item"><div class="sc1-act-dot" style="background:var(--mauve);"></div><div class="sc1-act-text">3 contracts pending approval</div><div class="sc1-act-time">1d</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Dashboard</div>
+  </div>
+
+  <div class="phone-outer">
+    <div class="phone-frame">
+      <div class="di"></div>
+      <div class="sc">
+        <div class="sc2-topbar">
+          <div class="sc2-icon">✦</div>
+          <div><div class="sc2-title">AI Assistant</div><div class="sc2-status">● Ready</div></div>
+        </div>
+        <div class="sc2-bubbles">
+          <div class="bubble ai">MRR grew 18.4% in Q1. Helvetia and Swiss Re are your highest-growth accounts this quarter.</div>
+          <div class="bubble user">Which segment has highest churn risk?</div>
+          <div class="bubble ai">SMB shows early signals — 3 accounts below 60% feature adoption. I can draft a re-engagement plan.</div>
+          <div class="bubble user">Yes, do that for the top 3.</div>
+          <div class="bubble typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        </div>
+        <div class="sc2-input">
+          <span class="sc2-placeholder">Ask anything…</span>
+          <div class="sc2-send"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 9L9 5L1 1V4.2L6 5L1 5.8V9Z" fill="white"/></svg></div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">AI Assistant</div>
+  </div>
+
+  <div class="phone-outer">
+    <div class="phone-frame">
+      <div class="di"></div>
+      <div class="sc">
+        <div class="sc3-top">
+          <div class="sc3-avatar">✦</div>
+          <div class="sc3-name">Pascal M.</div>
+          <div class="sc3-role">Senior Manager Strategy · elipsLife AG</div>
+        </div>
+        <div class="sc3-sec">Preferences</div>
+        <div class="sc3-row"><span class="sc3-row-text">AI memory enabled</span><div class="ton"></div></div>
+        <div class="sc3-row"><span class="sc3-row-text">Smart notifications</span><div class="ton"></div></div>
+        <div class="sc3-row"><span class="sc3-row-text">Compact view</span><div class="toff"></div></div>
+        <div class="sc3-sec">Data</div>
+        <div class="sc3-row"><span class="sc3-row-text">Export dashboard</span><svg width="12" height="12" viewBox="0 0 12 12"><path d="M4 3L8 6L4 9" stroke="#B8ADA8" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        <div class="sc3-row"><span class="sc3-row-text">API integrations</span><svg width="12" height="12" viewBox="0 0 12 12"><path d="M4 3L8 6L4 9" stroke="#B8ADA8" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        <div class="sc3-row" style="margin-top:6px;"><span class="sc3-row-text" style="color:var(--terracotta);">Sign out</span></div>
+      </div>
+    </div>
+    <div class="phone-label">Profile & Settings</div>
+  </div>
+</div>
+
+<!-- COMPONENTS -->
+<div class="section-row"><span>Component Library</span></div>
+<div class="components-grid">
+  <div class="comp-card">
+    <div class="comp-label">Actions</div>
+    <div class="btn-group">
+      <button class="btn-primary">Generate report</button>
+      <button class="btn-secondary">View details</button>
+      <button class="btn-ghost">↗ Export</button>
+    </div>
+  </div>
+  <div class="comp-card">
+    <div class="comp-label">Input Fields</div>
+    <div class="field-group">
+      <div class="field-label">Search accounts</div>
+      <input class="field-input" placeholder="e.g. Helvetia Group" disabled>
+      <div class="field-label">Active state</div>
+      <input class="field-input focused" value="Q2 retention analysis" disabled>
+    </div>
+  </div>
+  <div class="comp-card">
+    <div class="comp-label">Labels & Tags</div>
+    <div class="badge-group">
+      <span class="chip chip-t">Strategy</span>
+      <span class="chip chip-s">Active</span>
+      <span class="chip chip-m">AI Draft</span>
+      <span class="chip chip-k">Analytics</span>
+      <span class="chip chip-a">Pending</span>
+      <span class="chip chip-t">Q2 2025</span>
+      <span class="chip chip-s">Renewed</span>
+    </div>
+  </div>
+  <div class="comp-card">
+    <div class="comp-label">Iconography</div>
+    <div class="icon-grid">
+      <div class="icon-item"><div class="icon-box">✦</div><div class="icon-name">AI</div></div>
+      <div class="icon-item"><div class="icon-box">◎</div><div class="icon-name">Focus</div></div>
+      <div class="icon-item"><div class="icon-box">⌘</div><div class="icon-name">Action</div></div>
+      <div class="icon-item"><div class="icon-box">⟡</div><div class="icon-name">Thread</div></div>
+      <div class="icon-item"><div class="icon-box">▲</div><div class="icon-name">Trend</div></div>
+      <div class="icon-item"><div class="icon-box">◈</div><div class="icon-name">Data</div></div>
+      <div class="icon-item"><div class="icon-box">⊕</div><div class="icon-name">Add</div></div>
+      <div class="icon-item"><div class="icon-box">⊞</div><div class="icon-name">Grid</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PRINCIPLES -->
+<div class="section-row"><span>Design Principles</span></div>
+<div class="principles-section">
+  <div class="principle-card">
+    <div class="principle-num">01</div>
+    <div class="principle-title">Warm intelligence</div>
+    <div class="principle-body">Data-dense interfaces don't have to be cold. Terracotta and linen replace sterile greys. The interface feels like a well-designed physical workspace — warm materials, precise tools.</div>
+    <span class="principle-tag chip-t chip" style="margin-top:16px;">From Claude</span>
+  </div>
+  <div class="principle-card">
+    <div class="principle-num">02</div>
+    <div class="principle-title">Hardware-grade craft</div>
+    <div class="principle-body">Every radius, shadow, and spacing value is intentional. Spring physics on interactions. Consistent 8px grid. The obsession Apple applies to physical products, applied here to pixels.</div>
+    <span class="principle-tag chip-k chip" style="margin-top:16px;">From Apple</span>
+  </div>
+  <div class="principle-card">
+    <div class="principle-num">03</div>
+    <div class="principle-title">B2B without compromise</div>
+    <div class="principle-body">Professional-grade data density without sacrificing approachability. Charts communicate at a glance. AI surfaces exactly when useful. The tool earns trust through clarity, not complexity.</div>
+    <span class="principle-tag chip-s chip" style="margin-top:16px;">Fusion</span>
+  </div>
+</div>
+
+</div>
+</body>
+</html>
